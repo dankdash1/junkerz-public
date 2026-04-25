@@ -65,4 +65,12 @@ export const buyerApi = {
     _fetch(`/api/buyers/bid-rules/${id}`, { method: "DELETE" }).then(_json),
   testRule: (id: number) =>
     _fetch(`/api/buyers/bid-rules/${id}/test`, { method: "POST" }).then(_json),
+  wonCars: (status?: string) =>
+    _fetch(`/api/buyers/won-cars${status ? `?status=${status}` : ""}`).then(_json),
+  declineMatch: (matchId: number) =>
+    _fetch(`/api/buyers/won-cars/${matchId}/decline`, { method: "POST" }).then(_json),
+  ledger: () => _fetch("/api/buyers/ledger").then(_json),
+  listDisputes: () => _fetch("/api/buyers/disputes").then(_json),
+  openDispute: (b: { match_id: number; reason: string; description?: string; evidence_urls?: string[] }) =>
+    _fetch("/api/buyers/disputes", { method: "POST", body: JSON.stringify(b) }).then(_json),
 };
