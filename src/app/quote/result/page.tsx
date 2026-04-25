@@ -15,7 +15,10 @@ function ResultContent() {
     if (!id) return;
     let cancelled = false;
     async function poll() {
-      while (!cancelled) {
+      const MAX_ATTEMPTS = 24; // 24 × 5s = 2 min
+      let attempts = 0;
+      while (!cancelled && attempts < MAX_ATTEMPTS) {
+        attempts++;
         try {
           const o = await getOffer(id);
           if (cancelled) return;
@@ -26,6 +29,9 @@ function ResultContent() {
           return;
         }
         await new Promise((r) => setTimeout(r, 5000));
+      }
+      if (!cancelled) {
+        setError("This is taking longer than expected. We'll text you shortly.");
       }
     }
     poll();

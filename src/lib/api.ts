@@ -29,6 +29,10 @@ export async function sendOtp(phone: string) {
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({phone}),
   });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as any).error || `otp/send failed: ${r.status}`);
+  }
   return r.json();
 }
 
@@ -38,5 +42,9 @@ export async function verifyOtp(phone: string, code: string) {
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({phone, code}),
   });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error((err as any).error || `otp/verify failed: ${r.status}`);
+  }
   return r.json();
 }
