@@ -4,6 +4,14 @@ export async function submitQuote(payload: {
   vin: string; year: number; make: string; model: string;
   condition: string; title_status: string; weight_lbs: number;
   zip_code: string; photo_count?: number;
+  trim?: string; mileage?: number;
+  make_id?: number | null; model_id?: number | null;
+  runs?: boolean; starts?: boolean;
+  all_wheels_attached?: boolean; all_tires_inflated?: boolean;
+  engine_state?: "intact" | "partial" | "missing";
+  transmission_state?: "intact" | "partial" | "missing";
+  has_catalytic?: boolean; has_battery?: boolean; has_keys?: boolean;
+  damage_zones?: Record<string, "none" | "some">;
 }) {
   const r = await fetch(`${BASE}/api/public/junkerz/quote`, {
     method: "POST",
