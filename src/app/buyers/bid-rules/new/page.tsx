@@ -5,10 +5,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { buyerApi } from "@/lib/buyer-api";
+import VehiclePicker, { VehicleSelection } from "@/components/VehiclePicker";
 
 const CONDITIONS = ["runs", "starts_no_drive", "dead", "wrecked"];
 const TITLES = ["clean", "salvage", "rebuilt", "no_title"];
 const PICKUP_PAYORS = ["buyer", "junkerz", "split"];
+const ENGINE_STATES = ["intact", "partial", "missing"];
+
+const EMPTY_VEHICLE: VehicleSelection = {
+  year: null,
+  make_id: null,
+  make_name: null,
+  model_id: null,
+  model_name: null,
+  trim: "",
+};
+
+interface PickedMake {
+  id: number;
+  name: string;
+}
+
+interface PickedModel {
+  id: number;
+  name: string;
+}
 
 interface FormState {
   name: string;
@@ -22,6 +43,17 @@ interface FormState {
   weekly_budget_dollars: string;
   pickup_paid_by: string;
   priority: number;
+  // new condition filters
+  require_runs: boolean | null;
+  require_starts: boolean | null;
+  min_wheels: null | 2 | 4;
+  require_engine_state: string[];
+  require_battery: boolean | null;
+  require_keys: boolean | null;
+  require_catalytic: boolean | null;
+  exclude_flood: boolean;
+  exclude_fire: boolean;
+  max_damage_zones: string;
 }
 
 export default function NewBidRule() {
@@ -38,9 +70,37 @@ export default function NewBidRule() {
     weekly_budget_dollars: "",
     pickup_paid_by: "buyer",
     priority: 0,
+    require_runs: null,
+    require_starts: null,
+    min_wheels: null,
+    require_engine_state: [],
+    require_battery: null,
+    require_keys: null,
+    require_catalytic: null,
+    exclude_flood: false,
+    exclude_fire: false,
+    max_damage_zones: "",
   });
+
+  const [picker, setPicker] = useState<VehicleSelection>(EMPTY_VEHICLE);
+  const [pickedMakes, setPickedMakes] = useState<PickedMake[]>([]);
+  const [pickedModels, setPickedModels] = useState<PickedModel[]>([]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  function addMake() {
+    if (!picker.make_id || !picker.make_name) return;
+    if (pickedMakes.find((m) => m.id === picker.make_id)) return;
+    setPickedMakes([...pickedMakes, { id: picker.make_id, name: picker.make_name }]);
+    setPicker(EMPTY_VEHICLE);
+  }
+
+  function addModel() {
+    if (!picker.model_id || !picker.model_name) return;
+    if (pickedModels.find((m) => m.id === picker.model_id)) return;
+    setPickedModels([...pickedModels, { id: picker.model_id, name: picker.model_name }]);
+    setPicker(EMPTY_VEHICLE);
+  }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -69,6 +129,21 @@ export default function NewBidRule() {
           : null,
         pickup_paid_by: form.pickup_paid_by,
         priority: form.priority,
+        // vehicle picker
+        make_ids: pickedMakes.length ? pickedMakes.map((m) => m.id) : null,
+        model_ids: pickedModels.length ? pickedModels.map((m) => m.id) : null,
+        // condition filters
+        require_runs: form.require_runs,
+        require_starts: form.require_starts,
+        min_wheels: form.min_wheels,
+        require_engine_state: form.require_engine_state.length ? form.require_engine_state : null,
+        require_transmission_state: null,
+        require_battery: form.require_battery,
+        require_keys: form.require_keys,
+        has_catalytic: form.require_catalytic,
+        exclude_flood: form.exclude_flood,
+        exclude_fire: form.exclude_fire,
+        max_damage_zones: form.max_damage_zones ? parseInt(form.max_damage_zones, 10) : null,
       };
       await buyerApi.createRule(payload);
       router.replace("/buyers/bid-rules");
@@ -87,6 +162,47 @@ export default function NewBidRule() {
         : [...cur, value];
       return { ...f, [field]: next };
     });
+  }
+
+  // Yes / Any toggle helper
+  function YesAny({
+    label,
+    value,
+    onChange,
+  }: {
+    label: string;
+    value: boolean | null;
+    onChange: (v: boolean | null) => void;
+  }) {
+    return (
+      <div className="flex items-center gap-3">
+        <span className="text-sm w-40 text-slate-700">{label}</span>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={() => onChange(value === true ? null : true)}
+            className={`px-3 py-1 rounded border text-sm ${
+              value === true
+                ? "bg-emerald-600 text-white border-emerald-700"
+                : "bg-white text-slate-700"
+            }`}
+          >
+            Yes
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className={`px-3 py-1 rounded border text-sm ${
+              value === null
+                ? "bg-slate-200 text-slate-800 border-slate-400"
+                : "bg-white text-slate-700"
+            }`}
+          >
+            Any
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -138,6 +254,77 @@ export default function NewBidRule() {
             placeholder="Honda, Toyota"
           />
         </div>
+
+        {/* VehiclePicker section */}
+        <div className="border rounded p-4 space-y-3 bg-slate-50">
+          <Label className="font-semibold">Target specific makes / models</Label>
+          <VehiclePicker value={picker} onChange={setPicker} showTrim={false} />
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addMake}
+              disabled={!picker.make_id}
+            >
+              + Add make
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addModel}
+              disabled={!picker.model_id}
+            >
+              + Add model
+            </Button>
+          </div>
+          {pickedMakes.length > 0 && (
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Makes:</p>
+              <div className="flex flex-wrap gap-1">
+                {pickedMakes.map((m) => (
+                  <span
+                    key={m.id}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-sm"
+                  >
+                    {m.name}
+                    <button
+                      type="button"
+                      onClick={() => setPickedMakes(pickedMakes.filter((x) => x.id !== m.id))}
+                      className="text-emerald-600 hover:text-emerald-900 font-bold"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {pickedModels.length > 0 && (
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Models:</p>
+              <div className="flex flex-wrap gap-1">
+                {pickedModels.map((m) => (
+                  <span
+                    key={m.id}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 text-sm"
+                  >
+                    {m.name}
+                    <button
+                      type="button"
+                      onClick={() => setPickedModels(pickedModels.filter((x) => x.id !== m.id))}
+                      className="text-cyan-600 hover:text-cyan-900 font-bold"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div>
           <Label>Conditions</Label>
           <div className="flex flex-wrap gap-2 mt-1">
@@ -214,6 +401,122 @@ export default function NewBidRule() {
             ))}
           </div>
         </div>
+
+        {/* NEW: Condition filters */}
+        <div className="border-t pt-4 space-y-3">
+          <h2 className="font-semibold text-slate-800">Condition Filters</h2>
+
+          <YesAny
+            label="Require runs"
+            value={form.require_runs}
+            onChange={(v) => setForm({ ...form, require_runs: v })}
+          />
+          <YesAny
+            label="Require starts"
+            value={form.require_starts}
+            onChange={(v) => setForm({ ...form, require_starts: v })}
+          />
+
+          <div className="flex items-center gap-3">
+            <span className="text-sm w-40 text-slate-700">Minimum wheels attached</span>
+            <div className="flex gap-1">
+              {([null, 2, 4] as (null | 2 | 4)[]).map((v) => (
+                <button
+                  type="button"
+                  key={String(v)}
+                  onClick={() => setForm({ ...form, min_wheels: v })}
+                  className={`px-3 py-1 rounded border text-sm ${
+                    form.min_wheels === v
+                      ? "bg-emerald-600 text-white border-emerald-700"
+                      : "bg-white text-slate-700"
+                  }`}
+                >
+                  {v === null ? "Any" : `${v}+`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <span className="text-sm text-slate-700">Acceptable engine states</span>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {ENGINE_STATES.map((s) => (
+                <button
+                  type="button"
+                  key={s}
+                  onClick={() => toggleArray("require_engine_state", s)}
+                  className={`px-3 py-1 rounded border text-sm ${
+                    form.require_engine_state.includes(s)
+                      ? "bg-emerald-600 text-white border-emerald-700"
+                      : "bg-white text-slate-700"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+              <span className="text-xs text-slate-400 self-center">(blank = any)</span>
+            </div>
+          </div>
+
+          <YesAny
+            label="Battery present"
+            value={form.require_battery}
+            onChange={(v) => setForm({ ...form, require_battery: v })}
+          />
+          <YesAny
+            label="Keys present"
+            value={form.require_keys}
+            onChange={(v) => setForm({ ...form, require_keys: v })}
+          />
+          <YesAny
+            label="Catalytic converter"
+            value={form.require_catalytic}
+            onChange={(v) => setForm({ ...form, require_catalytic: v })}
+          />
+
+          <div className="flex items-center gap-3">
+            <span className="text-sm w-40 text-slate-700">Exclude flood damage</span>
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, exclude_flood: !form.exclude_flood })}
+              className={`px-3 py-1 rounded border text-sm ${
+                form.exclude_flood
+                  ? "bg-red-600 text-white border-red-700"
+                  : "bg-white text-slate-700"
+              }`}
+            >
+              {form.exclude_flood ? "Excluded" : "Allow"}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-sm w-40 text-slate-700">Exclude fire damage</span>
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, exclude_fire: !form.exclude_fire })}
+              className={`px-3 py-1 rounded border text-sm ${
+                form.exclude_fire
+                  ? "bg-red-600 text-white border-red-700"
+                  : "bg-white text-slate-700"
+              }`}
+            >
+              {form.exclude_fire ? "Excluded" : "Allow"}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-sm w-40 text-slate-700">Max damage zones</span>
+            <Input
+              type="number"
+              min="0"
+              className="w-24"
+              placeholder="Any"
+              value={form.max_damage_zones}
+              onChange={(e) => setForm({ ...form, max_damage_zones: e.target.value })}
+            />
+          </div>
+        </div>
+
         {err && <p className="text-red-600 text-sm">{err}</p>}
         <div className="flex gap-2 pt-4">
           <Button type="submit" disabled={busy} className="flex-1">
