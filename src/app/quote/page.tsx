@@ -5,40 +5,114 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { submitQuote } from "@/lib/api";
+import VehiclePicker, { VehicleSelection } from "@/components/VehiclePicker";
+import ConditionGrid, { DamageZones } from "@/components/ConditionGrid";
+
+const STEPS = ["vehicle", "title", "drivability", "components", "damage", "zip", "contact"] as const;
 
 type Form = {
-  year: string; make: string; model: string; vin: string;
-  title_status: string; condition: string; zip_code: string;
-  phone: string; email: string;
+  vehicle: VehicleSelection;
+  vin: string;
+  mileage: string;
+  title_status: string;
+  runs: boolean | null;
+  starts: boolean | null;
+  all_wheels_attached: boolean | null;
+  all_tires_inflated: boolean | null;
+  engine_state: "intact" | "partial" | "missing" | "";
+  transmission_state: "intact" | "partial" | "missing" | "";
+  has_catalytic: boolean | null;
+  has_battery: boolean | null;
+  has_keys: boolean | null;
+  damage_zones: DamageZones;
+  zip_code: string;
+  phone: string;
+  email: string;
 };
 
-const STEPS = ["vehicle", "title", "condition", "zip", "contact"] as const;
+const EMPTY_VEHICLE: VehicleSelection = {
+  year: null, make_id: null, make_name: null,
+  model_id: null, model_name: null, trim: "",
+};
+
+const EMPTY_DAMAGE: DamageZones = {
+  front: "none", rear: "none", left: "none", right: "none",
+  engine_bay: "none", glass: "none", airbags_deployed: "none",
+  flood: "none", fire: "none",
+};
+
+function YesNo({ label, value, onChange }: {
+  label: string; value: boolean | null;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div>
+      <Label>{label}</Label>
+      <div className="flex gap-2 mt-1">
+        <Button
+          variant={value === true ? "default" : "outline"}
+          onClick={() => onChange(true)}>Yes</Button>
+        <Button
+          variant={value === false ? "default" : "outline"}
+          onClick={() => onChange(false)}>No</Button>
+      </div>
+    </div>
+  );
+}
 
 export default function QuoteWizard() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Form>({
-    year: "", make: "", model: "", vin: "",
-    title_status: "", condition: "", zip_code: "",
-    phone: "", email: "",
+    vehicle: EMPTY_VEHICLE,
+    vin: "",
+    mileage: "",
+    title_status: "",
+    runs: null, starts: null,
+    all_wheels_attached: null, all_tires_inflated: null,
+    engine_state: "", transmission_state: "",
+    has_catalytic: null, has_battery: null, has_keys: null,
+    damage_zones: EMPTY_DAMAGE,
+    zip_code: "", phone: "", email: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const conditionFromAnswers = () => {
+    if (form.runs) return "runs";
+    if (form.starts) return "starts_no_drive";
+    if (form.engine_state === "missing") return "wrecked";
+    return "dead";
+  };
 
   async function submit() {
     setSubmitting(true);
     setError(null);
     try {
+      const v = form.vehicle;
       const result = await submitQuote({
-        vin: form.vin || `UNK_${form.year}_${form.make}_${form.model}`,
-        year: parseInt(form.year),
-        make: form.make,
-        model: form.model,
-        condition: form.condition,
+        vin: form.vin || `UNK_${v.year}_${v.make_name}_${v.model_name}`,
+        year: v.year ?? 0,
+        make: v.make_name ?? "",
+        model: v.model_name ?? "",
+        condition: conditionFromAnswers(),
         title_status: form.title_status,
         weight_lbs: 3000,
         zip_code: form.zip_code,
         photo_count: 0,
+        trim: v.trim || undefined,
+        mileage: form.mileage ? parseInt(form.mileage, 10) : undefined,
+        make_id: v.make_id, model_id: v.model_id,
+        runs: form.runs ?? undefined,
+        starts: form.starts ?? undefined,
+        all_wheels_attached: form.all_wheels_attached ?? undefined,
+        all_tires_inflated: form.all_tires_inflated ?? undefined,
+        engine_state: form.engine_state || undefined,
+        transmission_state: form.transmission_state || undefined,
+        has_catalytic: form.has_catalytic ?? undefined,
+        has_battery: form.has_battery ?? undefined,
+        has_keys: form.has_keys ?? undefined,
+        damage_zones: form.damage_zones,
       });
       router.push(`/quote/result?id=${result.offer_id}&status=${result.status}`);
     } catch (e: unknown) {
@@ -48,15 +122,17 @@ export default function QuoteWizard() {
     }
   }
 
-  const set = (k: keyof Form) => (v: string) =>
-    setForm((f) => ({ ...f, [k]: v }));
-
   const canAdvance = (() => {
-    if (step === 0) return form.year && form.make && form.model;
+    if (step === 0) return !!(form.vehicle.year && form.vehicle.make_id && form.vehicle.model_id);
     if (step === 1) return !!form.title_status;
-    if (step === 2) return !!form.condition;
-    if (step === 3) return form.zip_code.length >= 5;
-    if (step === 4) return form.phone.length >= 10;
+    if (step === 2) return form.runs !== null && form.starts !== null
+                           && form.all_wheels_attached !== null;
+    if (step === 3) return !!form.engine_state && !!form.transmission_state
+                           && form.has_catalytic !== null
+                           && form.has_battery !== null && form.has_keys !== null;
+    if (step === 4) return true;
+    if (step === 5) return form.zip_code.length >= 5;
+    if (step === 6) return form.phone.length >= 10;
     return false;
   })();
 
@@ -69,12 +145,20 @@ export default function QuoteWizard() {
 
         {step === 0 && (
           <div className="space-y-4">
-            <Label>Year</Label>
-            <Input value={form.year} onChange={(e) => set("year")(e.target.value)} />
-            <Label>Make</Label>
-            <Input value={form.make} onChange={(e) => set("make")(e.target.value)} />
-            <Label>Model</Label>
-            <Input value={form.model} onChange={(e) => set("model")(e.target.value)} />
+            <VehiclePicker
+              value={form.vehicle}
+              onChange={(v) => setForm({ ...form, vehicle: v })}
+            />
+            <div>
+              <Label>VIN (optional)</Label>
+              <Input value={form.vin} onChange={(e) =>
+                setForm({ ...form, vin: e.target.value })} />
+            </div>
+            <div>
+              <Label>Mileage (optional)</Label>
+              <Input type="number" value={form.mileage} onChange={(e) =>
+                setForm({ ...form, mileage: e.target.value })} />
+            </div>
           </div>
         )}
 
@@ -86,7 +170,7 @@ export default function QuoteWizard() {
                 key={t}
                 variant={form.title_status === t ? "default" : "outline"}
                 className="w-full"
-                onClick={() => set("title_status")(t)}
+                onClick={() => setForm({ ...form, title_status: t })}
               >{t.replace("_", " ")}</Button>
             ))}
           </div>
@@ -94,31 +178,78 @@ export default function QuoteWizard() {
 
         {step === 2 && (
           <div className="space-y-4">
-            <Label>Condition</Label>
-            {["runs", "starts_no_drive", "dead", "wrecked"].map((t) => (
-              <Button
-                key={t}
-                variant={form.condition === t ? "default" : "outline"}
-                className="w-full"
-                onClick={() => set("condition")(t)}
-              >{t.replace("_", " ")}</Button>
-            ))}
+            <YesNo label="Does it run/drive?"
+              value={form.runs}
+              onChange={(v) => setForm({ ...form, runs: v })} />
+            <YesNo label="Does it start?"
+              value={form.starts}
+              onChange={(v) => setForm({ ...form, starts: v })} />
+            <YesNo label="All four wheels attached?"
+              value={form.all_wheels_attached}
+              onChange={(v) => setForm({ ...form, all_wheels_attached: v })} />
+            <YesNo label="All tires inflated?"
+              value={form.all_tires_inflated}
+              onChange={(v) => setForm({ ...form, all_tires_inflated: v })} />
           </div>
         )}
 
         {step === 3 && (
           <div className="space-y-4">
-            <Label>Zip code</Label>
-            <Input value={form.zip_code} onChange={(e) => set("zip_code")(e.target.value)} />
+            <div>
+              <Label>Engine</Label>
+              <div className="flex gap-2 mt-1">
+                {(["intact","partial","missing"] as const).map((s) => (
+                  <Button key={s}
+                    variant={form.engine_state === s ? "default" : "outline"}
+                    onClick={() => setForm({ ...form, engine_state: s })}>{s}</Button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label>Transmission</Label>
+              <div className="flex gap-2 mt-1">
+                {(["intact","partial","missing"] as const).map((s) => (
+                  <Button key={s}
+                    variant={form.transmission_state === s ? "default" : "outline"}
+                    onClick={() => setForm({ ...form, transmission_state: s })}>{s}</Button>
+                ))}
+              </div>
+            </div>
+            <YesNo label="Catalytic converter installed?"
+              value={form.has_catalytic}
+              onChange={(v) => setForm({ ...form, has_catalytic: v })} />
+            <YesNo label="Battery present?"
+              value={form.has_battery}
+              onChange={(v) => setForm({ ...form, has_battery: v })} />
+            <YesNo label="Keys available?"
+              value={form.has_keys}
+              onChange={(v) => setForm({ ...form, has_keys: v })} />
           </div>
         )}
 
         {step === 4 && (
+          <ConditionGrid
+            value={form.damage_zones}
+            onChange={(v) => setForm({ ...form, damage_zones: v })}
+          />
+        )}
+
+        {step === 5 && (
+          <div className="space-y-4">
+            <Label>Zip code</Label>
+            <Input value={form.zip_code} onChange={(e) =>
+              setForm({ ...form, zip_code: e.target.value })} />
+          </div>
+        )}
+
+        {step === 6 && (
           <div className="space-y-4">
             <Label>Phone</Label>
-            <Input value={form.phone} onChange={(e) => set("phone")(e.target.value)} />
+            <Input value={form.phone} onChange={(e) =>
+              setForm({ ...form, phone: e.target.value })} />
             <Label>Email</Label>
-            <Input value={form.email} onChange={(e) => set("email")(e.target.value)} />
+            <Input value={form.email} onChange={(e) =>
+              setForm({ ...form, email: e.target.value })} />
           </div>
         )}
 
@@ -126,22 +257,16 @@ export default function QuoteWizard() {
 
         <div className="flex gap-2 mt-8">
           {step > 0 && (
-            <Button variant="outline" onClick={() => setStep((s) => s - 1)}>
-              Back
-            </Button>
+            <Button variant="outline" onClick={() => setStep((s) => s - 1)}>Back</Button>
           )}
           {step < STEPS.length - 1 ? (
-            <Button
-              className="flex-1"
-              disabled={!canAdvance}
-              onClick={() => setStep((s) => s + 1)}
-            >Next</Button>
+            <Button className="flex-1" disabled={!canAdvance}
+              onClick={() => setStep((s) => s + 1)}>Next</Button>
           ) : (
-            <Button
-              className="flex-1"
-              disabled={!canAdvance || submitting}
-              onClick={submit}
-            >{submitting ? "Getting offer..." : "Get my offer"}</Button>
+            <Button className="flex-1" disabled={!canAdvance || submitting}
+              onClick={submit}>
+              {submitting ? "Getting offer..." : "Get my offer"}
+            </Button>
           )}
         </div>
       </div>
