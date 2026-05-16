@@ -57,7 +57,20 @@ export default function Dashboard() {
 
   return (
     <main className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">{me.business_name}</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">{me.business_name}</h1>
+        <div className="flex gap-2 text-sm">
+          <a href="/buyers/marketplace" className="px-3 py-1.5 rounded bg-emerald-600 text-white hover:bg-emerald-700">
+            Marketplace
+          </a>
+          <a href="/buyers/won-cars" className="px-3 py-1.5 rounded border hover:bg-slate-50">
+            Won cars
+          </a>
+          <a href="/buyers/bid-rules" className="px-3 py-1.5 rounded border hover:bg-slate-50">
+            Bid rules
+          </a>
+        </div>
+      </div>
 
       {!me.active && (
         <div className="bg-amber-100 border border-amber-300 text-amber-900 p-4 rounded mb-6">

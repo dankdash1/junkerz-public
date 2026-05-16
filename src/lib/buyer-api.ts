@@ -103,6 +103,19 @@ export const buyerApi = {
     _fetch(`/api/buyers/bid-rules/${id}/test`, { method: "POST" }).then(_json),
   wonCars: (status?: string) =>
     _fetch(`/api/buyers/won-cars${status ? `?status=${status}` : ""}`).then(_json),
+  marketplace: (filters?: {
+    year_min?: number; year_max?: number;
+    make?: string; condition?: string; zip_prefix?: string;
+  }) => {
+    const q = new URLSearchParams()
+    if (filters?.year_min) q.set("year_min", String(filters.year_min))
+    if (filters?.year_max) q.set("year_max", String(filters.year_max))
+    if (filters?.make) q.set("make", filters.make)
+    if (filters?.condition) q.set("condition", filters.condition)
+    if (filters?.zip_prefix) q.set("zip_prefix", filters.zip_prefix)
+    const qs = q.toString()
+    return _fetch(`/api/buyers/marketplace${qs ? `?${qs}` : ""}`).then(_json)
+  },
   declineMatch: (matchId: number) =>
     _fetch(`/api/buyers/won-cars/${matchId}/decline`, { method: "POST" }).then(_json),
   ledger: () => _fetch("/api/buyers/ledger").then(_json),
