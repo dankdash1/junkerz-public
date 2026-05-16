@@ -11,6 +11,12 @@ const CONDITIONS = ["runs", "starts_no_drive", "dead", "wrecked"];
 const TITLES = ["clean", "salvage", "rebuilt", "no_title"];
 const PICKUP_PAYORS = ["buyer", "junkerz", "split"];
 const ENGINE_STATES = ["intact", "partial", "missing"];
+const VEHICLE_CATEGORIES: Array<{ value: string; label: string }> = [
+  { value: "", label: "Any" },
+  { value: "car", label: "Cars" },
+  { value: "truck", label: "Trucks" },
+  { value: "suv", label: "SUVs" },
+];
 
 const EMPTY_VEHICLE: VehicleSelection = {
   year: null,
@@ -34,6 +40,7 @@ interface PickedModel {
 interface FormState {
   name: string;
   bid_dollars: string;
+  vehicle_category: string;
   year_min: string;
   year_max: string;
   makes: string;
@@ -61,6 +68,7 @@ export default function NewBidRule() {
   const [form, setForm] = useState<FormState>({
     name: "",
     bid_dollars: "",
+    vehicle_category: "",
     year_min: "",
     year_max: "",
     makes: "",
@@ -114,6 +122,7 @@ export default function NewBidRule() {
       const payload: Record<string, unknown> = {
         name: form.name || null,
         bid_cents,
+        vehicle_category: form.vehicle_category || null,
         year_min: form.year_min ? parseInt(form.year_min, 10) : null,
         year_max: form.year_max ? parseInt(form.year_max, 10) : null,
         makes: form.makes
@@ -227,6 +236,28 @@ export default function NewBidRule() {
             onChange={(e) => setForm({ ...form, bid_dollars: e.target.value })}
             required
           />
+        </div>
+        <div>
+          <Label>Vehicle type</Label>
+          <div className="flex gap-2 mt-1">
+            {VEHICLE_CATEGORIES.map((cat) => (
+              <button
+                type="button"
+                key={cat.value || "any"}
+                onClick={() => setForm({ ...form, vehicle_category: cat.value })}
+                className={`px-3 py-1 rounded border text-sm ${
+                  form.vehicle_category === cat.value
+                    ? "bg-emerald-600 text-white border-emerald-700"
+                    : "bg-white text-slate-700"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Pick a category to bid on all vehicles in it. Leave Any to bid on every vehicle type.
+          </p>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
