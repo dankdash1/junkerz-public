@@ -99,10 +99,16 @@ export default function WonCars() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.match_id} className="border-t">
-                  <td className="p-3 font-mono text-xs">{r.vin}</td>
+                <tr key={r.match_id} className="border-t hover:bg-emerald-50/40">
+                  <td className="p-3 font-mono text-xs">
+                    <Link href={`/buyers/won-cars/${r.match_id}`} className="text-emerald-700 hover:underline">
+                      {r.vin || `match #${r.match_id}`}
+                    </Link>
+                  </td>
                   <td className="p-3">
-                    {r.year} {r.make} {r.model}
+                    <Link href={`/buyers/won-cars/${r.match_id}`} className="hover:underline">
+                      {r.year} {r.make} {r.model}
+                    </Link>
                     <div className="text-xs text-slate-500">
                       {r.condition} · {r.title_status} · {r.zip_code}
                     </div>
