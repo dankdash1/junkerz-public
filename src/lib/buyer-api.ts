@@ -33,9 +33,45 @@ async function _json(r: Response) {
   return r.json();
 }
 
+export type BuyerSignupBody = {
+  email: string;
+  password: string;
+  business_name: string;
+  // PR-J8 expansion (all optional at the column level; per-field "required"
+  // is gated by the org's `buyer_signup_required_fields` JSONB list).
+  contact_name?: string;
+  address?: string;
+  phone?: string;
+  website?: string;
+  license_number?: string;
+  notification_email?: string;
+};
+
+export type SignupConfig = {
+  required_fields: string[];
+  all_fields: string[];
+};
+
+export type DocumentType = "w9" | "license" | "insurance" | "id";
+
 export const buyerApi = {
-  signup: (b: { email: string; password: string; business_name: string }) =>
+  signup: (b: BuyerSignupBody) =>
     _fetch("/api/buyers/auth/signup", { method: "POST", body: JSON.stringify(b) }).then(_json),
+  signupConfig: () =>
+    _fetch("/api/buyers/public/signup-config").then(_json) as Promise<SignupConfig>,
+  uploadDocument: async (kind: DocumentType, file: File) => {
+    const t = token();
+    const fd = new FormData();
+    fd.append("document_type", kind);
+    fd.append("file", file);
+    const r = await fetch(`${BASE}/api/buyers/documents/upload`, {
+      method: "POST",
+      headers: t ? { Authorization: `Bearer ${t}` } : {},
+      body: fd,
+    });
+    return _json(r);
+  },
+  listDocuments: () => _fetch("/api/buyers/documents").then(_json),
   login: (email: string, password: string) =>
     _fetch("/api/buyers/auth/login", {
       method: "POST",
