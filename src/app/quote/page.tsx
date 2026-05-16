@@ -26,6 +26,7 @@ type Form = {
   has_keys: boolean | null;
   damage_zones: DamageZones;
   zip_code: string;
+  pickup_address: string;
   phone: string;
   email: string;
 };
@@ -73,7 +74,7 @@ export default function QuoteWizard() {
     engine_state: "", transmission_state: "",
     has_catalytic: null, has_battery: null, has_keys: null,
     damage_zones: EMPTY_DAMAGE,
-    zip_code: "", phone: "", email: "",
+    zip_code: "", pickup_address: "", phone: "", email: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +100,7 @@ export default function QuoteWizard() {
         title_status: form.title_status,
         weight_lbs: 3000,
         zip_code: form.zip_code,
+        pickup_address: form.pickup_address || undefined,
         photo_count: 0,
         trim: v.trim || undefined,
         mileage: form.mileage ? parseInt(form.mileage, 10) : undefined,
@@ -241,6 +243,17 @@ export default function QuoteWizard() {
             <Label>Zip code</Label>
             <Input value={form.zip_code} onChange={(e) =>
               setForm({ ...form, zip_code: e.target.value })} />
+            <Label>Pickup address (optional)</Label>
+            <Input
+              value={form.pickup_address}
+              onChange={(e) =>
+                setForm({ ...form, pickup_address: e.target.value })
+              }
+              placeholder="Street, city, state — we'll confirm later"
+            />
+            <p className="text-xs text-slate-500">
+              You can leave this blank and we&apos;ll ask when we schedule pickup.
+            </p>
           </div>
         )}
 

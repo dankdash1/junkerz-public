@@ -20,6 +20,7 @@ type Offer = {
   contact_email: string | null;
   contact_phone: string | null;
   zip_code: string | null;
+  pickup_address: string | null;
   seller_schedule_token_expires_at: string | null;
 };
 
@@ -49,6 +50,7 @@ export default function SellerSchedulePage() {
 
   const [date, setDate] = useState<string>(ymd(new Date()));
   const [windowSlot, setWindowSlot] = useState("9am-11am");
+  const [address, setAddress] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [submitErr, setSubmitErr] = useState<string | null>(null);
   const [done, setDone] = useState<{ slot: string; eta_at: string | null } | null>(null);
@@ -74,6 +76,7 @@ export default function SellerSchedulePage() {
       const data = await r.json();
       setOffer(data.offer);
       setQuickPicks(data.quick_picks || []);
+      if (data.offer?.pickup_address) setAddress(data.offer.pickup_address);
     } catch (e) {
       setLoadErr((e as Error)?.message ?? "Failed to load");
     } finally {
@@ -85,13 +88,21 @@ export default function SellerSchedulePage() {
 
   const submitWithQuickPick = useCallback(
     async (qp: QuickPick) => {
+      if (!address.trim()) {
+        setSubmitErr("Please enter your pickup address first.");
+        return;
+      }
       setBusy(true);
       setSubmitErr(null);
       try {
         const r = await fetch(`${BASE}/api/public/junkerz/seller/schedule/${token}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ slot: qp.label, quick_pick: qp.key }),
+          body: JSON.stringify({
+            slot: qp.label,
+            quick_pick: qp.key,
+            pickup_address: address.trim(),
+          }),
         });
         const data = await r.json();
         if (!r.ok) throw new Error((data as { error?: string }).error || "submit failed");
@@ -102,20 +113,27 @@ export default function SellerSchedulePage() {
         setBusy(false);
       }
     },
-    [token]
+    [token, address]
   );
 
-  // Auto-submit if the email link came with ?qp=immediately|tomorrow_am|...
+  // Auto-submit ONLY if email link has ?qp= AND we already have an address
+  // pre-filled from the quote. If address is blank, force seller to confirm
+  // it manually so we never schedule a pickup at an unknown location.
   useEffect(() => {
     if (!offer || done || busy) return;
     const qp = search.get("qp");
     if (!qp) return;
+    if (!address.trim()) return;  // wait for seller to enter / edit address
     const match = quickPicks.find((q) => q.key === qp);
     if (match) void submitWithQuickPick(match);
-  }, [offer, done, busy, search, quickPicks, submitWithQuickPick]);
+  }, [offer, done, busy, search, quickPicks, submitWithQuickPick, address]);
 
   const submitCustom = async () => {
     if (!offer) return;
+    if (!address.trim()) {
+      setSubmitErr("Please enter your pickup address first.");
+      return;
+    }
     const d = new Date(date + "T12:00:00");
     const slot = `${fmtDate(d)} — ${windowSlot}`;
     setBusy(true); setSubmitErr(null);
@@ -123,7 +141,7 @@ export default function SellerSchedulePage() {
       const r = await fetch(`${BASE}/api/public/junkerz/seller/schedule/${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slot }),
+        body: JSON.stringify({ slot, pickup_address: address.trim() }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error((data as { error?: string }).error || "submit failed");
@@ -188,6 +206,20 @@ export default function SellerSchedulePage() {
           {submitErr}
         </div>
       )}
+
+      <section>
+        <Label className="text-sm font-semibold text-slate-700">Pickup address</Label>
+        <Input
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          placeholder="123 Main St, City, State, ZIP"
+          className="mt-1"
+        />
+        <p className="text-xs text-slate-500 mt-1">
+          Where the driver should pick up the vehicle. We pre-filled from your
+          quote — edit if it&apos;s wrong or you want pickup at a different spot.
+        </p>
+      </section>
 
       <section>
         <h2 className="text-sm font-semibold text-slate-700 mb-2">Quick picks</h2>
