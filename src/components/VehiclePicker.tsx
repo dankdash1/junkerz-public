@@ -17,9 +17,23 @@ type Props = {
   value: VehicleSelection;
   onChange: (v: VehicleSelection) => void;
   showTrim?: boolean;
+  // PR-J5.5c Phase 4: cascading filter from outer form.
+  // When provided, the Make list is filtered to manufacturers that build
+  // at least one model in any of `categories` within [yearMin, yearMax].
+  // The inner Year dropdown is still used to fetch Models for the chosen Make.
+  categories?: string[];
+  yearMin?: number | null;
+  yearMax?: number | null;
 };
 
-export default function VehiclePicker({ value, onChange, showTrim = true }: Props) {
+export default function VehiclePicker({
+  value,
+  onChange,
+  showTrim = true,
+  categories,
+  yearMin,
+  yearMax,
+}: Props) {
   const [years, setYears] = useState<number[]>([]);
   const [makes, setMakes] = useState<{ id: number; name: string }[]>([]);
   const [models, setModels] = useState<{ id: number; name: string }[]>([]);
@@ -31,13 +45,20 @@ export default function VehiclePicker({ value, onChange, showTrim = true }: Prop
       .catch(() => setYears([]));
   }, []);
 
+  const catKey = (categories ?? []).join(",");
   useEffect(() => {
-    if (!value.year) { setMakes([]); return; }
-    fetch(`${API_BASE}/api/junkerz/vehicles/makes?year=${value.year}`)
+    const params = new URLSearchParams();
+    if (catKey) params.set("categories", catKey);
+    if (yearMin != null) params.set("year_min", String(yearMin));
+    if (yearMax != null) params.set("year_max", String(yearMax));
+    const url = `${API_BASE}/api/junkerz/vehicles/makes/by-category${
+      params.toString() ? `?${params}` : ""
+    }`;
+    fetch(url)
       .then((r) => r.json())
       .then((j) => setMakes(j.makes || []))
       .catch(() => setMakes([]));
-  }, [value.year]);
+  }, [catKey, yearMin, yearMax]);
 
   useEffect(() => {
     if (!value.year || !value.make_id) { setModels([]); return; }
