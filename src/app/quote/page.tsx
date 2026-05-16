@@ -113,6 +113,8 @@ export default function QuoteWizard() {
         has_battery: form.has_battery ?? undefined,
         has_keys: form.has_keys ?? undefined,
         damage_zones: form.damage_zones,
+        contact_phone: form.phone,
+        contact_email: form.email,
       });
       router.push(`/quote/result?id=${result.offer_id}&status=${result.status}`);
     } catch (e: unknown) {
@@ -132,7 +134,7 @@ export default function QuoteWizard() {
                            && form.has_battery !== null && form.has_keys !== null;
     if (step === 4) return true;
     if (step === 5) return form.zip_code.length >= 5;
-    if (step === 6) return form.phone.length >= 10;
+    if (step === 6) return form.phone.length >= 10 && /\S+@\S+\.\S+/.test(form.email);
     return false;
   })();
 

@@ -12,6 +12,7 @@ export async function submitQuote(payload: {
   transmission_state?: "intact" | "partial" | "missing";
   has_catalytic?: boolean; has_battery?: boolean; has_keys?: boolean;
   damage_zones?: Record<string, "none" | "some">;
+  contact_phone?: string; contact_email?: string;
 }) {
   const r = await fetch(`${BASE}/api/public/junkerz/quote`, {
     method: "POST",
