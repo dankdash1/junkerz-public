@@ -122,4 +122,30 @@ export const buyerApi = {
   listDisputes: () => _fetch("/api/buyers/disputes").then(_json),
   openDispute: (b: { match_id: number; reason: string; description?: string; evidence_urls?: string[] }) =>
     _fetch("/api/buyers/disputes", { method: "POST", body: JSON.stringify(b) }).then(_json),
+  pickupDetail: (matchId: number) =>
+    _fetch(`/api/buyers/pickup/${matchId}/detail`).then(_json),
+  pickupPhoto: async (matchId: number, kind: string, file: File, caption?: string) => {
+    const t = token();
+    const fd = new FormData();
+    fd.append("photo_kind", kind);
+    fd.append("file", file);
+    if (caption) fd.append("caption", caption);
+    const r = await fetch(`${BASE}/api/buyers/pickup/${matchId}/photo`, {
+      method: "POST",
+      headers: t ? { Authorization: `Bearer ${t}` } : {},
+      body: fd,
+    });
+    return _json(r);
+  },
+  pickupSignature: (matchId: number, body: {
+    signer_role: "seller" | "buyer";
+    signer_name?: string;
+    signature: string;
+  }) =>
+    _fetch(`/api/buyers/pickup/${matchId}/signature`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }).then(_json),
+  pickupComplete: (matchId: number) =>
+    _fetch(`/api/buyers/pickup/${matchId}/complete`, { method: "POST" }).then(_json),
 };
