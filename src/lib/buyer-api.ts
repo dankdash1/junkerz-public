@@ -118,6 +118,8 @@ export const buyerApi = {
   },
   declineMatch: (matchId: number) =>
     _fetch(`/api/buyers/won-cars/${matchId}/decline`, { method: "POST" }).then(_json),
+  markPickedUp: (matchId: number) =>
+    _fetch(`/api/buyers/won-cars/${matchId}/mark-picked-up`, { method: "POST" }).then(_json),
   ledger: () => _fetch("/api/buyers/ledger").then(_json),
   listDisputes: () => _fetch("/api/buyers/disputes").then(_json),
   openDispute: (b: { match_id: number; reason: string; description?: string; evidence_urls?: string[] }) =>
