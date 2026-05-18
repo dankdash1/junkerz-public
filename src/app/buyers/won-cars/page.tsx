@@ -145,6 +145,7 @@ export default function WonCars() {
                 <th className="p-3">VIN</th>
                 <th className="p-3">Vehicle</th>
                 <th className="p-3">Bid</th>
+                <th className="p-3">Finder Fee</th>
                 <th className="p-3">Status</th>
                 <th className="p-3">When</th>
                 <th className="p-3"></th>
@@ -167,6 +168,33 @@ export default function WonCars() {
                     </div>
                   </td>
                   <td className="p-3">${(r.bid_cents / 100).toFixed(0)}</td>
+                  <td className="p-3 whitespace-nowrap">
+                    {r.picked_up_charge_cents != null ? (
+                      <>
+                        <span className="font-medium">
+                          ${(r.picked_up_charge_cents / 100).toFixed(2)}
+                        </span>
+                        <span
+                          className={
+                            "ml-2 text-xs px-1.5 py-0.5 rounded " +
+                            (r.picked_up_charge_status === "paid"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : r.picked_up_charge_status === "declined"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-slate-100 text-slate-700")
+                          }
+                        >
+                          {r.picked_up_charge_status === "paid"
+                            ? "Paid"
+                            : r.picked_up_charge_status === "declined"
+                            ? "Declined"
+                            : "Pending"}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-slate-400 text-xs">—</span>
+                    )}
+                  </td>
                   <td className="p-3">{STATUS_LABEL[r.status] ?? r.status}</td>
                   <td className="p-3 text-xs text-slate-600">
                     {r.created_at ? new Date(r.created_at).toLocaleString() : ""}
