@@ -9,10 +9,21 @@ const STATUS_FILTERS = [
   { label: "Won", value: "won" },
   { label: "Backup", value: "backup" },
   { label: "Charged", value: "charged" },
-  { label: "Delivered", value: "delivered" },
+  { label: "Picked Up", value: "delivered" },
   { label: "Declined", value: "declined" },
   { label: "Disputed", value: "disputed" },
 ];
+
+// status -> human label (UI rename: 'delivered' DB value displays as 'Picked Up')
+const STATUS_LABEL: Record<string, string> = {
+  matched: "Matched",
+  won: "Won",
+  backup: "Backup",
+  charged: "Charged",
+  delivered: "Picked Up",
+  declined: "Declined",
+  disputed: "Disputed",
+};
 
 export default function WonCars() {
   const [rows, setRows] = useState<any[] | null>(null);
@@ -47,6 +58,48 @@ export default function WonCars() {
       reload();
     } catch (e: unknown) {
       setErr((e as Error)?.message ?? "decline failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function markPickedUp(matchId: number, bidCents: number, vehicle: string) {
+    const bid = (bidCents / 100).toFixed(2);
+    if (
+      !confirm(
+        `Mark ${vehicle} as picked up?\n\n` +
+          `Your card on file will be charged the finder fee ` +
+          `(your bid $${bid} minus the seller's cash offer).\n\n` +
+          `The match will move to the Picked Up tab.`
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      const r = await buyerApi.markPickedUp(matchId);
+      if (r?.charge_status === "paid") {
+        alert(`Picked up. Card charged $${(r.spread_cents / 100).toFixed(2)}.`);
+      } else if (r?.charge_status === "declined") {
+        alert(
+          `Picked up — BUT card was declined ($${(r.spread_cents / 100).toFixed(2)}). ` +
+            `Matching has been paused on your account until you update your card.`
+        );
+      } else if (r?.stub_mode) {
+        alert(
+          `Picked up. Invoice posted ($${(r.spread_cents / 100).toFixed(2)}). ` +
+            `Stripe is not live yet — payment will reconcile when it goes live.`
+        );
+      } else {
+        alert(`Picked up. Invoice #${r?.invoice_id}.`);
+      }
+      reload();
+    } catch (e: unknown) {
+      const msg = (e as Error)?.message ?? "mark-picked-up failed";
+      if (msg.includes("no_card_on_file")) {
+        alert("Add a payment method on the Settings page before completing pickups.");
+      } else {
+        setErr(msg);
+      }
     } finally {
       setBusy(false);
     }
@@ -114,20 +167,38 @@ export default function WonCars() {
                     </div>
                   </td>
                   <td className="p-3">${(r.bid_cents / 100).toFixed(0)}</td>
-                  <td className="p-3 capitalize">{r.status}</td>
+                  <td className="p-3">{STATUS_LABEL[r.status] ?? r.status}</td>
                   <td className="p-3 text-xs text-slate-600">
                     {r.created_at ? new Date(r.created_at).toLocaleString() : ""}
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 space-x-2 whitespace-nowrap">
                     {r.status === "won" && (
-                      <Button
-                        variant="outline"
-                        size="default"
-                        onClick={() => decline(r.match_id)}
-                        disabled={busy}
-                      >
-                        Decline
-                      </Button>
+                      <>
+                        <Button
+                          variant="outline"
+                          size="default"
+                          onClick={() => decline(r.match_id)}
+                          disabled={busy}
+                        >
+                          Decline
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="default"
+                          className="bg-emerald-600 hover:bg-emerald-700"
+                          onClick={() =>
+                            markPickedUp(
+                              r.match_id,
+                              r.bid_cents,
+                              `${r.year || ""} ${r.make || ""} ${r.model || ""}`.trim() ||
+                                `match #${r.match_id}`
+                            )
+                          }
+                          disabled={busy}
+                        >
+                          Mark Picked Up
+                        </Button>
+                      </>
                     )}
                   </td>
                 </tr>
