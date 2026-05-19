@@ -45,6 +45,7 @@ interface BidRuleResponse {
   weekly_budget_cents?: number | null;
   pickup_paid_by?: string;
   priority?: number;
+  notification_preference?: string[] | null;
   make_ids?: number[] | null;
   model_ids?: number[] | null;
   require_runs?: boolean | null;
@@ -72,6 +73,7 @@ interface FormState {
   weekly_budget_dollars: string;
   pickup_paid_by: string;
   priority: number;
+  notification_preference: string[];
   require_runs: boolean | null;
   require_starts: boolean | null;
   min_wheels: null | 2 | 4;
@@ -149,6 +151,7 @@ export default function EditBidRule() {
     weekly_budget_dollars: "",
     pickup_paid_by: "buyer",
     priority: 0,
+    notification_preference: ["telegram"],
     require_runs: null,
     require_starts: null,
     min_wheels: null,
@@ -189,6 +192,9 @@ export default function EditBidRule() {
               : "",
           pickup_paid_by: r.pickup_paid_by ?? "buyer",
           priority: r.priority ?? 0,
+          notification_preference: (r.notification_preference ?? ["telegram"]).filter(
+            (c): c is string => typeof c === "string",
+          ),
           require_runs: r.require_runs ?? null,
           require_starts: r.require_starts ?? null,
           min_wheels: (r.min_wheels === 2 || r.min_wheels === 4 ? r.min_wheels : null),
@@ -264,6 +270,9 @@ export default function EditBidRule() {
           : null,
         pickup_paid_by: form.pickup_paid_by,
         priority: form.priority,
+        notification_preference: form.notification_preference.length
+          ? form.notification_preference
+          : null,
         make_ids: pickedMakes.length ? pickedMakes.map((m) => m.id) : null,
         model_ids: pickedModels.length ? pickedModels.map((m) => m.id) : null,
         require_runs: form.require_runs,
@@ -324,14 +333,82 @@ export default function EditBidRule() {
             onChange={(e) => setForm({ ...form, bid_dollars: e.target.value })}
           />
         </div>
-        <div className="flex items-center gap-2">
-          <input
-            id="active"
-            type="checkbox"
-            checked={form.active}
-            onChange={(e) => setForm({ ...form, active: e.target.checked })}
-          />
-          <label htmlFor="active">Active</label>
+        <div className="flex items-center gap-3">
+          <Label className="mb-0">Status</Label>
+          <button
+            type="button"
+            onClick={() => setForm({ ...form, active: !form.active })}
+            aria-pressed={form.active}
+            className={`px-4 py-1 rounded border text-sm font-semibold ${
+              form.active
+                ? "bg-emerald-600 text-white border-emerald-700"
+                : "bg-slate-200 text-slate-700 border-slate-300"
+            }`}
+          >
+            {form.active ? "Active" : "Paused"}
+          </button>
+        </div>
+
+        <div>
+          <Label>Priority</Label>
+          <div className="flex gap-2 mt-1">
+            {([
+              { value: 0, label: "Off" },
+              { value: 1, label: "Low" },
+              { value: 5, label: "Med" },
+              { value: 10, label: "High" },
+            ] as Array<{ value: number; label: string }>).map((p) => (
+              <button
+                type="button"
+                key={p.value}
+                onClick={() => setForm({ ...form, priority: p.value })}
+                className={`px-3 py-1 rounded border text-sm ${
+                  form.priority === p.value
+                    ? "bg-emerald-600 text-white border-emerald-700"
+                    : "bg-white text-slate-700"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Higher priority rules win ties when more than one rule matches an offer.
+          </p>
+        </div>
+
+        <div>
+          <Label>Notification channels</Label>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {(["telegram", "email", "sms"] as const).map((ch) => {
+              const checked = form.notification_preference.includes(ch);
+              return (
+                <button
+                  type="button"
+                  key={ch}
+                  role="checkbox"
+                  aria-checked={checked}
+                  onClick={() => {
+                    const next = checked
+                      ? form.notification_preference.filter((c) => c !== ch)
+                      : [...form.notification_preference, ch];
+                    setForm({ ...form, notification_preference: next });
+                  }}
+                  className={`px-3 py-1 rounded border text-sm flex items-center gap-1 ${
+                    checked
+                      ? "bg-emerald-600 text-white border-emerald-700"
+                      : "bg-white text-slate-700"
+                  }`}
+                >
+                  <span aria-hidden>{checked ? "☑" : "☐"}</span>
+                  {ch}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Pick where matches for this rule should ping you. Defaults to Telegram.
+          </p>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
