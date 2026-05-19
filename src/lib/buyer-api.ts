@@ -99,6 +99,8 @@ export const buyerApi = {
     _fetch(`/api/buyers/bid-rules/${id}`, { method: "PATCH", body: JSON.stringify(patch) }).then(_json),
   deleteRule: (id: number) =>
     _fetch(`/api/buyers/bid-rules/${id}`, { method: "DELETE" }).then(_json),
+  cloneRule: (id: number) =>
+    _fetch(`/api/buyers/bid-rules/${id}/clone`, { method: "POST" }).then(_json),
   testRule: (id: number) =>
     _fetch(`/api/buyers/bid-rules/${id}/test`, { method: "POST" }).then(_json),
   wonCars: (status?: string) =>
