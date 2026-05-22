@@ -61,6 +61,14 @@ function YesNo({ label, value, onChange }: {
   );
 }
 
+function isValidPhone(phone: string) {
+  return phone.replace(/\D/g, "").length >= 10;
+}
+
+function isValidEmail(email: string) {
+  return /\S+@\S+\.\S+/.test(email.trim());
+}
+
 export default function QuoteWizard() {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -75,6 +83,10 @@ export default function QuoteWizard() {
     has_catalytic: null, has_battery: null, has_keys: null,
     damage_zones: EMPTY_DAMAGE,
     zip_code: "", pickup_address: "", phone: "", email: "",
+  });
+  const [touched, setTouched] = useState<{ phone: boolean; email: boolean }>({
+    phone: false,
+    email: false,
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -136,9 +148,16 @@ export default function QuoteWizard() {
                            && form.has_battery !== null && form.has_keys !== null;
     if (step === 4) return true;
     if (step === 5) return form.zip_code.length >= 5;
-    if (step === 6) return form.phone.length >= 10 && /\S+@\S+\.\S+/.test(form.email);
+    if (step === 6) return isValidPhone(form.phone) && isValidEmail(form.email);
     return false;
   })();
+
+  const phoneError = touched.phone && !isValidPhone(form.phone)
+    ? (form.phone.trim() === "" ? "Phone is required" : "Enter a valid 10-digit phone number")
+    : null;
+  const emailError = touched.email && !isValidEmail(form.email)
+    ? (form.email.trim() === "" ? "Email is required" : "Enter a valid email address")
+    : null;
 
   return (
     <main className="min-h-screen bg-slate-50 p-6">
@@ -259,12 +278,52 @@ export default function QuoteWizard() {
 
         {step === 6 && (
           <div className="space-y-4">
-            <Label>Phone</Label>
-            <Input value={form.phone} onChange={(e) =>
-              setForm({ ...form, phone: e.target.value })} />
-            <Label>Email</Label>
-            <Input value={form.email} onChange={(e) =>
-              setForm({ ...form, email: e.target.value })} />
+            <div>
+              <Label htmlFor="phone">
+                Phone <span className="text-red-600">*</span>
+              </Label>
+              <Input
+                id="phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                required
+                aria-required="true"
+                aria-invalid={phoneError ? "true" : "false"}
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                onBlur={() => setTouched((t) => ({ ...t, phone: true }))}
+                placeholder="(555) 123-4567"
+              />
+              {phoneError && (
+                <p className="text-red-600 text-sm mt-1">{phoneError}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="email">
+                Email <span className="text-red-600">*</span>
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                required
+                aria-required="true"
+                aria-invalid={emailError ? "true" : "false"}
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                placeholder="you@example.com"
+              />
+              {emailError && (
+                <p className="text-red-600 text-sm mt-1">{emailError}</p>
+              )}
+            </div>
+            <p className="text-xs text-slate-500">
+              We&apos;ll text your offer to your phone and email you the
+              confirmation. Both are required.
+            </p>
           </div>
         )}
 

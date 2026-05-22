@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://api.dankdash.ai";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
 
 export type VehicleSelection = {
   year: number | null;
