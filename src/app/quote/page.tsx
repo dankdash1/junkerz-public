@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { BadgeDollarSign, ArrowLeft, Check, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +11,18 @@ import VehiclePicker, { VehicleSelection } from "@/components/VehiclePicker";
 import ConditionGrid, { DamageZones } from "@/components/ConditionGrid";
 
 const STEPS = ["vehicle", "title", "drivability", "components", "damage", "zip", "contact"] as const;
+
+const STEP_META: { title: string; subtitle: string }[] = [
+  { title: "What are we buying?", subtitle: "Pick your vehicle — VIN and mileage are optional." },
+  { title: "Do you have the title?", subtitle: "No title is often fine — just let us know." },
+  { title: "Does it run?", subtitle: "Be honest — dead cars are still worth real cash." },
+  { title: "What's still on it?", subtitle: "Engine, transmission and key parts drive the offer." },
+  { title: "Any damage?", subtitle: "Tap any areas that are wrecked or missing." },
+  { title: "Where is it?", subtitle: "We tow from your location — always free." },
+  { title: "Where do we send the offer?", subtitle: "We'll text and email your guaranteed number." },
+];
+
+const mono = "font-[family-name:var(--font-geist-mono)]";
 
 type Form = {
   vehicle: VehicleSelection;
@@ -48,15 +62,47 @@ function YesNo({ label, value, onChange }: {
 }) {
   return (
     <div>
-      <Label>{label}</Label>
-      <div className="flex gap-2 mt-1">
-        <Button
-          variant={value === true ? "default" : "outline"}
-          onClick={() => onChange(true)}>Yes</Button>
-        <Button
-          variant={value === false ? "default" : "outline"}
-          onClick={() => onChange(false)}>No</Button>
+      <Label className="text-sm font-medium text-zinc-700">{label}</Label>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        {[true, false].map((opt) => (
+          <button
+            key={String(opt)}
+            type="button"
+            onClick={() => onChange(opt)}
+            className={`flex h-11 items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold transition
+              ${value === opt
+                ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"}`}
+          >
+            {value === opt && <Check className="h-4 w-4" />}
+            {opt ? "Yes" : "No"}
+          </button>
+        ))}
       </div>
+    </div>
+  );
+}
+
+function ChoiceRow({ options, value, onChange }: {
+  options: readonly string[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {options.map((s) => (
+        <button
+          key={s}
+          type="button"
+          onClick={() => onChange(s)}
+          className={`h-11 rounded-xl border text-sm font-semibold capitalize transition
+            ${value === s
+              ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+              : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"}`}
+        >
+          {s}
+        </button>
+      ))}
     </div>
   );
 }
@@ -159,190 +205,240 @@ export default function QuoteWizard() {
     ? (form.email.trim() === "" ? "Email is required" : "Enter a valid email address")
     : null;
 
+  const pct = Math.round(((step + 1) / STEPS.length) * 100);
+  const meta = STEP_META[step];
+
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
-      <div className="max-w-md mx-auto pt-12">
-        <h1 className="text-2xl font-bold mb-6">
-          Step {step + 1} of {STEPS.length}
-        </h1>
+    <main className="min-h-screen bg-zinc-50 text-zinc-900">
+      {/* header */}
+      <header className="border-b border-zinc-200 bg-white">
+        <div className="mx-auto flex h-16 max-w-lg items-center justify-between px-5">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="grid h-8 w-8 -rotate-6 place-items-center rounded-lg bg-emerald-600 text-white">
+              <BadgeDollarSign className="h-5 w-5" />
+            </span>
+            <span className="text-lg font-extrabold tracking-tight">Junkerz</span>
+          </Link>
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+            <ShieldCheck className="h-4 w-4 text-emerald-600" /> Guaranteed offer
+          </span>
+        </div>
+      </header>
 
-        {step === 0 && (
-          <div className="space-y-4">
-            <VehiclePicker
-              value={form.vehicle}
-              onChange={(v) => setForm({ ...form, vehicle: v })}
+      <div className="mx-auto max-w-lg px-5 pb-16 pt-8">
+        {/* progress */}
+        <div className="mb-8">
+          <div className="mb-2 flex items-center justify-between">
+            <span className={`text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700 ${mono}`}>
+              Step {step + 1} of {STEPS.length}
+            </span>
+            <span className={`text-xs font-semibold text-zinc-400 ${mono}`}>{pct}%</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-200">
+            <div
+              className="h-full rounded-full bg-emerald-600 transition-all duration-300"
+              style={{ width: `${pct}%` }}
             />
-            <div>
-              <Label>VIN (optional)</Label>
-              <Input value={form.vin} onChange={(e) =>
-                setForm({ ...form, vin: e.target.value })} />
-            </div>
-            <div>
-              <Label>Mileage (optional)</Label>
-              <Input type="number" value={form.mileage} onChange={(e) =>
-                setForm({ ...form, mileage: e.target.value })} />
-            </div>
           </div>
-        )}
+        </div>
 
-        {step === 1 && (
-          <div className="space-y-4">
-            <Label>Title Status</Label>
-            {["clean", "salvage", "rebuilt", "no_title"].map((t) => (
-              <Button
-                key={t}
-                variant={form.title_status === t ? "default" : "outline"}
-                className="w-full"
-                onClick={() => setForm({ ...form, title_status: t })}
-              >{t.replace("_", " ")}</Button>
-            ))}
-          </div>
-        )}
+        {/* step heading */}
+        <h1 className="text-balance text-2xl font-extrabold tracking-tight">{meta.title}</h1>
+        <p className="mt-1.5 text-sm text-zinc-500">{meta.subtitle}</p>
 
-        {step === 2 && (
-          <div className="space-y-4">
-            <YesNo label="Does it run/drive?"
-              value={form.runs}
-              onChange={(v) => setForm({ ...form, runs: v })} />
-            <YesNo label="Does it start?"
-              value={form.starts}
-              onChange={(v) => setForm({ ...form, starts: v })} />
-            <YesNo label="All four wheels attached?"
-              value={form.all_wheels_attached}
-              onChange={(v) => setForm({ ...form, all_wheels_attached: v })} />
-            <YesNo label="All tires inflated?"
-              value={form.all_tires_inflated}
-              onChange={(v) => setForm({ ...form, all_tires_inflated: v })} />
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="space-y-4">
-            <div>
-              <Label>Engine</Label>
-              <div className="flex gap-2 mt-1">
-                {(["intact","partial","missing"] as const).map((s) => (
-                  <Button key={s}
-                    variant={form.engine_state === s ? "default" : "outline"}
-                    onClick={() => setForm({ ...form, engine_state: s })}>{s}</Button>
-                ))}
+        {/* card */}
+        <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
+          {step === 0 && (
+            <div className="space-y-4">
+              <VehiclePicker
+                value={form.vehicle}
+                onChange={(v) => setForm({ ...form, vehicle: v })}
+              />
+              <div>
+                <Label>VIN (optional)</Label>
+                <Input value={form.vin} onChange={(e) =>
+                  setForm({ ...form, vin: e.target.value })} />
+              </div>
+              <div>
+                <Label>Mileage (optional)</Label>
+                <Input type="number" value={form.mileage} onChange={(e) =>
+                  setForm({ ...form, mileage: e.target.value })} />
               </div>
             </div>
-            <div>
-              <Label>Transmission</Label>
-              <div className="flex gap-2 mt-1">
-                {(["intact","partial","missing"] as const).map((s) => (
-                  <Button key={s}
-                    variant={form.transmission_state === s ? "default" : "outline"}
-                    onClick={() => setForm({ ...form, transmission_state: s })}>{s}</Button>
-                ))}
+          )}
+
+          {step === 1 && (
+            <div className="space-y-2.5">
+              {["clean", "salvage", "rebuilt", "no_title"].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setForm({ ...form, title_status: t })}
+                  className={`flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left text-sm font-semibold capitalize transition
+                    ${form.title_status === t
+                      ? "border-emerald-600 bg-emerald-50 text-emerald-800"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"}`}
+                >
+                  {t.replace("_", " ")}
+                  {form.title_status === t && <Check className="h-5 w-5 text-emerald-600" />}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-5">
+              <YesNo label="Does it run/drive?"
+                value={form.runs}
+                onChange={(v) => setForm({ ...form, runs: v })} />
+              <YesNo label="Does it start?"
+                value={form.starts}
+                onChange={(v) => setForm({ ...form, starts: v })} />
+              <YesNo label="All four wheels attached?"
+                value={form.all_wheels_attached}
+                onChange={(v) => setForm({ ...form, all_wheels_attached: v })} />
+              <YesNo label="All tires inflated?"
+                value={form.all_tires_inflated}
+                onChange={(v) => setForm({ ...form, all_tires_inflated: v })} />
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-5">
+              <div>
+                <Label className="text-sm font-medium text-zinc-700">Engine</Label>
+                <div className="mt-2">
+                  <ChoiceRow options={["intact", "partial", "missing"] as const}
+                    value={form.engine_state}
+                    onChange={(s) => setForm({ ...form, engine_state: s as Form["engine_state"] })} />
+                </div>
               </div>
+              <div>
+                <Label className="text-sm font-medium text-zinc-700">Transmission</Label>
+                <div className="mt-2">
+                  <ChoiceRow options={["intact", "partial", "missing"] as const}
+                    value={form.transmission_state}
+                    onChange={(s) => setForm({ ...form, transmission_state: s as Form["transmission_state"] })} />
+                </div>
+              </div>
+              <YesNo label="Catalytic converter installed?"
+                value={form.has_catalytic}
+                onChange={(v) => setForm({ ...form, has_catalytic: v })} />
+              <YesNo label="Battery present?"
+                value={form.has_battery}
+                onChange={(v) => setForm({ ...form, has_battery: v })} />
+              <YesNo label="Keys available?"
+                value={form.has_keys}
+                onChange={(v) => setForm({ ...form, has_keys: v })} />
             </div>
-            <YesNo label="Catalytic converter installed?"
-              value={form.has_catalytic}
-              onChange={(v) => setForm({ ...form, has_catalytic: v })} />
-            <YesNo label="Battery present?"
-              value={form.has_battery}
-              onChange={(v) => setForm({ ...form, has_battery: v })} />
-            <YesNo label="Keys available?"
-              value={form.has_keys}
-              onChange={(v) => setForm({ ...form, has_keys: v })} />
-          </div>
-        )}
+          )}
 
-        {step === 4 && (
-          <ConditionGrid
-            value={form.damage_zones}
-            onChange={(v) => setForm({ ...form, damage_zones: v })}
-          />
-        )}
-
-        {step === 5 && (
-          <div className="space-y-4">
-            <Label>Zip code</Label>
-            <Input value={form.zip_code} onChange={(e) =>
-              setForm({ ...form, zip_code: e.target.value })} />
-            <Label>Pickup address (optional)</Label>
-            <Input
-              value={form.pickup_address}
-              onChange={(e) =>
-                setForm({ ...form, pickup_address: e.target.value })
-              }
-              placeholder="Street, city, state — we'll confirm later"
+          {step === 4 && (
+            <ConditionGrid
+              value={form.damage_zones}
+              onChange={(v) => setForm({ ...form, damage_zones: v })}
             />
-            <p className="text-xs text-slate-500">
-              You can leave this blank and we&apos;ll ask when we schedule pickup.
-            </p>
-          </div>
-        )}
+          )}
 
-        {step === 6 && (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="phone">
-                Phone <span className="text-red-600">*</span>
-              </Label>
-              <Input
-                id="phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                required
-                aria-required="true"
-                aria-invalid={phoneError ? "true" : "false"}
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                onBlur={() => setTouched((t) => ({ ...t, phone: true }))}
-                placeholder="(555) 123-4567"
-              />
-              {phoneError && (
-                <p className="text-red-600 text-sm mt-1">{phoneError}</p>
-              )}
+          {step === 5 && (
+            <div className="space-y-4">
+              <div>
+                <Label>Zip code</Label>
+                <Input value={form.zip_code} onChange={(e) =>
+                  setForm({ ...form, zip_code: e.target.value })} />
+              </div>
+              <div>
+                <Label>Pickup address (optional)</Label>
+                <Input
+                  value={form.pickup_address}
+                  onChange={(e) =>
+                    setForm({ ...form, pickup_address: e.target.value })
+                  }
+                  placeholder="Street, city, state — we'll confirm later"
+                />
+              </div>
+              <p className="text-xs text-zinc-500">
+                You can leave this blank and we&apos;ll ask when we schedule pickup.
+              </p>
             </div>
-            <div>
-              <Label htmlFor="email">
-                Email <span className="text-red-600">*</span>
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                required
-                aria-required="true"
-                aria-invalid={emailError ? "true" : "false"}
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-                placeholder="you@example.com"
-              />
-              {emailError && (
-                <p className="text-red-600 text-sm mt-1">{emailError}</p>
-              )}
+          )}
+
+          {step === 6 && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="phone">
+                  Phone <span className="text-red-600">*</span>
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  required
+                  aria-required="true"
+                  aria-invalid={phoneError ? "true" : "false"}
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  onBlur={() => setTouched((t) => ({ ...t, phone: true }))}
+                  placeholder="(555) 123-4567"
+                />
+                {phoneError && (
+                  <p className="text-red-600 text-sm mt-1">{phoneError}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="email">
+                  Email <span className="text-red-600">*</span>
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  required
+                  aria-required="true"
+                  aria-invalid={emailError ? "true" : "false"}
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                  placeholder="you@example.com"
+                />
+                {emailError && (
+                  <p className="text-red-600 text-sm mt-1">{emailError}</p>
+                )}
+              </div>
+              <p className="text-xs text-zinc-500">
+                We&apos;ll text your offer to your phone and email you the
+                confirmation. Both are required.
+              </p>
             </div>
-            <p className="text-xs text-slate-500">
-              We&apos;ll text your offer to your phone and email you the
-              confirmation. Both are required.
-            </p>
-          </div>
-        )}
+          )}
+        </div>
 
-        {error && <p className="text-red-600 mt-4">{error}</p>}
+        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-        <div className="flex gap-2 mt-8">
+        {/* nav */}
+        <div className="mt-6 flex gap-3">
           {step > 0 && (
-            <Button variant="outline" onClick={() => setStep((s) => s - 1)}>Back</Button>
+            <Button variant="outline" className="h-12 gap-1.5 px-4"
+              onClick={() => setStep((s) => s - 1)}>
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
           )}
           {step < STEPS.length - 1 ? (
-            <Button className="flex-1" disabled={!canAdvance}
-              onClick={() => setStep((s) => s + 1)}>Next</Button>
+            <Button className="h-12 flex-1 text-base font-semibold" disabled={!canAdvance}
+              onClick={() => setStep((s) => s + 1)}>Continue</Button>
           ) : (
-            <Button className="flex-1" disabled={!canAdvance || submitting}
+            <Button className="h-12 flex-1 text-base font-bold" disabled={!canAdvance || submitting}
               onClick={submit}>
-              {submitting ? "Getting offer..." : "Get my offer"}
+              {submitting ? "Getting your offer…" : "Get my offer"}
             </Button>
           )}
         </div>
+
+        <p className="mt-5 text-center text-xs text-zinc-400">
+          Free towing · No fees · Paid at pickup
+        </p>
       </div>
     </main>
   );
