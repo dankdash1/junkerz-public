@@ -6,8 +6,54 @@ import {
 import { Button } from "@/components/ui/button";
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
 
-export default function Landing() {
+// Editable-in-admin content (admin Website module → Junkerz "home" page).
+// These are the fallback defaults; whatever is saved server-side overrides them.
+type HomeContent = {
+  hero_eyebrow: string;
+  hero_title: string;
+  hero_subtitle: string;
+  hero_cta: string;
+  phone: string;
+  sample_offer_amount: string;
+  sample_offer_vehicle: string;
+};
+
+const DEFAULTS: HomeContent = {
+  hero_eyebrow: "Cash for junk cars · Madill, OK & nationwide",
+  hero_title: "Get real cash for your junk car — as soon as today.",
+  hero_subtitle:
+    "Running or not, wrecked or dead, title or no title. Tell us about it and get a guaranteed offer — free towing, paid on the spot.",
+  hero_cta: "Get my instant offer",
+  phone: "(580) 555-0142",
+  sample_offer_amount: "620",
+  sample_offer_vehicle: "2012 Toyota Camry · Madill, OK",
+};
+
+async function getContent(): Promise<HomeContent> {
+  try {
+    const res = await fetch(`${API_BASE}/api/public/junkerz/homepage`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return DEFAULTS;
+    const data = await res.json();
+    const c = (data && data.content) || {};
+    // Merge saved values over defaults; ignore blank/missing fields.
+    const merged = { ...DEFAULTS };
+    (Object.keys(DEFAULTS) as (keyof HomeContent)[]).forEach((k) => {
+      if (typeof c[k] === "string" && c[k].trim() !== "") merged[k] = c[k];
+    });
+    return merged;
+  } catch {
+    return DEFAULTS;
+  }
+}
+
+export default async function Landing() {
+  const c = await getContent();
+  const telHref = `tel:+1${c.phone.replace(/\D/g, "")}`;
   return (
     <main className="min-h-screen bg-white text-zinc-900">
       {/* header */}
@@ -20,9 +66,9 @@ export default function Landing() {
             <span className="text-xl font-extrabold tracking-tight">Junkerz</span>
           </div>
           <div className="flex items-center gap-3">
-            <a href="tel:+15805550142"
+            <a href={telHref}
                className={`hidden items-center gap-1.5 text-sm font-semibold text-zinc-700 hover:text-zinc-900 sm:flex ${mono}`}>
-              <Phone className="h-4 w-4" /> (580) 555-0142
+              <Phone className="h-4 w-4" /> {c.phone}
             </a>
             <Link href="/quote">
               <Button className="h-10 px-4 font-semibold">Get my offer</Button>
@@ -37,23 +83,21 @@ export default function Landing() {
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-16 md:grid-cols-[1.05fr_.95fr] md:py-24">
           <div>
             <p className={`text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 ${mono}`}>
-              Cash for junk cars · Madill, OK &amp; nationwide
+              {c.hero_eyebrow}
             </p>
             <h1 className="mt-4 text-balance text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
-              Get real cash for your junk car — as soon as{" "}
-              <span className="text-emerald-600">today.</span>
+              {c.hero_title}
             </h1>
             <p className="mt-5 max-w-lg text-lg text-zinc-600">
-              Running or not, wrecked or dead, title or no title. Tell us about
-              it and get a guaranteed offer — free towing, paid on the spot.
+              {c.hero_subtitle}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/quote">
                 <Button className="h-14 w-full gap-2 px-8 text-base font-bold sm:w-auto">
-                  Get my instant offer <ArrowRight className="h-5 w-5" />
+                  {c.hero_cta} <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <a href="tel:+15805550142">
+              <a href={telHref}>
                 <Button variant="outline"
                   className="h-14 w-full gap-2 px-6 text-base font-semibold sm:w-auto">
                   <Phone className="h-4 w-4" /> Call us
@@ -84,9 +128,9 @@ export default function Landing() {
                 </span>
               </div>
               <div className={`mt-3 text-6xl font-bold tracking-tight tabular-nums ${mono}`}>
-                <span className="align-top text-3xl text-emerald-600">$</span>620
+                <span className="align-top text-3xl text-emerald-600">$</span>{c.sample_offer_amount}
               </div>
-              <p className="mt-1 text-sm text-zinc-500">2012 Toyota Camry · Madill, OK</p>
+              <p className="mt-1 text-sm text-zinc-500">{c.sample_offer_vehicle}</p>
               <div className="my-5 border-t border-dashed border-zinc-200" />
               <div className="grid grid-cols-3 gap-3 text-center">
                 {[["FREE", "towing"], ["$0", "fees"], ["Today", "pickup"]].map(
@@ -215,7 +259,7 @@ export default function Landing() {
             </span>
             Junkerz
           </div>
-          <div>Cash for junk cars · Madill, OK · (580) 555-0142</div>
+          <div>Cash for junk cars · Madill, OK · {c.phone}</div>
           <a href="mailto:hello@junkerz.com" className="underline hover:text-zinc-800">
             hello@junkerz.com
           </a>
