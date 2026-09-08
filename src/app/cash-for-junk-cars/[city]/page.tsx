@@ -88,7 +88,7 @@ export default async function CityPage(
       {/* hero — plain and centred */}
       <section className="border-b border-zinc-100">
         <div className="mx-auto max-w-3xl px-5 py-14 text-center md:py-20">
-          <p className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 ${mono}`}>
+          <p className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-brand-700 ${mono}`}>
             <MapPin className="h-3.5 w-3.5" /> {c.name} · {c.county}
           </p>
           <h1 className="mx-auto mt-4 max-w-2xl text-balance text-4xl font-extrabold leading-[1.06] tracking-tight sm:text-5xl">
@@ -135,7 +135,7 @@ export default async function CityPage(
                 `Vehicles abandoned on your property anywhere in ${c.county}`,
               ].map((t) => (
                 <li key={t} className="flex gap-3">
-                  <Check className="mt-1 h-5 w-5 shrink-0 text-emerald-600" />
+                  <Check className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
                   <span>{t}</span>
                 </li>
               ))}
@@ -170,7 +170,7 @@ export default async function CityPage(
                 [`We come to ${c.name}`, "You pick the window. We turn up, hand over the cash, do the paperwork and tow it away free."],
               ].map(([t, b], i) => (
                 <li key={t} className="flex gap-4">
-                  <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full bg-emerald-600 text-sm font-bold text-white ${mono}`}>
+                  <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-600 text-sm font-bold text-white ${mono}`}>
                     {i + 1}
                   </span>
                   <div>
@@ -195,17 +195,17 @@ export default async function CityPage(
           </section>
         </div>
 
-        <div className="mt-12 rounded-3xl bg-emerald-600 px-8 py-10 text-white">
+        <div className="mt-12 rounded-3xl bg-brand-600 px-8 py-10 text-white">
           <h2 className="text-balance text-2xl font-extrabold tracking-tight sm:text-3xl">
             Get your {c.name} offer today
           </h2>
-          <p className="mt-3 max-w-xl text-emerald-50">
+          <p className="mt-3 max-w-xl text-brand-50">
             One minute for a guaranteed number. Free towing across {c.name} and{" "}
             {c.county}, cash in your hand at pickup.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link href="/quote">
-              <Button className="h-14 w-full gap-2 bg-white px-8 text-base font-bold text-emerald-700 hover:bg-emerald-50 sm:w-auto">
+              <Button className="h-14 w-full gap-2 bg-white px-8 text-base font-bold text-brand-700 hover:bg-brand-50 sm:w-auto">
                 Get my offer <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
@@ -225,7 +225,7 @@ export default async function CityPage(
           <div className="mt-4 flex flex-wrap gap-2">
             {others.map((x) => (
               <Link key={x.slug} href={`/cash-for-junk-cars/${x.slug}`}
-                className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-700 hover:border-emerald-600 hover:text-emerald-700">
+                className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-700 hover:border-brand-600 hover:text-brand-700">
                 {x.name}
               </Link>
             ))}

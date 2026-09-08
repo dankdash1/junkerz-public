@@ -59,7 +59,7 @@ export default function CarroViejos() {
       <script type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
+      <div className="rounded-2xl border border-brand-200 bg-brand-50 p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="font-bold text-zinc-900">¿Listo para vender?</p>
@@ -103,7 +103,7 @@ export default function CarroViejos() {
               "Camionetas y vans de trabajo que ya no sirven",
             ].map((t) => (
               <li key={t} className="flex gap-3">
-                <Check className="mt-1 h-5 w-5 shrink-0 text-emerald-600" />
+                <Check className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
                 <span>{t}</span>
               </li>
             ))}
@@ -125,8 +125,8 @@ export default function CarroViejos() {
             ].map(({ icon: Icon, n, t, b }) => (
               <div key={n} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
                 <div className="flex items-center justify-between">
-                  <Icon className="h-6 w-6 text-emerald-600" />
-                  <span className={`text-sm font-bold text-emerald-700/70 ${mono}`}>{n}</span>
+                  <Icon className="h-6 w-6 text-brand-600" />
+                  <span className={`text-sm font-bold text-brand-700/70 ${mono}`}>{n}</span>
                 </div>
                 <h3 className="mt-3 font-bold text-zinc-900">{t}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">{b}</p>
@@ -161,7 +161,7 @@ export default function CarroViejos() {
               <details key={q} className="group py-4">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-semibold text-zinc-900 [&::-webkit-details-marker]:hidden">
                   {q}
-                  <span className={`text-2xl leading-none text-emerald-600 transition-transform group-open:rotate-45 ${mono}`}>+</span>
+                  <span className={`text-2xl leading-none text-brand-600 transition-transform group-open:rotate-45 ${mono}`}>+</span>
                 </summary>
                 <p className="mt-2.5 text-zinc-600">{a}</p>
               </details>
@@ -177,7 +177,7 @@ export default function CarroViejos() {
           <div className="mt-4 flex flex-wrap gap-2">
             {CITIES.map((x) => (
               <Link key={x.slug} href={`/cash-for-junk-cars/${x.slug}`}
-                className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-700 hover:border-emerald-600 hover:text-emerald-700">
+                className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-700 hover:border-brand-600 hover:text-brand-700">
                 {x.name}
               </Link>
             ))}
@@ -185,17 +185,17 @@ export default function CarroViejos() {
         </section>
       </div>
 
-      <div className="mt-12 rounded-3xl bg-emerald-600 px-8 py-12 text-white">
+      <div className="mt-12 rounded-3xl bg-brand-600 px-8 py-12 text-white">
         <h2 className="text-balance text-3xl font-extrabold tracking-tight">
           Reciba su oferta hoy
         </h2>
-        <p className="mt-3 max-w-xl text-emerald-50">
+        <p className="mt-3 max-w-xl text-brand-50">
           Un minuto en línea y sabrá cuánto vale su carro. Sin compromiso, sin costo
           de grúa y con pago en efectivo el día que lo recogemos.
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <Link href="/quote">
-            <Button className="h-14 w-full gap-2 bg-white px-8 text-base font-bold text-emerald-700 hover:bg-emerald-50 sm:w-auto">
+            <Button className="h-14 w-full gap-2 bg-white px-8 text-base font-bold text-brand-700 hover:bg-brand-50 sm:w-auto">
               Ver mi oferta <ArrowRight className="h-5 w-5" />
             </Button>
           </Link>

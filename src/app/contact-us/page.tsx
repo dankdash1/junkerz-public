@@ -23,8 +23,8 @@ export default function ContactUs() {
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <a href={SITE.phoneHref}
-           className="group rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-emerald-600">
-          <Phone className="h-6 w-6 text-emerald-600" />
+           className="group rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-brand-600">
+          <Phone className="h-6 w-6 text-brand-600" />
           <h2 className="mt-3 font-bold text-zinc-900">Call us</h2>
           <p className={`mt-1 text-xl font-extrabold text-zinc-900 ${mono}`}>{SITE.phone}</p>
           <p className="mt-2 text-sm text-zinc-600">
@@ -33,8 +33,8 @@ export default function ContactUs() {
         </a>
 
         <a href={`mailto:${SITE.email}`}
-           className="group rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-emerald-600">
-          <Mail className="h-6 w-6 text-emerald-600" />
+           className="group rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-brand-600">
+          <Mail className="h-6 w-6 text-brand-600" />
           <h2 className="mt-3 font-bold text-zinc-900">Email us</h2>
           <p className="mt-1 text-lg font-bold text-zinc-900">{SITE.email}</p>
           <p className="mt-2 text-sm text-zinc-600">
@@ -43,7 +43,7 @@ export default function ContactUs() {
         </a>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-6">
-          <MapPin className="h-6 w-6 text-emerald-600" />
+          <MapPin className="h-6 w-6 text-brand-600" />
           <h2 className="mt-3 font-bold text-zinc-900">Where we are</h2>
           <p className="mt-1 text-zinc-700">
             {SITE.street}<br />{SITE.city}, {SITE.state} {SITE.postal}
@@ -54,7 +54,7 @@ export default function ContactUs() {
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-6">
-          <Clock className="h-6 w-6 text-emerald-600" />
+          <Clock className="h-6 w-6 text-brand-600" />
           <h2 className="mt-3 font-bold text-zinc-900">Hours</h2>
           <p className="mt-1 text-zinc-700">Monday to Saturday, 8am to 7pm</p>
           <p className="mt-2 text-sm text-zinc-600">
@@ -63,7 +63,7 @@ export default function ContactUs() {
         </div>
       </div>
 
-      <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
+      <div className="mt-8 rounded-2xl border border-brand-200 bg-brand-50 p-6">
         <h2 className="text-xl font-extrabold tracking-tight text-zinc-900">
           Fastest way: get the number first
         </h2>
@@ -89,7 +89,7 @@ export default function ContactUs() {
         <div className="mt-4 flex flex-wrap gap-2">
           {CITIES.map((x) => (
             <Link key={x.slug} href={`/cash-for-junk-cars/${x.slug}`}
-              className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-700 hover:border-emerald-600 hover:text-emerald-700">
+              className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-700 hover:border-brand-600 hover:text-brand-700">
               {x.name}
             </Link>
           ))}

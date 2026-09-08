@@ -47,7 +47,7 @@ export default function UnwantedCars() {
               "Something that has been sitting so long the registration lapsed years ago",
             ].map((t) => (
               <li key={t} className="flex gap-3">
-                <Check className="mt-1 h-5 w-5 shrink-0 text-emerald-600" />
+                <Check className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
                 <span>{t}</span>
               </li>
             ))}
@@ -61,7 +61,7 @@ export default function UnwantedCars() {
           <p className="mt-3">
             Start the quote online and you will have a number before you finish your
             coffee. If you would rather explain the situation to a person, call us on{" "}
-            <a href={SITE.phoneHref} className="font-semibold text-emerald-700 underline">
+            <a href={SITE.phoneHref} className="font-semibold text-brand-700 underline">
               {SITE.phone}
             </a>{" "}
             and we will walk through it with you.

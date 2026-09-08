@@ -60,7 +60,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">{me.business_name}</h1>
         <div className="flex gap-2 text-sm">
-          <a href="/buyers/marketplace" className="px-3 py-1.5 rounded bg-emerald-600 text-white hover:bg-emerald-700">
+          <a href="/buyers/marketplace" className="px-3 py-1.5 rounded bg-brand-600 text-white hover:bg-brand-700">
             Marketplace
           </a>
           <a href="/buyers/won-cars" className="px-3 py-1.5 rounded border hover:bg-slate-50">
@@ -141,7 +141,7 @@ function Step({
   return (
     <div className="flex items-center justify-between">
       <span>
-        <span className={done ? "text-emerald-600" : "text-slate-400"}>
+        <span className={done ? "text-brand-600" : "text-slate-400"}>
           {done ? "✓" : "○"}
         </span>{" "}
         {label}

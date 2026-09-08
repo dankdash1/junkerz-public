@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import type { Metadata } from "next";
 import {
   Truck, BadgeDollarSign, Phone, ClipboardList, ArrowRight,
@@ -141,10 +142,7 @@ export default async function Landing() {
       <header className="sticky top-0 z-40 border-b border-zinc-200/70 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
           <Link href="/" className="flex items-center gap-2">
-            <span className="grid h-8 w-8 -rotate-6 place-items-center rounded-lg bg-emerald-600 text-white">
-              <BadgeDollarSign className="h-5 w-5" />
-            </span>
-            <span className="text-xl font-extrabold tracking-tight">Junkerz</span>
+            <Logo height={34} priority />
           </Link>
           <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-600 lg:flex">
             <Link href="/junk-cars" className="hover:text-zinc-900">Wrecked cars</Link>
@@ -154,7 +152,7 @@ export default async function Landing() {
           </nav>
           <div className="flex items-center gap-3">
             <a href={telHref}
-               className={`hidden items-center gap-1.5 text-sm font-bold text-zinc-800 hover:text-emerald-700 sm:flex ${mono}`}>
+               className={`hidden items-center gap-1.5 text-sm font-bold text-zinc-800 hover:text-brand-700 sm:flex ${mono}`}>
               <Phone className="h-4 w-4" /> {c.phone}
             </a>
             <Link href="/quote">
@@ -167,7 +165,7 @@ export default async function Landing() {
       {/* hero — plain and centred */}
       <section className="border-b border-zinc-100">
         <div className="mx-auto max-w-3xl px-5 py-16 text-center md:py-24">
-          <p className={`text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 ${mono}`}>
+          <p className={`text-xs font-semibold uppercase tracking-[0.18em] text-brand-700 ${mono}`}>
             {c.hero_eyebrow}
           </p>
           <h1 className="mx-auto mt-4 max-w-2xl text-balance text-4xl font-extrabold leading-[1.06] tracking-tight sm:text-5xl md:text-6xl">
@@ -201,7 +199,7 @@ export default async function Landing() {
               const I = Icon as typeof Truck;
               return (
                 <li key={t as string} className="flex items-center justify-center gap-2 sm:justify-start">
-                  <I className="h-4 w-4 shrink-0 text-emerald-600" />
+                  <I className="h-4 w-4 shrink-0 text-brand-600" />
                   <span>{t as string}</span>
                 </li>
               );
@@ -213,7 +211,7 @@ export default async function Landing() {
       {/* how it works */}
       <section className="bg-zinc-950 text-white">
         <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
-          <p className={`text-xs font-semibold uppercase tracking-[0.18em] text-emerald-400 ${mono}`}>
+          <p className={`text-xs font-semibold uppercase tracking-[0.18em] text-brand-400 ${mono}`}>
             How it works
           </p>
           <h2 className="mt-3 max-w-xl text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
@@ -230,8 +228,8 @@ export default async function Landing() {
             ].map(({ icon: Icon, n, t, b }) => (
               <div key={n} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">
                 <div className="flex items-center justify-between">
-                  <Icon className="h-7 w-7 text-emerald-400" />
-                  <span className={`text-sm font-semibold text-emerald-400/80 ${mono}`}>{n}</span>
+                  <Icon className="h-7 w-7 text-brand-400" />
+                  <span className={`text-sm font-semibold text-brand-400/80 ${mono}`}>{n}</span>
                 </div>
                 <h3 className="mt-4 text-lg font-bold">{t}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-zinc-400">{b}</p>
@@ -263,7 +261,7 @@ export default async function Landing() {
             const I = Icon as typeof Truck;
             return (
               <div key={t as string} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-6">
-                <I className="h-6 w-6 text-emerald-600" />
+                <I className="h-6 w-6 text-brand-600" />
                 <h3 className="mt-3 font-bold">{t as string}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">{b as string}</p>
               </div>
@@ -281,7 +279,7 @@ export default async function Landing() {
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {TESTIMONIALS.slice(0, 3).map((t) => (
               <figure key={t.name} className="rounded-2xl border border-zinc-200 bg-white p-6">
-                <Quote className="h-6 w-6 text-emerald-600" />
+                <Quote className="h-6 w-6 text-brand-600" />
                 <blockquote className="mt-3 text-[15px] leading-relaxed text-zinc-700">
                   {t.text}
                 </blockquote>
@@ -296,10 +294,10 @@ export default async function Landing() {
 
       {/* reassurance */}
       <section className="mx-auto max-w-6xl px-5 py-16">
-        <div className="rounded-3xl bg-emerald-600 px-8 py-12 text-white md:px-14 md:py-16">
+        <div className="rounded-3xl bg-brand-600 px-8 py-12 text-white md:px-14 md:py-16">
           <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
             <div className="max-w-xl">
-              <div className="flex items-center gap-2 text-emerald-100">
+              <div className="flex items-center gap-2 text-brand-100">
                 <ShieldCheck className="h-5 w-5" />
                 <span className={`text-xs font-semibold uppercase tracking-[0.18em] ${mono}`}>
                   No title? Dead motor? Still worth cash.
@@ -308,13 +306,13 @@ export default async function Landing() {
               <h2 className="mt-3 text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
                 We buy cars other places turn away.
               </h2>
-              <p className="mt-3 text-emerald-50">
+              <p className="mt-3 text-brand-50">
                 A dead car still carries real value in scrap metal, the catalytic
                 converter and reusable parts. That is exactly what we price and pay for.
               </p>
             </div>
             <Link href="/quote" className="w-full md:w-auto">
-              <Button className="h-14 w-full gap-2 bg-white px-8 text-base font-bold text-emerald-700 hover:bg-emerald-50 md:w-auto">
+              <Button className="h-14 w-full gap-2 bg-white px-8 text-base font-bold text-brand-700 hover:bg-brand-50 md:w-auto">
                 Get my offer <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
@@ -337,7 +335,7 @@ export default async function Landing() {
             <Link
               key={x.slug}
               href={`/cash-for-junk-cars/${x.slug}`}
-              className="rounded-full border border-zinc-200 bg-white px-3.5 py-1.5 text-sm font-medium text-zinc-700 transition hover:border-emerald-600 hover:text-emerald-700"
+              className="rounded-full border border-zinc-200 bg-white px-3.5 py-1.5 text-sm font-medium text-zinc-700 transition hover:border-brand-600 hover:text-brand-700"
             >
               {x.name}
             </Link>
@@ -355,7 +353,7 @@ export default async function Landing() {
             <details key={q} className="group py-5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-lg font-semibold [&::-webkit-details-marker]:hidden">
                 {q}
-                <span className={`text-2xl leading-none text-emerald-600 transition-transform group-open:rotate-45 ${mono}`}>
+                <span className={`text-2xl leading-none text-brand-600 transition-transform group-open:rotate-45 ${mono}`}>
                   +
                 </span>
               </summary>
@@ -379,16 +377,13 @@ export function SiteFooter({ phone }: { phone?: string }) {
         <div className="grid gap-8 md:grid-cols-4">
           <div>
             <div className="flex items-center gap-2 font-extrabold text-zinc-900">
-              <span className="grid h-7 w-7 -rotate-6 place-items-center rounded-md bg-emerald-600 text-white">
-                <BadgeDollarSign className="h-4 w-4" />
-              </span>
-              Junkerz
+              <Logo height={28} />
             </div>
             <p className="mt-3 text-sm leading-relaxed text-zinc-600">
               Buying junk, wrecked and non-running cars across Dallas–Fort Worth
               since {SITE.founded}. Free towing, cash at pickup.
             </p>
-            <a href={telHref} className={`mt-4 inline-flex items-center gap-1.5 font-bold text-zinc-900 hover:text-emerald-700 ${mono}`}>
+            <a href={telHref} className={`mt-4 inline-flex items-center gap-1.5 font-bold text-zinc-900 hover:text-brand-700 ${mono}`}>
               <Phone className="h-4 w-4" /> {p}
             </a>
           </div>
@@ -396,21 +391,21 @@ export function SiteFooter({ phone }: { phone?: string }) {
           <div>
             <h3 className="text-sm font-bold text-zinc-900">Sell your car</h3>
             <ul className="mt-3 space-y-2 text-sm text-zinc-600">
-              <li><Link href="/quote" className="hover:text-emerald-700">Get an instant offer</Link></li>
-              <li><Link href="/junk-cars" className="hover:text-emerald-700">Wrecked &amp; junk cars</Link></li>
-              <li><Link href="/not-running" className="hover:text-emerald-700">Cars that will not start</Link></li>
-              <li><Link href="/unwanted-cars" className="hover:text-emerald-700">Unwanted cars</Link></li>
-              <li><Link href="/carro-viejos" className="hover:text-emerald-700">Español · Carros viejos</Link></li>
+              <li><Link href="/quote" className="hover:text-brand-700">Get an instant offer</Link></li>
+              <li><Link href="/junk-cars" className="hover:text-brand-700">Wrecked &amp; junk cars</Link></li>
+              <li><Link href="/not-running" className="hover:text-brand-700">Cars that will not start</Link></li>
+              <li><Link href="/unwanted-cars" className="hover:text-brand-700">Unwanted cars</Link></li>
+              <li><Link href="/carro-viejos" className="hover:text-brand-700">Español · Carros viejos</Link></li>
             </ul>
           </div>
 
           <div>
             <h3 className="text-sm font-bold text-zinc-900">Company</h3>
             <ul className="mt-3 space-y-2 text-sm text-zinc-600">
-              <li><Link href="/about-us" className="hover:text-emerald-700">About us</Link></li>
-              <li><Link href="/contact-us" className="hover:text-emerald-700">Contact us</Link></li>
-              <li><Link href="/privacy-policy" className="hover:text-emerald-700">Privacy policy</Link></li>
-              <li><Link href="/buyers/login" className="hover:text-emerald-700">Salvage yard login</Link></li>
+              <li><Link href="/about-us" className="hover:text-brand-700">About us</Link></li>
+              <li><Link href="/contact-us" className="hover:text-brand-700">Contact us</Link></li>
+              <li><Link href="/privacy-policy" className="hover:text-brand-700">Privacy policy</Link></li>
+              <li><Link href="/buyers/login" className="hover:text-brand-700">Salvage yard login</Link></li>
             </ul>
           </div>
 
@@ -419,7 +414,7 @@ export function SiteFooter({ phone }: { phone?: string }) {
             <ul className="mt-3 space-y-2 text-sm text-zinc-600">
               {CITIES.slice(0, 8).map((x) => (
                 <li key={x.slug}>
-                  <Link href={`/cash-for-junk-cars/${x.slug}`} className="hover:text-emerald-700">
+                  <Link href={`/cash-for-junk-cars/${x.slug}`} className="hover:text-brand-700">
                     Junk cars in {x.name}
                   </Link>
                 </li>

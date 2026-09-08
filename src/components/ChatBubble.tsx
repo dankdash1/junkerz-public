@@ -38,14 +38,14 @@ export default function ChatBubble() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-emerald-600 text-white rounded-full shadow-xl text-xl"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-brand-600 text-white rounded-full shadow-xl text-xl"
       >💬</button>
     );
   }
 
   return (
     <div className="fixed bottom-6 right-6 w-80 h-96 bg-white rounded-xl shadow-2xl flex flex-col">
-      <div className="p-3 bg-emerald-600 text-white rounded-t-xl flex justify-between">
+      <div className="p-3 bg-brand-600 text-white rounded-t-xl flex justify-between">
         <span>Junkerz Chat</span>
         <button onClick={() => setOpen(false)}>✕</button>
       </div>
@@ -54,7 +54,7 @@ export default function ChatBubble() {
           <div key={i} className={m.role === "user" ? "text-right" : ""}>
             <span
               className={`inline-block px-3 py-2 rounded-lg ${
-                m.role === "user" ? "bg-emerald-100" : "bg-slate-100"
+                m.role === "user" ? "bg-brand-100" : "bg-slate-100"
               }`}
             >{m.text}</span>
           </div>
@@ -69,7 +69,7 @@ export default function ChatBubble() {
           placeholder="Ask a question..."
         />
         <button
-          className="bg-emerald-600 text-white px-3 rounded"
+          className="bg-brand-600 text-white px-3 rounded"
           onClick={send}
         >Send</button>
       </div>

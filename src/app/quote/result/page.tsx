@@ -53,7 +53,7 @@ function ResultContent() {
   return (
     <main className="p-12 text-center">
       <h1 className="text-3xl font-bold">Your Offer</h1>
-      <div className="text-6xl font-extrabold mt-8 text-emerald-600">
+      <div className="text-6xl font-extrabold mt-8 text-brand-600">
         ${((offer.offer_cents as number) / 100).toFixed(0)}
       </div>
       <p className="mt-4 text-slate-600">Tier: {offer.tier as string}</p>

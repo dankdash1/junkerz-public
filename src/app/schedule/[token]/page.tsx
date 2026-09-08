@@ -240,7 +240,7 @@ export default function SellerSchedulePage() {
           <p className="text-slate-700">
             {offer.year} {offer.make} {offer.model}
           </p>
-          <p className="text-lg font-semibold text-emerald-700">{done.slot}</p>
+          <p className="text-lg font-semibold text-brand-700">{done.slot}</p>
           {done.eta_at && (
             <p className="text-sm text-slate-500">
               Driver arrives around {new Date(done.eta_at).toLocaleString(undefined,
@@ -258,7 +258,7 @@ export default function SellerSchedulePage() {
             arrival regardless (George 2026-05-18 strategy: don't gate
             the sale on VIN). */}
         {!vinSaved && !vinSkipped && (
-          <div className="bg-white border-2 border-emerald-200 rounded-lg p-5 space-y-4 shadow-sm">
+          <div className="bg-white border-2 border-brand-200 rounded-lg p-5 space-y-4 shadow-sm">
             <div>
               <h2 className="text-lg font-bold text-slate-900">
                 ⚡ Speed up pickup day
@@ -347,7 +347,7 @@ export default function SellerSchedulePage() {
         )}
 
         {vinSaved && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg p-4 text-sm">
+          <div className="bg-brand-50 border border-brand-200 text-brand-800 rounded-lg p-4 text-sm">
             ✓ Got it — that&apos;ll speed things up on pickup day.
           </div>
         )}
@@ -372,7 +372,7 @@ export default function SellerSchedulePage() {
           {offer.zip_code ? ` · ${offer.zip_code}` : ""}
         </p>
         <p className="text-sm text-slate-500">
-          Payout: <span className="font-semibold text-emerald-700">{dollars}</span>
+          Payout: <span className="font-semibold text-brand-700">{dollars}</span>
         </p>
       </header>
 

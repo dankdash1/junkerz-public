@@ -114,7 +114,7 @@ export default function BidRulesList() {
                       onClick={() => toggleActive(r)}
                       className={`px-3 py-1 rounded border text-xs font-semibold ${
                         r.active
-                          ? "bg-emerald-600 text-white border-emerald-700"
+                          ? "bg-brand-600 text-white border-brand-700"
                           : "bg-slate-200 text-slate-700 border-slate-300"
                       }`}
                       aria-pressed={r.active}

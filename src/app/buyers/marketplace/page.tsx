@@ -40,7 +40,7 @@ const rankBadge = (offer: Offer) => {
     return <span className="text-xs text-slate-500">Not in queue</span>;
   }
   if (offer.my_status === "won") {
-    return <span className="text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-medium">You won</span>;
+    return <span className="text-xs px-2 py-0.5 rounded bg-brand-100 text-brand-800 font-medium">You won</span>;
   }
   if (offer.my_status === "declined" || offer.my_status === "expired") {
     return <span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600 capitalize">{offer.my_status}</span>;
@@ -170,7 +170,7 @@ export default function BuyerMarketplace() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {offers.map((o) => (
-          <div key={o.id} className="bg-white border rounded p-4 hover:border-emerald-300 transition">
+          <div key={o.id} className="bg-white border rounded p-4 hover:border-brand-300 transition">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="font-semibold">
@@ -181,7 +181,7 @@ export default function BuyerMarketplace() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold text-emerald-700">
+                <div className="text-lg font-bold text-brand-700">
                   {fmtMoney(o.offer_price)}
                 </div>
                 <div className="text-[11px] text-slate-500">Offer price</div>

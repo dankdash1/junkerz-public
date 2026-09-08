@@ -189,7 +189,7 @@ export default function BuyerPickupDetail() {
     <main className="max-w-2xl mx-auto pt-6 px-4 pb-20 space-y-6">
       <header>
         <button onClick={() => router.push("/buyers/won-cars")}
-                className="text-emerald-700 text-sm">← Won cars</button>
+                className="text-brand-700 text-sm">← Won cars</button>
         <h1 className="text-2xl font-bold mt-1">{vehicleStr || "Won car"}</h1>
         <p className="text-xs text-slate-500 mt-1 font-mono">VIN {d.vin || "—"} · match #{d.match_id}</p>
       </header>
@@ -198,7 +198,7 @@ export default function BuyerPickupDetail() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <div className="text-xs text-slate-500">Your winning bid</div>
-            <div className="text-lg font-semibold text-emerald-700">
+            <div className="text-lg font-semibold text-brand-700">
               {fmtMoney(d.bid_cents)}
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function BuyerPickupDetail() {
           <div className="font-medium">{addr}</div>
           {mapsHref && (
             <a href={mapsHref} target="_blank" rel="noreferrer"
-               className="text-xs text-emerald-700 underline mt-1 inline-block">
+               className="text-xs text-brand-700 underline mt-1 inline-block">
               Open in Google Maps
             </a>
           )}
@@ -236,7 +236,7 @@ export default function BuyerPickupDetail() {
             <div className="text-xs text-slate-500">Seller contact</div>
             <div>{d.contact_name || "—"}</div>
             {d.contact_phone && (
-              <a href={`tel:${d.contact_phone}`} className="text-emerald-700 underline text-sm">
+              <a href={`tel:${d.contact_phone}`} className="text-brand-700 underline text-sm">
                 {d.contact_phone}
               </a>
             )}
@@ -249,13 +249,13 @@ export default function BuyerPickupDetail() {
       </section>
 
       {isCompleted ? (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-          <div className="font-semibold text-emerald-800">✓ Pickup completed</div>
-          <div className="text-sm text-emerald-700 mt-1">
+        <div className="bg-brand-50 border border-brand-200 rounded-lg p-4">
+          <div className="font-semibold text-brand-800">✓ Pickup completed</div>
+          <div className="text-sm text-brand-700 mt-1">
             Completed {new Date(d.completion.buyer_completed_at!).toLocaleString()}.
           </div>
           {d.signatures.find((s) => s.signer_role === "seller")?.emailed_copy_at && (
-            <div className="text-xs text-emerald-700 mt-2">
+            <div className="text-xs text-brand-700 mt-2">
               Seller copy emailed to {d.signatures.find((s) => s.signer_role === "seller")?.emailed_copy_to}.
             </div>
           )}
@@ -335,7 +335,7 @@ export default function BuyerPickupDetail() {
               {sellerSigned ? "✓ Signed" : sigBusy ? "Saving…" : "Save signature"}
             </Button>
             {sellerSigned && (
-              <p className="text-xs text-emerald-700">
+              <p className="text-xs text-brand-700">
                 Signed by {d.signatures.find((s) => s.signer_role === "seller")?.signer_name || "seller"} at{" "}
                 {new Date(d.signatures.find((s) => s.signer_role === "seller")!.signed_at).toLocaleString()}
               </p>
@@ -356,7 +356,7 @@ export default function BuyerPickupDetail() {
               {completing ? "Completing…" : "✓ Mark pickup complete"}
             </Button>
             {completeMsg && (
-              <p className={`text-sm ${completeMsg.startsWith("✓") ? "text-emerald-700" : "text-red-600"}`}>
+              <p className={`text-sm ${completeMsg.startsWith("✓") ? "text-brand-700" : "text-red-600"}`}>
                 {completeMsg}
               </p>
             )}

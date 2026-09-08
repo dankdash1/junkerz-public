@@ -104,7 +104,7 @@ export default function BuyerSignupDocuments() {
                 </div>
                 <div className="text-xs flex-shrink-0">
                   {s.uploadedId ? (
-                    <span className="text-emerald-700 font-medium">✓ uploaded</span>
+                    <span className="text-brand-700 font-medium">✓ uploaded</span>
                   ) : s.uploading ? (
                     <span className="text-slate-500">Uploading…</span>
                   ) : s.error ? (

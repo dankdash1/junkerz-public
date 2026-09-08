@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import { BadgeDollarSign, Phone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SITE } from "@/lib/site";
@@ -11,10 +12,7 @@ export function SiteHeader({ ctaLabel = "Get my offer" }: { ctaLabel?: string })
     <header className="sticky top-0 z-40 border-b border-zinc-200/70 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
         <Link href="/" className="flex items-center gap-2">
-          <span className="grid h-8 w-8 -rotate-6 place-items-center rounded-lg bg-emerald-600 text-white">
-            <BadgeDollarSign className="h-5 w-5" />
-          </span>
-          <span className="text-xl font-extrabold tracking-tight">Junkerz</span>
+          <Logo height={34} priority />
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-600 lg:flex">
           <Link href="/junk-cars" className="hover:text-zinc-900">Wrecked cars</Link>
@@ -24,7 +22,7 @@ export function SiteHeader({ ctaLabel = "Get my offer" }: { ctaLabel?: string })
         </nav>
         <div className="flex items-center gap-3">
           <a href={SITE.phoneHref}
-             className={`hidden items-center gap-1.5 text-sm font-bold text-zinc-800 hover:text-emerald-700 sm:flex ${mono}`}>
+             className={`hidden items-center gap-1.5 text-sm font-bold text-zinc-800 hover:text-brand-700 sm:flex ${mono}`}>
             <Phone className="h-4 w-4" /> {SITE.phone}
           </a>
           <Link href="/quote">
@@ -42,15 +40,15 @@ export function BottomCTA({
 }: { heading: string; body: string; cta?: string; callLabel?: string }) {
   return (
     <section className="mx-auto max-w-6xl px-5 pb-16">
-      <div className="rounded-3xl bg-emerald-600 px-8 py-12 text-white md:px-14 md:py-14">
+      <div className="rounded-3xl bg-brand-600 px-8 py-12 text-white md:px-14 md:py-14">
         <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div className="max-w-xl">
             <h2 className="text-balance text-3xl font-extrabold tracking-tight">{heading}</h2>
-            <p className="mt-3 text-emerald-50">{body}</p>
+            <p className="mt-3 text-brand-50">{body}</p>
           </div>
           <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
             <Link href="/quote">
-              <Button className="h-14 w-full gap-2 bg-white px-8 text-base font-bold text-emerald-700 hover:bg-emerald-50 sm:w-auto">
+              <Button className="h-14 w-full gap-2 bg-white px-8 text-base font-bold text-brand-700 hover:bg-brand-50 sm:w-auto">
                 {cta} <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
@@ -77,7 +75,7 @@ export default function PageShell({
       <SiteHeader />
       <section className="border-b border-zinc-100">
         <div className="mx-auto max-w-3xl px-5 py-14 md:py-20">
-          <p className={`text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 ${mono}`}>
+          <p className={`text-xs font-semibold uppercase tracking-[0.18em] text-brand-700 ${mono}`}>
             {eyebrow}
           </p>
           <h1 className="mt-4 text-balance text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl">

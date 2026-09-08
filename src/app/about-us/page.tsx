@@ -61,7 +61,7 @@ export default function AboutUs() {
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             {TESTIMONIALS.map((t) => (
               <figure key={t.name} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
-                <Quote className="h-5 w-5 text-emerald-600" />
+                <Quote className="h-5 w-5 text-brand-600" />
                 <blockquote className="mt-2.5 text-[15px] leading-relaxed">{t.text}</blockquote>
                 <figcaption className={`mt-3 text-sm font-bold text-zinc-900 ${mono}`}>
                   {t.name}

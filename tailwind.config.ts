@@ -10,6 +10,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Junkerz brand red, sampled from the logo (#F90303).
+        brand: {
+          "50": "#FFF1F1",
+          "100": "#FFDFDF",
+          "200": "#FFC5C5",
+          "300": "#FF9B9B",
+          "400": "#FF5C5C",
+          "500": "#FC2323",
+          "600": "#F90303",
+          "700": "#D10202",
+          "800": "#A80202",
+          "900": "#7C0101",
+        },
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {

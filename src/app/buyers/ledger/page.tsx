@@ -45,7 +45,7 @@ export default function Ledger() {
                   <td className="p-3 capitalize">{r.entry_type.replace(/_/g, " ")}</td>
                   <td
                     className={`p-3 text-right ${
-                      r.amount_cents > 0 ? "text-red-700" : "text-emerald-700"
+                      r.amount_cents > 0 ? "text-red-700" : "text-brand-700"
                     }`}
                   >
                     ${(r.amount_cents / 100).toFixed(2)}

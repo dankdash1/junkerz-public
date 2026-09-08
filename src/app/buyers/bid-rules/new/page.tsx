@@ -194,7 +194,7 @@ export default function NewBidRule() {
             onClick={() => onChange(value === true ? null : true)}
             className={`px-3 py-1 rounded border text-sm ${
               value === true
-                ? "bg-emerald-600 text-white border-emerald-700"
+                ? "bg-brand-600 text-white border-brand-700"
                 : "bg-white text-slate-700"
             }`}
           >
@@ -258,7 +258,7 @@ export default function NewBidRule() {
                   }}
                   className={`px-3 py-1 rounded border text-sm flex items-center gap-1 ${
                     checked
-                      ? "bg-emerald-600 text-white border-emerald-700"
+                      ? "bg-brand-600 text-white border-brand-700"
                       : "bg-white text-slate-700"
                   }`}
                 >
@@ -337,13 +337,13 @@ export default function NewBidRule() {
                 {pickedMakes.map((m) => (
                   <span
                     key={m.id}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-sm"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-100 text-brand-800 text-sm"
                   >
                     {m.name}
                     <button
                       type="button"
                       onClick={() => setPickedMakes(pickedMakes.filter((x) => x.id !== m.id))}
-                      className="text-emerald-600 hover:text-emerald-900 font-bold"
+                      className="text-brand-600 hover:text-brand-900 font-bold"
                     >
                       ×
                     </button>
@@ -386,7 +386,7 @@ export default function NewBidRule() {
                 onClick={() => toggleArray("conditions", c)}
                 className={`px-3 py-1 rounded border text-sm ${
                   form.conditions.includes(c)
-                    ? "bg-emerald-600 text-white border-emerald-700"
+                    ? "bg-brand-600 text-white border-brand-700"
                     : "bg-white text-slate-700"
                 }`}
               >
@@ -405,7 +405,7 @@ export default function NewBidRule() {
                 onClick={() => toggleArray("title_statuses", t)}
                 className={`px-3 py-1 rounded border text-sm ${
                   form.title_statuses.includes(t)
-                    ? "bg-emerald-600 text-white border-emerald-700"
+                    ? "bg-brand-600 text-white border-brand-700"
                     : "bg-white text-slate-700"
                 }`}
               >
@@ -443,7 +443,7 @@ export default function NewBidRule() {
                 onClick={() => setForm({ ...form, pickup_paid_by: p })}
                 className={`px-3 py-1 rounded border text-sm ${
                   form.pickup_paid_by === p
-                    ? "bg-emerald-600 text-white border-emerald-700"
+                    ? "bg-brand-600 text-white border-brand-700"
                     : "bg-white text-slate-700"
                 }`}
               >
@@ -478,7 +478,7 @@ export default function NewBidRule() {
                   onClick={() => setForm({ ...form, min_wheels: v })}
                   className={`px-3 py-1 rounded border text-sm ${
                     form.min_wheels === v
-                      ? "bg-emerald-600 text-white border-emerald-700"
+                      ? "bg-brand-600 text-white border-brand-700"
                       : "bg-white text-slate-700"
                   }`}
                 >
@@ -498,7 +498,7 @@ export default function NewBidRule() {
                   onClick={() => toggleArray("require_engine_state", s)}
                   className={`px-3 py-1 rounded border text-sm ${
                     form.require_engine_state.includes(s)
-                      ? "bg-emerald-600 text-white border-emerald-700"
+                      ? "bg-brand-600 text-white border-brand-700"
                       : "bg-white text-slate-700"
                   }`}
                 >

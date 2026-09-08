@@ -116,7 +116,7 @@ export default function WonCars() {
             onClick={() => setFilter(f.value)}
             className={`px-3 py-1 rounded border ${
               filter === f.value
-                ? "bg-emerald-600 text-white border-emerald-700"
+                ? "bg-brand-600 text-white border-brand-700"
                 : "bg-white text-slate-700"
             }`}
           >
@@ -132,7 +132,7 @@ export default function WonCars() {
       ) : rows.length === 0 ? (
         <div className="bg-white rounded shadow p-12 text-center text-slate-600">
           No matches yet.{" "}
-          <Link href="/buyers/bid-rules" className="text-emerald-600 underline">
+          <Link href="/buyers/bid-rules" className="text-brand-600 underline">
             Set up bid rules
           </Link>{" "}
           to start receiving cars.
@@ -153,9 +153,9 @@ export default function WonCars() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.match_id} className="border-t hover:bg-emerald-50/40">
+                <tr key={r.match_id} className="border-t hover:bg-brand-50/40">
                   <td className="p-3 font-mono text-xs">
-                    <Link href={`/buyers/won-cars/${r.match_id}`} className="text-emerald-700 hover:underline">
+                    <Link href={`/buyers/won-cars/${r.match_id}`} className="text-brand-700 hover:underline">
                       {r.vin || `match #${r.match_id}`}
                     </Link>
                   </td>
@@ -178,7 +178,7 @@ export default function WonCars() {
                           className={
                             "ml-2 text-xs px-1.5 py-0.5 rounded " +
                             (r.picked_up_charge_status === "paid"
-                              ? "bg-emerald-100 text-emerald-800"
+                              ? "bg-brand-100 text-brand-800"
                               : r.picked_up_charge_status === "declined"
                               ? "bg-red-100 text-red-800"
                               : "bg-slate-100 text-slate-700")
@@ -213,7 +213,7 @@ export default function WonCars() {
                         <Button
                           variant="default"
                           size="default"
-                          className="bg-emerald-600 hover:bg-emerald-700"
+                          className="bg-brand-600 hover:bg-brand-700"
                           onClick={() =>
                             markPickedUp(
                               r.match_id,

@@ -52,7 +52,7 @@ export default function JunkCars() {
               "A straight answer when you have no title, not a runaround",
             ].map((t) => (
               <li key={t} className="flex gap-3">
-                <Check className="mt-1 h-5 w-5 shrink-0 text-emerald-600" />
+                <Check className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
                 <span>{t}</span>
               </li>
             ))}

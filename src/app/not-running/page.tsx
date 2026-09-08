@@ -50,7 +50,7 @@ export default function NotRunning() {
               "Our truck comes to you, we hand over the cash, and we tow it free",
             ].map((t) => (
               <li key={t} className="flex gap-3">
-                <Check className="mt-1 h-5 w-5 shrink-0 text-emerald-600" />
+                <Check className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
                 <span>{t}</span>
               </li>
             ))}

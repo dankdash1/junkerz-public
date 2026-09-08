@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Logo from "@/components/Logo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BadgeDollarSign, ArrowLeft, Check, ShieldCheck } from "lucide-react";
@@ -71,7 +72,7 @@ function YesNo({ label, value, onChange }: {
             onClick={() => onChange(opt)}
             className={`flex h-11 items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold transition
               ${value === opt
-                ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                ? "border-brand-600 bg-brand-600 text-white shadow-sm"
                 : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"}`}
           >
             {value === opt && <Check className="h-4 w-4" />}
@@ -97,7 +98,7 @@ function ChoiceRow({ options, value, onChange }: {
           onClick={() => onChange(s)}
           className={`h-11 rounded-xl border text-sm font-semibold capitalize transition
             ${value === s
-              ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+              ? "border-brand-600 bg-brand-600 text-white shadow-sm"
               : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"}`}
         >
           {s}
@@ -214,13 +215,10 @@ export default function QuoteWizard() {
       <header className="border-b border-zinc-200 bg-white">
         <div className="mx-auto flex h-16 max-w-lg items-center justify-between px-5">
           <Link href="/" className="flex items-center gap-2">
-            <span className="grid h-8 w-8 -rotate-6 place-items-center rounded-lg bg-emerald-600 text-white">
-              <BadgeDollarSign className="h-5 w-5" />
-            </span>
-            <span className="text-lg font-extrabold tracking-tight">Junkerz</span>
+            <Logo height={30} />
           </Link>
           <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" /> Guaranteed offer
+            <ShieldCheck className="h-4 w-4 text-brand-600" /> Guaranteed offer
           </span>
         </div>
       </header>
@@ -229,14 +227,14 @@ export default function QuoteWizard() {
         {/* progress */}
         <div className="mb-8">
           <div className="mb-2 flex items-center justify-between">
-            <span className={`text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700 ${mono}`}>
+            <span className={`text-xs font-semibold uppercase tracking-[0.16em] text-brand-700 ${mono}`}>
               Step {step + 1} of {STEPS.length}
             </span>
             <span className={`text-xs font-semibold text-zinc-400 ${mono}`}>{pct}%</span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-200">
             <div
-              className="h-full rounded-full bg-emerald-600 transition-all duration-300"
+              className="h-full rounded-full bg-brand-600 transition-all duration-300"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -276,11 +274,11 @@ export default function QuoteWizard() {
                   onClick={() => setForm({ ...form, title_status: t })}
                   className={`flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left text-sm font-semibold capitalize transition
                     ${form.title_status === t
-                      ? "border-emerald-600 bg-emerald-50 text-emerald-800"
+                      ? "border-brand-600 bg-brand-50 text-brand-800"
                       : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"}`}
                 >
                   {t.replace("_", " ")}
-                  {form.title_status === t && <Check className="h-5 w-5 text-emerald-600" />}
+                  {form.title_status === t && <Check className="h-5 w-5 text-brand-600" />}
                 </button>
               ))}
             </div>

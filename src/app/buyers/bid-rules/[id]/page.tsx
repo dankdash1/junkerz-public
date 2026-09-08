@@ -110,7 +110,7 @@ function YesAny({
           onClick={() => onChange(value === true ? null : true)}
           className={`px-3 py-1 rounded border text-sm ${
             value === true
-              ? "bg-emerald-600 text-white border-emerald-700"
+              ? "bg-brand-600 text-white border-brand-700"
               : "bg-white text-slate-700"
           }`}
         >
@@ -341,7 +341,7 @@ export default function EditBidRule() {
             aria-pressed={form.active}
             className={`px-4 py-1 rounded border text-sm font-semibold ${
               form.active
-                ? "bg-emerald-600 text-white border-emerald-700"
+                ? "bg-brand-600 text-white border-brand-700"
                 : "bg-slate-200 text-slate-700 border-slate-300"
             }`}
           >
@@ -364,7 +364,7 @@ export default function EditBidRule() {
                 onClick={() => setForm({ ...form, priority: p.value })}
                 className={`px-3 py-1 rounded border text-sm ${
                   form.priority === p.value
-                    ? "bg-emerald-600 text-white border-emerald-700"
+                    ? "bg-brand-600 text-white border-brand-700"
                     : "bg-white text-slate-700"
                 }`}
               >
@@ -396,7 +396,7 @@ export default function EditBidRule() {
                   }}
                   className={`px-3 py-1 rounded border text-sm flex items-center gap-1 ${
                     checked
-                      ? "bg-emerald-600 text-white border-emerald-700"
+                      ? "bg-brand-600 text-white border-brand-700"
                       : "bg-white text-slate-700"
                   }`}
                 >
@@ -468,13 +468,13 @@ export default function EditBidRule() {
                 {pickedMakes.map((m) => (
                   <span
                     key={m.id}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-sm"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-100 text-brand-800 text-sm"
                   >
                     {m.name}
                     <button
                       type="button"
                       onClick={() => setPickedMakes(pickedMakes.filter((x) => x.id !== m.id))}
-                      className="text-emerald-600 hover:text-emerald-900 font-bold"
+                      className="text-brand-600 hover:text-brand-900 font-bold"
                     >
                       ×
                     </button>
@@ -517,7 +517,7 @@ export default function EditBidRule() {
                 onClick={() => toggleArray("conditions", c)}
                 className={`px-3 py-1 rounded border text-sm ${
                   form.conditions.includes(c)
-                    ? "bg-emerald-600 text-white border-emerald-700"
+                    ? "bg-brand-600 text-white border-brand-700"
                     : "bg-white text-slate-700"
                 }`}
               >
@@ -536,7 +536,7 @@ export default function EditBidRule() {
                 onClick={() => toggleArray("title_statuses", t)}
                 className={`px-3 py-1 rounded border text-sm ${
                   form.title_statuses.includes(t)
-                    ? "bg-emerald-600 text-white border-emerald-700"
+                    ? "bg-brand-600 text-white border-brand-700"
                     : "bg-white text-slate-700"
                 }`}
               >
@@ -574,7 +574,7 @@ export default function EditBidRule() {
                 onClick={() => setForm({ ...form, pickup_paid_by: p })}
                 className={`px-3 py-1 rounded border text-sm ${
                   form.pickup_paid_by === p
-                    ? "bg-emerald-600 text-white border-emerald-700"
+                    ? "bg-brand-600 text-white border-brand-700"
                     : "bg-white text-slate-700"
                 }`}
               >
@@ -609,7 +609,7 @@ export default function EditBidRule() {
                   onClick={() => setForm({ ...form, min_wheels: v })}
                   className={`px-3 py-1 rounded border text-sm ${
                     form.min_wheels === v
-                      ? "bg-emerald-600 text-white border-emerald-700"
+                      ? "bg-brand-600 text-white border-brand-700"
                       : "bg-white text-slate-700"
                   }`}
                 >
@@ -629,7 +629,7 @@ export default function EditBidRule() {
                   onClick={() => toggleArray("require_engine_state", s)}
                   className={`px-3 py-1 rounded border text-sm ${
                     form.require_engine_state.includes(s)
-                      ? "bg-emerald-600 text-white border-emerald-700"
+                      ? "bg-brand-600 text-white border-brand-700"
                       : "bg-white text-slate-700"
                   }`}
                 >
