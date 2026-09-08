@@ -2,53 +2,72 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Check, ArrowRight, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import HeroQuoteForm from "@/components/HeroQuoteForm";
 import Logo from "@/components/Logo";
 import { SITE } from "@/lib/site";
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
 
 export const metadata: Metadata = {
-  title: "Quote engine — side by side",
+  title: "Quote form — seven steps or four",
   robots: { index: false, follow: false },
 };
 
-/** Option B: the original — a sample offer card, then a button to the wizard. */
-function OfferCardVariant() {
+const SEVEN = [
+  ["The car", "Year, make, model, VIN, mileage"],
+  ["Title", "Clean, salvage, rebuilt or none"],
+  ["Does it run", "Runs, starts, wheels on, tyres up"],
+  ["What's on it", "Engine, transmission, converter, battery, keys"],
+  ["Damage", "Tap each panel that is wrecked"],
+  ["Where is it", "Zip code and pickup address"],
+  ["Contact", "Phone and email"],
+];
+
+const FOUR = [
+  ["Which car are we buying?", "Year, make, model. VIN only if handy."],
+  ["Paperwork and pulse", "Title, does it drive, does it turn over, wheels on"],
+  ["What is still bolted to it?", "Engine, transmission, converter, keys — pre-filled with the usual answers. Damage is optional and folded in."],
+  ["Where is it, and how do we reach you?", "Zip, address, phone, email — all on one screen"],
+];
+
+function Card({
+  badge, badgeClass, steps, rows, blurb, href, cta,
+}: {
+  badge: string; badgeClass: string; steps: number;
+  rows: string[][]; blurb: string; href: string; cta: string;
+}) {
   return (
-    <div className="mx-auto w-full max-w-md">
-      <div className="rounded-2xl border border-zinc-200 bg-white p-6 text-left shadow-[0_20px_60px_-15px_rgba(16,24,28,.2)]">
-        <div className="flex items-center justify-between">
-          <p className={`text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400 ${mono}`}>
-            Your cash offer
-          </p>
-          <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
-            <Check className="h-3.5 w-3.5" /> Guaranteed
-          </span>
+    <section className="flex flex-col rounded-3xl border border-zinc-200 bg-white p-6 sm:p-8">
+      <div className="text-center">
+        <span className={`inline-block rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider text-white ${badgeClass} ${mono}`}>
+          {badge}
+        </span>
+        <div className={`mt-4 text-5xl font-extrabold tracking-tight ${mono}`}>{steps}</div>
+        <div className="text-sm font-semibold uppercase tracking-wider text-zinc-500">
+          screens
         </div>
-        <div className={`mt-3 text-6xl font-bold tracking-tight tabular-nums ${mono}`}>
-          <span className="align-top text-3xl text-brand-600">$</span>620
-        </div>
-        <p className="mt-1 text-sm text-zinc-500">2012 Toyota Camry · Arlington, TX</p>
-        <div className="my-5 border-t border-dashed border-zinc-200" />
-        <div className="grid grid-cols-3 gap-3 text-center">
-          {[["FREE", "towing"], ["$0", "fees"], ["Today", "pickup"]].map(([v, k]) => (
-            <div key={k}>
-              <div className={`text-base font-bold ${mono}`}>{v}</div>
-              <div className="text-xs text-zinc-500">{k}</div>
-            </div>
-          ))}
-        </div>
-        <Link href="/quote" className="mt-6 block">
-          <Button className="h-14 w-full gap-2 text-base font-bold">
-            Get my offer <ArrowRight className="h-5 w-5" />
-          </Button>
-        </Link>
+        <p className="mt-4 text-sm text-zinc-600">{blurb}</p>
       </div>
-      <p className="mt-3 text-center text-xs text-zinc-500">
-        Sends you to the full seven-step form.
-      </p>
-    </div>
+
+      <ol className="mt-7 flex-1 space-y-3">
+        {rows.map(([t, b], i) => (
+          <li key={t} className="flex gap-3">
+            <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full bg-zinc-900 text-xs font-bold text-white ${mono}`}>
+              {i + 1}
+            </span>
+            <div>
+              <div className="text-[15px] font-bold text-zinc-900">{t}</div>
+              <div className="text-sm text-zinc-600">{b}</div>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <Link href={href} className="mt-7 block">
+        <Button className="h-14 w-full gap-2 text-base font-bold">
+          {cta} <ArrowRight className="h-5 w-5" />
+        </Button>
+      </Link>
+    </section>
   );
 }
 
@@ -65,56 +84,49 @@ export default function Compare() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-6xl px-5 py-10">
+      <div className="mx-auto max-w-5xl px-5 py-10">
         <h1 className="text-center text-3xl font-extrabold tracking-tight">
-          Quote engine — pick one
+          The quote form — seven screens or four
         </h1>
-        <p className="mx-auto mt-3 max-w-xl text-center text-zinc-600">
-          Both are live and both work. Try each one, then tell me which to keep
-          on the homepage.
+        <p className="mx-auto mt-3 max-w-2xl text-center text-zinc-600">
+          Same questions, same offer, same box layout you liked. The short one
+          just groups them onto fewer screens. Both are live — open each and
+          click through.
         </p>
 
         <div className="mt-10 grid gap-8 md:grid-cols-2">
-          <section className="rounded-3xl border border-zinc-200 bg-white p-6 sm:p-8">
-            <div className="text-center">
-              <span className={`inline-block rounded-full bg-brand-600 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white ${mono}`}>
-                Option A — on the page now
-              </span>
-              <h2 className="mt-4 text-xl font-extrabold">Start it right here</h2>
-              <p className="mt-2 text-sm text-zinc-600">
-                They pick the car without leaving the homepage. Fewer people
-                drop off, because there is nothing to click first.
-              </p>
-            </div>
-            <div className="mt-7"><HeroQuoteForm /></div>
-          </section>
-
-          <section className="rounded-3xl border border-zinc-200 bg-white p-6 sm:p-8">
-            <div className="text-center">
-              <span className={`inline-block rounded-full bg-zinc-900 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white ${mono}`}>
-                Option B — the older one
-              </span>
-              <h2 className="mt-4 text-xl font-extrabold">Show a sample offer first</h2>
-              <p className="mt-2 text-sm text-zinc-600">
-                Shows what a real payout looks like before asking anything.
-                One extra click to reach the form.
-              </p>
-            </div>
-            <div className="mt-7"><OfferCardVariant /></div>
-          </section>
+          <Card
+            badge="Option A — live now"
+            badgeClass="bg-zinc-900"
+            steps={7}
+            rows={SEVEN}
+            blurb="One question per screen. Nothing is assumed, so every answer is the seller's own."
+            href="/quote"
+            cta="Try the seven-step"
+          />
+          <Card
+            badge="Option B — the short one"
+            badgeClass="bg-brand-600"
+            steps={4}
+            rows={FOUR}
+            blurb="Same questions, grouped. The parts screen arrives pre-filled with the common answers, so it is a quick confirm rather than five taps."
+            href="/quote-short"
+            cta="Try the four-step"
+          />
         </div>
 
         <div className="mx-auto mt-12 max-w-2xl rounded-2xl border border-zinc-200 bg-white p-6">
-          <h3 className="font-extrabold">The honest difference</h3>
+          <h3 className="font-extrabold">The trade-off, plainly</h3>
           <ul className="mt-3 space-y-2 text-[15px] text-zinc-700">
             <li className="flex gap-2"><Check className="mt-1 h-4 w-4 shrink-0 text-brand-600" />
-              <span><b>Option A</b> is what Peddle, Wheelzy and CarBrain all do. Every
-              click you remove keeps more people in.</span></li>
+              <span><b>Seven</b> asks everything outright. More people give up
+              partway, but every answer is deliberate.</span></li>
             <li className="flex gap-2"><Check className="mt-1 h-4 w-4 shrink-0 text-brand-600" />
-              <span><b>Option B</b> proves the money is real before you ask for
-              anything, which suits people who have never sold a junk car.</span></li>
+              <span><b>Four</b> finishes faster, so more quotes get completed. The
+              risk is a seller leaving a pre-filled answer wrong, which changes the
+              price at pickup.</span></li>
             <li className="flex gap-2"><Check className="mt-1 h-4 w-4 shrink-0 text-brand-600" />
-              <span>Both end at the same seven-step form and the same offer.</span></li>
+              <span>Both end at the same offer and the same pickup.</span></li>
           </ul>
         </div>
       </div>
