@@ -1,9 +1,8 @@
 "use client";
-import { Suspense, useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { BadgeDollarSign, ArrowLeft, Check, ShieldCheck, Phone } from "lucide-react";
-import { SITE } from "@/lib/site";
+import { useRouter } from "next/navigation";
+import { BadgeDollarSign, ArrowLeft, Check, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,17 +10,16 @@ import { submitQuote } from "@/lib/api";
 import VehiclePicker, { VehicleSelection } from "@/components/VehiclePicker";
 import ConditionGrid, { DamageZones } from "@/components/ConditionGrid";
 
-const STEPS = ["vehicle", "condition", "parts", "contact"] as const;
+const STEPS = ["vehicle", "title", "drivability", "components", "damage", "zip", "contact"] as const;
 
 const STEP_META: { title: string; subtitle: string }[] = [
-  { title: "Which car are we buying?",
-    subtitle: "Year, make and model. Add the VIN only if it is handy." },
-  { title: "Paperwork and pulse",
-    subtitle: "The title and whether it moves shift the number more than anything else." },
-  { title: "What is still bolted to it?",
-    subtitle: "We have filled in the usual answers. Change anything that is different on yours." },
-  { title: "Where is it, and how do we reach you?",
-    subtitle: "We tow free from wherever it sits and send your number straight over." },
+  { title: "What are we buying?", subtitle: "Pick your vehicle — VIN and mileage are optional." },
+  { title: "Do you have the title?", subtitle: "No title is often fine — just let us know." },
+  { title: "Does it run?", subtitle: "Be honest — dead cars are still worth real cash." },
+  { title: "What's still on it?", subtitle: "Engine, transmission and key parts drive the offer." },
+  { title: "Any damage?", subtitle: "Tap any areas that are wrecked or missing." },
+  { title: "Where is it?", subtitle: "We tow from your location — always free." },
+  { title: "Where do we send the offer?", subtitle: "We'll text and email your guaranteed number." },
 ];
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
@@ -117,9 +115,8 @@ function isValidEmail(email: string) {
   return /\S+@\S+\.\S+/.test(email.trim());
 }
 
-function QuoteWizardInner() {
+export default function QuoteWizard() {
   const router = useRouter();
-  const sp = useSearchParams();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Form>({
     vehicle: EMPTY_VEHICLE,
@@ -127,9 +124,9 @@ function QuoteWizardInner() {
     mileage: "",
     title_status: "",
     runs: null, starts: null,
-    all_wheels_attached: true, all_tires_inflated: true,
-    engine_state: "intact", transmission_state: "intact",
-    has_catalytic: true, has_battery: true, has_keys: true,
+    all_wheels_attached: null, all_tires_inflated: null,
+    engine_state: "", transmission_state: "",
+    has_catalytic: null, has_battery: null, has_keys: null,
     damage_zones: EMPTY_DAMAGE,
     zip_code: "", pickup_address: "", phone: "", email: "",
   });
@@ -137,31 +134,6 @@ function QuoteWizardInner() {
     phone: false,
     email: false,
   });
-  // The homepage asks for year, make and model. If the seller came from there,
-  // carry it straight in and skip the step they already finished.
-  useEffect(() => {
-    const year = sp.get("year");
-    const makeId = sp.get("make_id");
-    const modelId = sp.get("model_id");
-    const make = sp.get("make");
-    const model = sp.get("model");
-    if (!year || !makeId || !modelId || !make || !model) return;
-    setForm((f) => ({
-      ...f,
-      vehicle: {
-        year: Number(year),
-        make_id: Number(makeId),
-        make_name: make,
-        model_id: Number(modelId),
-        model_name: model,
-        trim: "",
-      },
-    }));
-    setStep((cur) => (cur === 0 ? 1 : cur));
-    // Only ever runs for the values present on first paint.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -214,12 +186,15 @@ function QuoteWizardInner() {
 
   const canAdvance = (() => {
     if (step === 0) return !!(form.vehicle.year && form.vehicle.make_id && form.vehicle.model_id);
-    // Title plus whether it runs. Wheels and tyres carry sensible defaults.
-    if (step === 1) return !!form.title_status && form.runs !== null && form.starts !== null;
-    // Everything here is pre-answered with the common case, so it never blocks.
-    if (step === 2) return true;
-    if (step === 3) return form.zip_code.length >= 5
-                           && isValidPhone(form.phone) && isValidEmail(form.email);
+    if (step === 1) return !!form.title_status;
+    if (step === 2) return form.runs !== null && form.starts !== null
+                           && form.all_wheels_attached !== null;
+    if (step === 3) return !!form.engine_state && !!form.transmission_state
+                           && form.has_catalytic !== null
+                           && form.has_battery !== null && form.has_keys !== null;
+    if (step === 4) return true;
+    if (step === 5) return form.zip_code.length >= 5;
+    if (step === 6) return isValidPhone(form.phone) && isValidEmail(form.email);
     return false;
   })();
 
@@ -244,15 +219,9 @@ function QuoteWizardInner() {
             </span>
             <span className="text-lg font-extrabold tracking-tight">Junkerz</span>
           </Link>
-          <div className="flex items-center gap-4">
-            <a href={SITE.phoneHref}
-               className="hidden items-center gap-1.5 text-sm font-bold text-zinc-800 hover:text-emerald-700 sm:flex">
-              <Phone className="h-4 w-4" /> {SITE.phone}
-            </a>
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
-              <ShieldCheck className="h-4 w-4 text-emerald-600" /> Guaranteed offer
-            </span>
-          </div>
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+            <ShieldCheck className="h-4 w-4 text-emerald-600" /> Guaranteed offer
+          </span>
         </div>
       </header>
 
@@ -272,19 +241,6 @@ function QuoteWizardInner() {
             />
           </div>
         </div>
-
-        {/* what we already know */}
-        {form.vehicle.year && form.vehicle.make_name && form.vehicle.model_name && step > 0 && (
-          <div className="mb-4 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-            <span className="text-sm font-semibold text-emerald-900">
-              {form.vehicle.year} {form.vehicle.make_name} {form.vehicle.model_name}
-            </span>
-            <button type="button" onClick={() => setStep(0)}
-              className="text-xs font-semibold text-emerald-700 underline">
-              Change
-            </button>
-          </div>
-        )}
 
         {/* step heading */}
         <h1 className="text-balance text-2xl font-extrabold tracking-tight">{meta.title}</h1>
@@ -312,154 +268,151 @@ function QuoteWizardInner() {
           )}
 
           {step === 1 && (
-            <div className="space-y-6">
-              <div>
-                <Label className="text-sm font-medium text-zinc-700">
-                  What is the title situation?
-                </Label>
-                <div className="mt-2 space-y-2.5">
-                  {[
-                    ["clean", "Clean title, I have it"],
-                    ["salvage", "Salvage title"],
-                    ["rebuilt", "Rebuilt title"],
-                    ["no_title", "No title, or I cannot find it"],
-                  ].map(([t, label]) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setForm({ ...form, title_status: t })}
-                      className={`flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left text-sm font-semibold transition
-                        ${form.title_status === t
-                          ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                          : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"}`}
-                    >
-                      {label}
-                      {form.title_status === t && <Check className="h-5 w-5 text-emerald-600" />}
-                    </button>
-                  ))}
-                </div>
-                <p className="mt-2 text-xs text-zinc-500">
-                  No title is usually fine in Texas. We will tell you what your case needs.
-                </p>
-              </div>
-
-              <div className="space-y-5 border-t border-zinc-100 pt-5">
-                <YesNo label="Does it drive under its own power?"
-                  value={form.runs}
-                  onChange={(v) => setForm({ ...form, runs: v, starts: v ? true : form.starts })} />
-                <YesNo label="Does the engine at least turn over?"
-                  value={form.starts}
-                  onChange={(v) => setForm({ ...form, starts: v })} />
-                <YesNo label="Are all four wheels still on it?"
-                  value={form.all_wheels_attached}
-                  onChange={(v) => setForm({ ...form, all_wheels_attached: v })} />
-              </div>
+            <div className="space-y-2.5">
+              {["clean", "salvage", "rebuilt", "no_title"].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setForm({ ...form, title_status: t })}
+                  className={`flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left text-sm font-semibold capitalize transition
+                    ${form.title_status === t
+                      ? "border-emerald-600 bg-emerald-50 text-emerald-800"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"}`}
+                >
+                  {t.replace("_", " ")}
+                  {form.title_status === t && <Check className="h-5 w-5 text-emerald-600" />}
+                </button>
+              ))}
             </div>
           )}
 
           {step === 2 && (
-            <div className="space-y-6">
-              <div className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-                These are pre-filled with the usual answers. Only change what is
-                different on your car.
-              </div>
-
-              <div className="space-y-5">
-                <div>
-                  <Label className="text-sm font-medium text-zinc-700">Engine</Label>
-                  <div className="mt-2">
-                    <ChoiceRow options={["intact", "partial", "missing"] as const}
-                      value={form.engine_state}
-                      onChange={(s) => setForm({ ...form, engine_state: s as Form["engine_state"] })} />
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-zinc-700">Transmission</Label>
-                  <div className="mt-2">
-                    <ChoiceRow options={["intact", "partial", "missing"] as const}
-                      value={form.transmission_state}
-                      onChange={(s) => setForm({ ...form, transmission_state: s as Form["transmission_state"] })} />
-                  </div>
-                </div>
-                <YesNo label="Catalytic converter still on it?"
-                  value={form.has_catalytic}
-                  onChange={(v) => setForm({ ...form, has_catalytic: v })} />
-                <YesNo label="Do you have the keys?"
-                  value={form.has_keys}
-                  onChange={(v) => setForm({ ...form, has_keys: v })} />
-              </div>
-
-              <details className="rounded-xl border border-zinc-200 bg-white">
-                <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-zinc-700 [&::-webkit-details-marker]:hidden">
-                  Any body damage? Tap to mark it (optional)
-                </summary>
-                <div className="border-t border-zinc-100 p-4">
-                  <ConditionGrid
-                    value={form.damage_zones}
-                    onChange={(v) => setForm({ ...form, damage_zones: v })}
-                  />
-                </div>
-              </details>
+            <div className="space-y-5">
+              <YesNo label="Does it run/drive?"
+                value={form.runs}
+                onChange={(v) => setForm({ ...form, runs: v })} />
+              <YesNo label="Does it start?"
+                value={form.starts}
+                onChange={(v) => setForm({ ...form, starts: v })} />
+              <YesNo label="All four wheels attached?"
+                value={form.all_wheels_attached}
+                onChange={(v) => setForm({ ...form, all_wheels_attached: v })} />
+              <YesNo label="All tires inflated?"
+                value={form.all_tires_inflated}
+                onChange={(v) => setForm({ ...form, all_tires_inflated: v })} />
             </div>
           )}
 
           {step === 3 && (
             <div className="space-y-5">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor="zip">
-                    Zip code <span className="text-red-600">*</span>
-                  </Label>
-                  <Input id="zip" inputMode="numeric" autoComplete="postal-code"
-                    value={form.zip_code}
-                    onChange={(e) => setForm({ ...form, zip_code: e.target.value })}
-                    placeholder="75252" />
-                </div>
-                <div>
-                  <Label htmlFor="addr">Street address (optional)</Label>
-                  <Input id="addr" autoComplete="street-address"
-                    value={form.pickup_address}
-                    onChange={(e) => setForm({ ...form, pickup_address: e.target.value })}
-                    placeholder="We can confirm this later" />
+              <div>
+                <Label className="text-sm font-medium text-zinc-700">Engine</Label>
+                <div className="mt-2">
+                  <ChoiceRow options={["intact", "partial", "missing"] as const}
+                    value={form.engine_state}
+                    onChange={(s) => setForm({ ...form, engine_state: s as Form["engine_state"] })} />
                 </div>
               </div>
-
-              <div className="space-y-4 border-t border-zinc-100 pt-5">
-                <div>
-                  <Label htmlFor="phone">
-                    Phone <span className="text-red-600">*</span>
-                  </Label>
-                  <Input
-                    id="phone" type="tel" inputMode="tel" autoComplete="tel" required
-                    aria-required="true" aria-invalid={phoneError ? "true" : "false"}
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    onBlur={() => setTouched((t) => ({ ...t, phone: true }))}
-                    placeholder="(817) 555-0100"
-                  />
-                  {phoneError && <p className="mt-1 text-sm text-red-600">{phoneError}</p>}
+              <div>
+                <Label className="text-sm font-medium text-zinc-700">Transmission</Label>
+                <div className="mt-2">
+                  <ChoiceRow options={["intact", "partial", "missing"] as const}
+                    value={form.transmission_state}
+                    onChange={(s) => setForm({ ...form, transmission_state: s as Form["transmission_state"] })} />
                 </div>
-                <div>
-                  <Label htmlFor="email">
-                    Email <span className="text-red-600">*</span>
-                  </Label>
-                  <Input
-                    id="email" type="email" inputMode="email" autoComplete="email" required
-                    aria-required="true" aria-invalid={emailError ? "true" : "false"}
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-                    placeholder="you@example.com"
-                  />
-                  {emailError && <p className="mt-1 text-sm text-red-600">{emailError}</p>}
-                </div>
-                <p className="text-xs text-zinc-500">
-                  We text your offer and email the confirmation. We never sell your details.
-                </p>
               </div>
+              <YesNo label="Catalytic converter installed?"
+                value={form.has_catalytic}
+                onChange={(v) => setForm({ ...form, has_catalytic: v })} />
+              <YesNo label="Battery present?"
+                value={form.has_battery}
+                onChange={(v) => setForm({ ...form, has_battery: v })} />
+              <YesNo label="Keys available?"
+                value={form.has_keys}
+                onChange={(v) => setForm({ ...form, has_keys: v })} />
             </div>
           )}
 
+          {step === 4 && (
+            <ConditionGrid
+              value={form.damage_zones}
+              onChange={(v) => setForm({ ...form, damage_zones: v })}
+            />
+          )}
+
+          {step === 5 && (
+            <div className="space-y-4">
+              <div>
+                <Label>Zip code</Label>
+                <Input value={form.zip_code} onChange={(e) =>
+                  setForm({ ...form, zip_code: e.target.value })} />
+              </div>
+              <div>
+                <Label>Pickup address (optional)</Label>
+                <Input
+                  value={form.pickup_address}
+                  onChange={(e) =>
+                    setForm({ ...form, pickup_address: e.target.value })
+                  }
+                  placeholder="Street, city, state — we'll confirm later"
+                />
+              </div>
+              <p className="text-xs text-zinc-500">
+                You can leave this blank and we&apos;ll ask when we schedule pickup.
+              </p>
+            </div>
+          )}
+
+          {step === 6 && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="phone">
+                  Phone <span className="text-red-600">*</span>
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  required
+                  aria-required="true"
+                  aria-invalid={phoneError ? "true" : "false"}
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  onBlur={() => setTouched((t) => ({ ...t, phone: true }))}
+                  placeholder="(555) 123-4567"
+                />
+                {phoneError && (
+                  <p className="text-red-600 text-sm mt-1">{phoneError}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="email">
+                  Email <span className="text-red-600">*</span>
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  required
+                  aria-required="true"
+                  aria-invalid={emailError ? "true" : "false"}
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                  placeholder="you@example.com"
+                />
+                {emailError && (
+                  <p className="text-red-600 text-sm mt-1">{emailError}</p>
+                )}
+              </div>
+              <p className="text-xs text-zinc-500">
+                We&apos;ll text your offer to your phone and email you the
+                confirmation. Both are required.
+              </p>
+            </div>
+          )}
         </div>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
@@ -488,19 +441,5 @@ function QuoteWizardInner() {
         </p>
       </div>
     </main>
-  );
-}
-
-export default function QuotePage() {
-  return (
-    <Suspense
-      fallback={
-        <main className="grid min-h-screen place-items-center bg-zinc-50 text-zinc-500">
-          Loading your quote…
-        </main>
-      }
-    >
-      <QuoteWizardInner />
-    </Suspense>
   );
 }

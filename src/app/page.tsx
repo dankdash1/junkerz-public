@@ -5,7 +5,6 @@ import {
   ShieldCheck, MapPin, Quote, Wrench, FileText, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import HeroQuoteForm from "@/components/HeroQuoteForm";
 import { SITE, TESTIMONIALS, CITIES } from "@/lib/site";
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
@@ -165,52 +164,49 @@ export default async function Landing() {
         </div>
       </header>
 
-      {/* hero — the quote starts here, not one click away */}
-      <section className="relative overflow-hidden border-b border-zinc-100">
-        <div className="pointer-events-none absolute -right-32 -top-24 h-96 w-96 rounded-full bg-emerald-100/60 blur-3xl" />
-        <div className="mx-auto grid max-w-6xl items-start gap-10 px-5 py-12 md:grid-cols-[1.05fr_.95fr] md:py-20">
-          <div>
-            <p className={`text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 ${mono}`}>
-              {c.hero_eyebrow}
-            </p>
-            <h1 className="mt-4 text-balance text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
-              {c.hero_title}
-            </h1>
-            <p className="mt-5 max-w-lg text-lg text-zinc-600">{c.hero_subtitle}</p>
+      {/* hero — plain and centred */}
+      <section className="border-b border-zinc-100">
+        <div className="mx-auto max-w-3xl px-5 py-16 text-center md:py-24">
+          <p className={`text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 ${mono}`}>
+            {c.hero_eyebrow}
+          </p>
+          <h1 className="mx-auto mt-4 max-w-2xl text-balance text-4xl font-extrabold leading-[1.06] tracking-tight sm:text-5xl md:text-6xl">
+            {c.hero_title}
+          </h1>
+          <p className="mx-auto mt-5 max-w-xl text-lg text-zinc-600">
+            {c.hero_subtitle}
+          </p>
 
-            <ul className="mt-7 grid gap-2.5 text-[15px] text-zinc-700 sm:grid-cols-2">
-              {[
-                [Truck, "Free towing, every pickup"],
-                [BadgeDollarSign, "Cash handed over at collection"],
-                [FileText, "Often no title needed"],
-                [Clock, "Most pickups in 24 to 48 hours"],
-              ].map(([Icon, t]) => {
-                const I = Icon as typeof Truck;
-                return (
-                  <li key={t as string} className="flex items-center gap-2">
-                    <I className="h-4.5 w-4.5 shrink-0 text-emerald-600" />
-                    <span>{t as string}</span>
-                  </li>
-                );
-              })}
-            </ul>
-
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <a href={telHref}>
-                <Button variant="outline"
-                  className="h-12 w-full gap-2 px-6 text-base font-bold sm:w-auto">
-                  <Phone className="h-4 w-4" /> {c.phone}
-                </Button>
-              </a>
-              <span className="text-sm text-zinc-500">
-                Rather talk it through? Call us, we answer.
-              </span>
-            </div>
+          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link href="/quote" className="w-full sm:w-auto">
+              <Button className="h-14 w-full gap-2 px-9 text-base font-bold sm:w-auto">
+                {c.hero_cta} <ArrowRight className="h-5 w-5" />
+              </Button>
+            </Link>
+            <a href={telHref} className="w-full sm:w-auto">
+              <Button variant="outline"
+                className="h-14 w-full gap-2 px-7 text-base font-bold sm:w-auto">
+                <Phone className="h-4 w-4" /> {c.phone}
+              </Button>
+            </a>
           </div>
 
-          <div className="md:sticky md:top-24">
-            <HeroQuoteForm />
-          </div>
+          <ul className="mx-auto mt-10 grid max-w-2xl gap-3 text-[15px] text-zinc-700 sm:grid-cols-2">
+            {[
+              [Truck, "Free towing, every pickup"],
+              [BadgeDollarSign, "Cash handed over at collection"],
+              [FileText, "Often no title needed"],
+              [Clock, "Most pickups in 24 to 48 hours"],
+            ].map(([Icon, t]) => {
+              const I = Icon as typeof Truck;
+              return (
+                <li key={t as string} className="flex items-center justify-center gap-2 sm:justify-start">
+                  <I className="h-4 w-4 shrink-0 text-emerald-600" />
+                  <span>{t as string}</span>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </section>
 
