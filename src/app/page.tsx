@@ -1,16 +1,32 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import {
-  Check, Truck, BadgeDollarSign, Phone, Star,
-  ClipboardList, ArrowRight, ShieldCheck,
+  Truck, BadgeDollarSign, Phone, ClipboardList, ArrowRight,
+  ShieldCheck, MapPin, Quote, Wrench, FileText, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import HeroQuoteForm from "@/components/HeroQuoteForm";
+import { SITE, TESTIMONIALS, CITIES } from "@/lib/site";
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
 
-// Editable-in-admin content (admin Website module → Junkerz "home" page).
-// These are the fallback defaults; whatever is saved server-side overrides them.
+export const metadata: Metadata = {
+  title: "Cash for Junk Cars in Dallas–Fort Worth | Junkerz",
+  description:
+    "Junkerz buys junk, wrecked and non-running cars across Dallas–Fort Worth. Get a real cash offer in about a minute, free towing, paid at pickup. Call 817-420-9180.",
+  alternates: { canonical: SITE.url },
+  openGraph: {
+    title: "Cash for Junk Cars in Dallas–Fort Worth",
+    description:
+      "Real cash offer in about a minute. Free towing anywhere in DFW. Paid when we pick it up.",
+    url: SITE.url,
+    siteName: SITE.name,
+    locale: "en_US",
+    type: "website",
+  },
+};
+
 type HomeContent = {
   hero_eyebrow: string;
   hero_title: string;
@@ -22,15 +38,32 @@ type HomeContent = {
 };
 
 const DEFAULTS: HomeContent = {
-  hero_eyebrow: "Cash for junk cars · Madill, OK & nationwide",
-  hero_title: "Get real cash for your junk car — as soon as today.",
+  hero_eyebrow: `Cash for junk cars · ${SITE.areaLabel}`,
+  hero_title: "Your junk car is worth real cash. Find out in a minute.",
   hero_subtitle:
-    "Running or not, wrecked or dead, title or no title. Tell us about it and get a guaranteed offer — free towing, paid on the spot.",
-  hero_cta: "Get my instant offer",
-  phone: "(580) 555-0142",
+    "Running or not, wrecked or dead, title or no title. Tell us what you have and we will give you a guaranteed number. Free towing anywhere in DFW, cash in your hand when we collect it.",
+  hero_cta: "See what it's worth",
+  phone: SITE.phone,
   sample_offer_amount: "620",
-  sample_offer_vehicle: "2012 Toyota Camry · Madill, OK",
+  sample_offer_vehicle: "2012 Toyota Camry · Arlington, TX",
 };
+
+const FAQ: [string, string][] = [
+  ["Do I need the title to sell my car?",
+   "Not always. In Texas we can often buy a vehicle with your registration and photo ID instead. Tell us during the quote and we will say exactly what your situation needs before anyone drives out."],
+  ["Is the towing really free?",
+   "Yes, everywhere we serve. We do not deduct a tow fee, a paperwork fee, or anything else. The number you accept is the number you are handed."],
+  ["How far out do you come?",
+   "Roughly two hours from the middle of Dallas–Fort Worth. That reaches Gainesville in the north, Midlothian and Ennis in the south, Weatherford in the west and Greenville in the east."],
+  ["My car does not run at all. Is it still worth something?",
+   "Almost always. The value sits in the scrap weight, the catalytic converter and the reusable parts, none of which need the engine to start. Non-running cars are most of what we buy."],
+  ["How fast can you pick it up?",
+   "Usually within 24 to 48 hours, and often the same day for pickups close to the yard in north Dallas. If you are on an apartment or city tow deadline, say so and we will work to it."],
+  ["How do I get paid?",
+   "On the spot, when we collect the car, before it goes on the truck. Never a cheque in the post that you have to chase."],
+  ["What kinds of vehicles do you buy?",
+   "Cars, trucks, vans and SUVs. Wrecked, flooded, burned, stripped, seized, or simply worn out. We also buy vehicles that have been sitting for years and will not move under their own power."],
+];
 
 async function getContent(): Promise<HomeContent> {
   try {
@@ -40,7 +73,6 @@ async function getContent(): Promise<HomeContent> {
     if (!res.ok) return DEFAULTS;
     const data = await res.json();
     const c = (data && data.content) || {};
-    // Merge saved values over defaults; ignore blank/missing fields.
     const merged = { ...DEFAULTS };
     (Object.keys(DEFAULTS) as (keyof HomeContent)[]).forEach((k) => {
       if (typeof c[k] === "string" && c[k].trim() !== "") merged[k] = c[k];
@@ -54,20 +86,76 @@ async function getContent(): Promise<HomeContent> {
 export default async function Landing() {
   const c = await getContent();
   const telHref = `tel:+1${c.phone.replace(/\D/g, "")}`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": ["AutoDealer", "LocalBusiness"],
+        "@id": `${SITE.url}/#business`,
+        name: SITE.legal,
+        description:
+          "Junkerz buys junk, wrecked and non-running cars for cash across Dallas–Fort Worth, with free towing and payment at pickup.",
+        url: SITE.url,
+        telephone: SITE.phone,
+        email: SITE.email,
+        foundingDate: SITE.founded,
+        priceRange: "$$",
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: SITE.street,
+          addressLocality: SITE.city,
+          addressRegion: SITE.state,
+          postalCode: SITE.postal,
+          addressCountry: SITE.country,
+        },
+        geo: { "@type": "GeoCoordinates", latitude: SITE.geo.lat, longitude: SITE.geo.lng },
+        openingHours: SITE.hours,
+        areaServed: CITIES.map((x) => ({
+          "@type": "City", name: `${x.name}, TX`,
+        })),
+        makesOffer: {
+          "@type": "Offer",
+          itemOffered: { "@type": "Service", name: "Cash for junk cars with free towing" },
+        },
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${SITE.url}/#faq`,
+        mainEntity: FAQ.map(([q, a]) => ({
+          "@type": "Question",
+          name: q,
+          acceptedAnswer: { "@type": "Answer", text: a },
+        })),
+      },
+    ],
+  };
+
   return (
     <main className="min-h-screen bg-white text-zinc-900">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* header */}
-      <header className="sticky top-0 z-40 border-b border-zinc-200/70 bg-white/85 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-zinc-200/70 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <span className="grid h-8 w-8 -rotate-6 place-items-center rounded-lg bg-emerald-600 text-white">
               <BadgeDollarSign className="h-5 w-5" />
             </span>
             <span className="text-xl font-extrabold tracking-tight">Junkerz</span>
-          </div>
+          </Link>
+          <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-600 lg:flex">
+            <Link href="/junk-cars" className="hover:text-zinc-900">Wrecked cars</Link>
+            <Link href="/not-running" className="hover:text-zinc-900">Not running</Link>
+            <Link href="/about-us" className="hover:text-zinc-900">About</Link>
+            <Link href="/carro-viejos" className="hover:text-zinc-900">Español</Link>
+          </nav>
           <div className="flex items-center gap-3">
             <a href={telHref}
-               className={`hidden items-center gap-1.5 text-sm font-semibold text-zinc-700 hover:text-zinc-900 sm:flex ${mono}`}>
+               className={`hidden items-center gap-1.5 text-sm font-bold text-zinc-800 hover:text-emerald-700 sm:flex ${mono}`}>
               <Phone className="h-4 w-4" /> {c.phone}
             </a>
             <Link href="/quote">
@@ -77,10 +165,10 @@ export default async function Landing() {
         </div>
       </header>
 
-      {/* hero */}
-      <section className="relative overflow-hidden">
+      {/* hero — the quote starts here, not one click away */}
+      <section className="relative overflow-hidden border-b border-zinc-100">
         <div className="pointer-events-none absolute -right-32 -top-24 h-96 w-96 rounded-full bg-emerald-100/60 blur-3xl" />
-        <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-16 md:grid-cols-[1.05fr_.95fr] md:py-24">
+        <div className="mx-auto grid max-w-6xl items-start gap-10 px-5 py-12 md:grid-cols-[1.05fr_.95fr] md:py-20">
           <div>
             <p className={`text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 ${mono}`}>
               {c.hero_eyebrow}
@@ -88,64 +176,40 @@ export default async function Landing() {
             <h1 className="mt-4 text-balance text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
               {c.hero_title}
             </h1>
-            <p className="mt-5 max-w-lg text-lg text-zinc-600">
-              {c.hero_subtitle}
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/quote">
-                <Button className="h-14 w-full gap-2 px-8 text-base font-bold sm:w-auto">
-                  {c.hero_cta} <ArrowRight className="h-5 w-5" />
-                </Button>
-              </Link>
+            <p className="mt-5 max-w-lg text-lg text-zinc-600">{c.hero_subtitle}</p>
+
+            <ul className="mt-7 grid gap-2.5 text-[15px] text-zinc-700 sm:grid-cols-2">
+              {[
+                [Truck, "Free towing, every pickup"],
+                [BadgeDollarSign, "Cash handed over at collection"],
+                [FileText, "Often no title needed"],
+                [Clock, "Most pickups in 24 to 48 hours"],
+              ].map(([Icon, t]) => {
+                const I = Icon as typeof Truck;
+                return (
+                  <li key={t as string} className="flex items-center gap-2">
+                    <I className="h-4.5 w-4.5 shrink-0 text-emerald-600" />
+                    <span>{t as string}</span>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
               <a href={telHref}>
                 <Button variant="outline"
-                  className="h-14 w-full gap-2 px-6 text-base font-semibold sm:w-auto">
-                  <Phone className="h-4 w-4" /> Call us
+                  className="h-12 w-full gap-2 px-6 text-base font-bold sm:w-auto">
+                  <Phone className="h-4 w-4" /> {c.phone}
                 </Button>
               </a>
-            </div>
-            <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-zinc-600">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="flex text-amber-500">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <Star key={i} className="h-4 w-4 fill-current" />
-                  ))}
-                </span>
-                <b className="font-semibold text-zinc-800">4.9/5</b> · 3,100+ sellers
+              <span className="text-sm text-zinc-500">
+                Rather talk it through? Call us, we answer.
               </span>
             </div>
           </div>
 
-          {/* offer card */}
-          <div className="relative">
-            <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-[0_20px_60px_-15px_rgba(16,24,28,.2)]">
-              <div className="flex items-center justify-between">
-                <p className={`text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400 ${mono}`}>
-                  Your cash offer
-                </p>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                  <Check className="h-3.5 w-3.5" /> Guaranteed
-                </span>
-              </div>
-              <div className={`mt-3 text-6xl font-bold tracking-tight tabular-nums ${mono}`}>
-                <span className="align-top text-3xl text-emerald-600">$</span>{c.sample_offer_amount}
-              </div>
-              <p className="mt-1 text-sm text-zinc-500">{c.sample_offer_vehicle}</p>
-              <div className="my-5 border-t border-dashed border-zinc-200" />
-              <div className="grid grid-cols-3 gap-3 text-center">
-                {[["FREE", "towing"], ["$0", "fees"], ["Today", "pickup"]].map(
-                  ([v, k]) => (
-                    <div key={k}>
-                      <div className={`text-base font-bold ${mono}`}>{v}</div>
-                      <div className="text-xs text-zinc-500">{k}</div>
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-            <p className="mt-3 text-center text-xs text-zinc-400">
-              Real offers priced from live scrap, parts &amp; catalytic values.
-            </p>
+          <div className="md:sticky md:top-24">
+            <HeroQuoteForm />
           </div>
         </div>
       </section>
@@ -161,9 +225,12 @@ export default async function Landing() {
           </h2>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
-              { icon: ClipboardList, n: "01", t: "Tell us about the car", b: "Year, make, model and condition — about two minutes. No VIN hunting required." },
-              { icon: BadgeDollarSign, n: "02", t: "Get your real offer", b: "A guaranteed cash number on the spot, priced from live scrap and parts values." },
-              { icon: Truck, n: "03", t: "We tow it & pay you", b: "Pick a time, we come to you, hand you cash, and haul it away — free." },
+              { icon: ClipboardList, n: "01", t: "Tell us about the car",
+                b: "Year, make, model, and how rough it is. About a minute. No VIN hunting and no account to create." },
+              { icon: BadgeDollarSign, n: "02", t: "Get your real number",
+                b: "A guaranteed cash offer priced from live scrap weight, the catalytic converter and parts that still sell." },
+              { icon: Truck, n: "03", t: "We collect it and pay you",
+                b: "Pick a time that suits you. We come to your driveway anywhere in DFW, hand you the cash, and tow it free." },
             ].map(({ icon: Icon, n, t, b }) => (
               <div key={n} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">
                 <div className="flex items-center justify-between">
@@ -178,25 +245,61 @@ export default async function Landing() {
         </div>
       </section>
 
-      {/* trust stats */}
+      {/* what we buy */}
       <section className="mx-auto max-w-6xl px-5 py-16">
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <h2 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
+          What we buy
+        </h2>
+        <p className="mt-3 max-w-2xl text-zinc-600">
+          If it has four wheels and a title problem, a dead engine or a caved-in
+          front end, it is still worth money. We buy cars, trucks, vans and SUVs
+          in any condition.
+        </p>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            ["2 min", "To a real offer"],
-            ["$0", "Towing & fees, always"],
-            ["24–48h", "Typical pickup window"],
-            ["Any", "Make, model or condition"],
-          ].map(([v, k]) => (
-            <div key={k} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-6">
-              <div className={`text-3xl font-bold tracking-tight ${mono}`}>{v}</div>
-              <div className="mt-1 text-sm font-medium text-zinc-500">{k}</div>
-            </div>
-          ))}
+            [Wrench, "Wrecked and collision cars", "Front, rear or side damage, deployed airbags, insurance write-offs."],
+            [Truck, "Cars that will not start", "Seized engines, blown transmissions, dead for years in the driveway."],
+            [FileText, "No title, lost title", "We handle Texas paperwork daily and will tell you what your case needs."],
+            [ShieldCheck, "Flood and fire damage", "Water and smoke do not stop a car being worth scrap and parts."],
+            [BadgeDollarSign, "High-mileage trade-ins", "Worth more to us than the dealer offered you on trade."],
+            [MapPin, "Abandoned on your property", "Tenants and neighbours leave cars behind. We remove them."],
+          ].map(([Icon, t, b]) => {
+            const I = Icon as typeof Truck;
+            return (
+              <div key={t as string} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-6">
+                <I className="h-6 w-6 text-emerald-600" />
+                <h3 className="mt-3 font-bold">{t as string}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">{b as string}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* testimonials — real customers carried over from junkerz.com */}
+      <section className="border-y border-zinc-100 bg-zinc-50">
+        <div className="mx-auto max-w-6xl px-5 py-16">
+          <h2 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
+            What DFW sellers say
+          </h2>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {TESTIMONIALS.slice(0, 3).map((t) => (
+              <figure key={t.name} className="rounded-2xl border border-zinc-200 bg-white p-6">
+                <Quote className="h-6 w-6 text-emerald-600" />
+                <blockquote className="mt-3 text-[15px] leading-relaxed text-zinc-700">
+                  {t.text}
+                </blockquote>
+                <figcaption className={`mt-4 text-sm font-bold text-zinc-900 ${mono}`}>
+                  {t.name}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* reassurance */}
-      <section className="mx-auto max-w-6xl px-5 pb-16">
+      <section className="mx-auto max-w-6xl px-5 py-16">
         <div className="rounded-3xl bg-emerald-600 px-8 py-12 text-white md:px-14 md:py-16">
           <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
             <div className="max-w-xl">
@@ -210,17 +313,39 @@ export default async function Landing() {
                 We buy cars other places turn away.
               </h2>
               <p className="mt-3 text-emerald-50">
-                Dead cars still carry real value — scrap metal, the catalytic
-                converter, and reusable parts. That&apos;s exactly what we pay for.
+                A dead car still carries real value in scrap metal, the catalytic
+                converter and reusable parts. That is exactly what we price and pay for.
               </p>
             </div>
             <Link href="/quote" className="w-full md:w-auto">
-              <Button
-                className="h-14 w-full gap-2 bg-white px-8 text-base font-bold text-emerald-700 hover:bg-emerald-50 md:w-auto">
+              <Button className="h-14 w-full gap-2 bg-white px-8 text-base font-bold text-emerald-700 hover:bg-emerald-50 md:w-auto">
                 Get my offer <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* service area */}
+      <section className="mx-auto max-w-6xl px-5 pb-16">
+        <h2 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
+          Where we tow from
+        </h2>
+        <p className="mt-3 max-w-2xl text-zinc-600">
+          We cover Dallas–Fort Worth and about two hours around it, from
+          Gainesville down to Ennis and from Weatherford across to Greenville.
+          Towing is free everywhere on this list.
+        </p>
+        <div className="mt-7 flex flex-wrap gap-2">
+          {CITIES.map((x) => (
+            <Link
+              key={x.slug}
+              href={`/cash-for-junk-cars/${x.slug}`}
+              className="rounded-full border border-zinc-200 bg-white px-3.5 py-1.5 text-sm font-medium text-zinc-700 transition hover:border-emerald-600 hover:text-emerald-700"
+            >
+              {x.name}
+            </Link>
+          ))}
         </div>
       </section>
 
@@ -230,13 +355,7 @@ export default async function Landing() {
           Good to know
         </h2>
         <div className="mt-8 divide-y divide-zinc-200">
-          {[
-            ["Is the offer really guaranteed?", "Yes. The number you see is what we pay, as long as the car matches what you told us — no surprise deductions when the tow truck shows up."],
-            ["What if I don't have the title?", "In many cases we can still buy it with your registration and ID. Just tell us during the quote and we'll explain what your state needs."],
-            ["Do you really tow it for free?", "Always. Towing and pickup are $0 — the offer you accept is the cash you get, nothing deducted."],
-            ["How do I get paid?", "Cash or instant transfer, handed to you at pickup before we load the car. Never a mailed check you have to chase."],
-            ["My car doesn't run at all. Worth anything?", "Almost always yes — scrap, the catalytic converter, and parts have real value. Our pricing is built on exactly that."],
-          ].map(([q, a]) => (
+          {FAQ.map(([q, a]) => (
             <details key={q} className="group py-5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-lg font-semibold [&::-webkit-details-marker]:hidden">
                 {q}
@@ -250,21 +369,74 @@ export default async function Landing() {
         </div>
       </section>
 
-      {/* footer */}
-      <footer className="border-t border-zinc-200 bg-zinc-50">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-10 text-sm text-zinc-500 sm:flex-row">
-          <div className="flex items-center gap-2 font-extrabold text-zinc-800">
-            <span className="grid h-7 w-7 -rotate-6 place-items-center rounded-md bg-emerald-600 text-white">
-              <BadgeDollarSign className="h-4 w-4" />
-            </span>
-            Junkerz
-          </div>
-          <div>Cash for junk cars · Madill, OK · {c.phone}</div>
-          <a href="mailto:hello@junkerz.com" className="underline hover:text-zinc-800">
-            hello@junkerz.com
-          </a>
-        </div>
-      </footer>
+      <SiteFooter phone={c.phone} />
     </main>
+  );
+}
+
+export function SiteFooter({ phone }: { phone?: string }) {
+  const p = phone || SITE.phone;
+  const telHref = `tel:+1${p.replace(/\D/g, "")}`;
+  return (
+    <footer className="border-t border-zinc-200 bg-zinc-50">
+      <div className="mx-auto max-w-6xl px-5 py-12">
+        <div className="grid gap-8 md:grid-cols-4">
+          <div>
+            <div className="flex items-center gap-2 font-extrabold text-zinc-900">
+              <span className="grid h-7 w-7 -rotate-6 place-items-center rounded-md bg-emerald-600 text-white">
+                <BadgeDollarSign className="h-4 w-4" />
+              </span>
+              Junkerz
+            </div>
+            <p className="mt-3 text-sm leading-relaxed text-zinc-600">
+              Buying junk, wrecked and non-running cars across Dallas–Fort Worth
+              since {SITE.founded}. Free towing, cash at pickup.
+            </p>
+            <a href={telHref} className={`mt-4 inline-flex items-center gap-1.5 font-bold text-zinc-900 hover:text-emerald-700 ${mono}`}>
+              <Phone className="h-4 w-4" /> {p}
+            </a>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-bold text-zinc-900">Sell your car</h3>
+            <ul className="mt-3 space-y-2 text-sm text-zinc-600">
+              <li><Link href="/quote" className="hover:text-emerald-700">Get an instant offer</Link></li>
+              <li><Link href="/junk-cars" className="hover:text-emerald-700">Wrecked &amp; junk cars</Link></li>
+              <li><Link href="/not-running" className="hover:text-emerald-700">Cars that will not start</Link></li>
+              <li><Link href="/unwanted-cars" className="hover:text-emerald-700">Unwanted cars</Link></li>
+              <li><Link href="/carro-viejos" className="hover:text-emerald-700">Español · Carros viejos</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-bold text-zinc-900">Company</h3>
+            <ul className="mt-3 space-y-2 text-sm text-zinc-600">
+              <li><Link href="/about-us" className="hover:text-emerald-700">About us</Link></li>
+              <li><Link href="/contact-us" className="hover:text-emerald-700">Contact us</Link></li>
+              <li><Link href="/privacy-policy" className="hover:text-emerald-700">Privacy policy</Link></li>
+              <li><Link href="/buyers/login" className="hover:text-emerald-700">Salvage yard login</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-bold text-zinc-900">Popular areas</h3>
+            <ul className="mt-3 space-y-2 text-sm text-zinc-600">
+              {CITIES.slice(0, 8).map((x) => (
+                <li key={x.slug}>
+                  <Link href={`/cash-for-junk-cars/${x.slug}`} className="hover:text-emerald-700">
+                    Junk cars in {x.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-10 flex flex-col gap-2 border-t border-zinc-200 pt-6 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
+          <span>© {new Date().getFullYear()} {SITE.legal}. {SITE.street}, {SITE.city}, {SITE.state} {SITE.postal}.</span>
+          <a href={`mailto:${SITE.email}`} className="underline hover:text-zinc-800">{SITE.email}</a>
+        </div>
+      </div>
+    </footer>
   );
 }
