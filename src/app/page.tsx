@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import HeroQuoteForm from "@/components/HeroQuoteForm";
 import type { Metadata } from "next";
 import {
   Truck, BadgeDollarSign, Phone, ClipboardList, ArrowRight,
@@ -175,15 +176,16 @@ export default async function Landing() {
             {c.hero_subtitle}
           </p>
 
-          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/quote" className="w-full sm:w-auto">
-              <Button className="h-14 w-full gap-2 px-9 text-base font-bold sm:w-auto">
-                {c.hero_cta} <ArrowRight className="h-5 w-5" />
-              </Button>
-            </Link>
-            <a href={telHref} className="w-full sm:w-auto">
+          {/* the quote starts here, dead centre under the headline */}
+          <div className="mt-9">
+            <HeroQuoteForm />
+          </div>
+
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <span className="text-sm text-zinc-500">Rather talk it through?</span>
+            <a href={telHref}>
               <Button variant="outline"
-                className="h-14 w-full gap-2 px-7 text-base font-bold sm:w-auto">
+                className="h-12 w-full gap-2 px-6 text-base font-bold sm:w-auto">
                 <Phone className="h-4 w-4" /> {c.phone}
               </Button>
             </a>
