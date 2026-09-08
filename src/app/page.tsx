@@ -163,35 +163,29 @@ export default async function Landing() {
         </div>
       </header>
 
-      {/* hero — plain and centred */}
+      {/* hero — the quote engine is the centrepiece, headline above and below */}
       <section className="border-b border-zinc-100">
-        <div className="mx-auto max-w-3xl px-5 py-16 text-center md:py-24">
+        <div className="mx-auto max-w-3xl px-5 py-12 text-center md:py-16">
           <p className={`text-xs font-semibold uppercase tracking-[0.18em] text-brand-700 ${mono}`}>
             {c.hero_eyebrow}
           </p>
-          <h1 className="mx-auto mt-4 max-w-2xl text-balance text-4xl font-extrabold leading-[1.06] tracking-tight sm:text-5xl md:text-6xl">
+
+          {/* headline sits directly on top of the quote engine */}
+          <h1 className="mx-auto mt-4 max-w-2xl text-balance text-3xl font-extrabold leading-[1.08] tracking-tight sm:text-4xl md:text-5xl">
             {c.hero_title}
           </h1>
-          <p className="mx-auto mt-5 max-w-xl text-lg text-zinc-600">
-            {c.hero_subtitle}
-          </p>
 
-          {/* the quote starts here, dead centre under the headline */}
-          <div className="mt-9">
+          {/* the quote engine */}
+          <div className="mt-7">
             <HeroQuoteForm />
           </div>
 
-          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <span className="text-sm text-zinc-500">Rather talk it through?</span>
-            <a href={telHref}>
-              <Button variant="outline"
-                className="h-12 w-full gap-2 px-6 text-base font-bold sm:w-auto">
-                <Phone className="h-4 w-4" /> {c.phone}
-              </Button>
-            </a>
-          </div>
+          {/* and the promise underneath it */}
+          <p className="mx-auto mt-7 max-w-xl text-lg text-zinc-600">
+            {c.hero_subtitle}
+          </p>
 
-          <ul className="mx-auto mt-10 grid max-w-2xl gap-3 text-[15px] text-zinc-700 sm:grid-cols-2">
+          <ul className="mx-auto mt-8 grid max-w-2xl gap-3 text-[15px] text-zinc-700 sm:grid-cols-2">
             {[
               [Truck, "Free towing, every pickup"],
               [BadgeDollarSign, "Cash handed over at collection"],
@@ -207,6 +201,16 @@ export default async function Landing() {
               );
             })}
           </ul>
+
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <span className="text-sm text-zinc-500">Rather talk it through?</span>
+            <a href={telHref}>
+              <Button variant="outline"
+                className="h-12 w-full gap-2 px-6 text-base font-bold sm:w-auto">
+                <Phone className="h-4 w-4" /> {c.phone}
+              </Button>
+            </a>
+          </div>
         </div>
       </section>
 
