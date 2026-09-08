@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Logo from "@/components/Logo";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BadgeDollarSign, ArrowLeft, Check, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,8 +116,9 @@ function isValidEmail(email: string) {
   return /\S+@\S+\.\S+/.test(email.trim());
 }
 
-export default function QuoteWizard() {
+function QuoteWizardInner() {
   const router = useRouter();
+  const sp = useSearchParams();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Form>({
     vehicle: EMPTY_VEHICLE,
@@ -135,6 +136,31 @@ export default function QuoteWizard() {
     phone: false,
     email: false,
   });
+  // The homepage already asked for year, make and model. Carry those in and
+  // start on the next question instead of asking the same thing twice —
+  // George, on hitting the live page: "it asks you the same questions again".
+  useEffect(() => {
+    const year = sp.get("year");
+    const makeId = sp.get("make_id");
+    const modelId = sp.get("model_id");
+    const make = sp.get("make");
+    const model = sp.get("model");
+    if (!year || !makeId || !modelId || !make || !model) return;
+    setForm((f) => ({
+      ...f,
+      vehicle: {
+        year: Number(year),
+        make_id: Number(makeId),
+        make_name: make,
+        model_id: Number(modelId),
+        model_name: model,
+        trim: "",
+      },
+    }));
+    setStep((cur) => (cur === 0 ? 1 : cur));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -239,6 +265,19 @@ export default function QuoteWizard() {
             />
           </div>
         </div>
+
+        {/* what the homepage already told us */}
+        {form.vehicle.year && form.vehicle.make_name && form.vehicle.model_name && step > 0 && (
+          <div className="mb-4 flex items-center justify-between rounded-xl border border-brand-200 bg-brand-50 px-4 py-3">
+            <span className="text-sm font-semibold text-brand-800">
+              {form.vehicle.year} {form.vehicle.make_name} {form.vehicle.model_name}
+            </span>
+            <button type="button" onClick={() => setStep(0)}
+              className="text-xs font-semibold text-brand-700 underline">
+              Change
+            </button>
+          </div>
+        )}
 
         {/* step heading */}
         <h1 className="text-balance text-2xl font-extrabold tracking-tight">{meta.title}</h1>
@@ -439,5 +478,19 @@ export default function QuoteWizard() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function QuotePage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="grid min-h-screen place-items-center bg-zinc-50 text-zinc-500">
+          Loading your quote…
+        </main>
+      }
+    >
+      <QuoteWizardInner />
+    </Suspense>
   );
 }
