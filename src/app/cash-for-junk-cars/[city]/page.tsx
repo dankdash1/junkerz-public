@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import StickyMobileBar from "@/components/StickyMobileBar";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Check, Phone, ArrowRight, MapPin } from "lucide-react";
@@ -80,7 +81,7 @@ export default async function CityPage(
   };
 
   return (
-    <main className="min-h-screen bg-white text-zinc-900">
+    <main className="min-h-screen bg-white pb-20 text-zinc-900 md:pb-0">
       <script type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <SiteHeader />
@@ -234,6 +235,7 @@ export default async function CityPage(
       </div>
 
       <SiteFooter />
+      <StickyMobileBar />
     </main>
   );
 }

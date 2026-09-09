@@ -7,6 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import HeroQuoteForm, { ES } from "@/components/HeroQuoteForm";
 import Logo from "@/components/Logo";
+import StickyMobileBar from "@/components/StickyMobileBar";
 import { SITE, TESTIMONIALS, CITIES } from "@/lib/site";
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
@@ -59,7 +60,7 @@ export default function CarroViejos() {
   };
 
   return (
-    <main className="min-h-screen bg-white text-zinc-900" lang="es">
+    <main className="min-h-screen bg-white pb-20 text-zinc-900 md:pb-0" lang="es">
       <script type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
@@ -327,6 +328,7 @@ export default function CarroViejos() {
           </div>
         </div>
       </footer>
+      <StickyMobileBar es />
     </main>
   );
 }

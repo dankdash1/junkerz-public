@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import StickyMobileBar from "@/components/StickyMobileBar";
 import HeroQuoteForm from "@/components/HeroQuoteForm";
 import type { Metadata } from "next";
 import {
@@ -133,7 +134,7 @@ export default async function Landing() {
   };
 
   return (
-    <main className="min-h-screen bg-white text-zinc-900">
+    <main className="min-h-screen bg-white pb-20 text-zinc-900 md:pb-0">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -370,6 +371,7 @@ export default async function Landing() {
       </section>
 
       <SiteFooter phone={c.phone} />
+      <StickyMobileBar />
     </main>
   );
 }

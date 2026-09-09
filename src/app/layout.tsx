@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { SITE } from "@/lib/site";
 import ChatBubble from "@/components/ChatBubble";
+import Analytics from "@/components/Analytics";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -74,6 +75,7 @@ export default function RootLayout({
       >
         {children}
         <ChatBubble />
+        <Analytics />
       </body>
     </html>
   );
