@@ -48,6 +48,9 @@ interface FormState {
   title_statuses: string[];
   zip_codes: string;
   weekly_budget_dollars: string;
+  max_per_day: string;
+  max_per_week: string;
+  max_per_month: string;
   pickup_paid_by: string;
   priority: number;
   // new condition filters
@@ -76,6 +79,9 @@ export default function NewBidRule() {
     title_statuses: ["clean"],
     zip_codes: "",
     weekly_budget_dollars: "",
+    max_per_day: "",
+    max_per_week: "",
+    max_per_month: "",
     pickup_paid_by: "buyer",
     priority: 0,
     require_runs: null,
@@ -138,6 +144,9 @@ export default function NewBidRule() {
         weekly_budget_cents: form.weekly_budget_dollars
           ? Math.round(parseFloat(form.weekly_budget_dollars) * 100)
           : null,
+        max_per_day: form.max_per_day ? parseInt(form.max_per_day, 10) : null,
+        max_per_week: form.max_per_week ? parseInt(form.max_per_week, 10) : null,
+        max_per_month: form.max_per_month ? parseInt(form.max_per_month, 10) : null,
         pickup_paid_by: form.pickup_paid_by,
         priority: form.priority,
         // vehicle picker
@@ -433,6 +442,43 @@ export default function NewBidRule() {
             }
           />
         </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <Label>Max cars / day</Label>
+            <Input
+              type="number"
+              min="1"
+              value={form.max_per_day}
+              onChange={(e) => setForm({ ...form, max_per_day: e.target.value })}
+              placeholder="Any"
+            />
+          </div>
+          <div>
+            <Label>Max / week</Label>
+            <Input
+              type="number"
+              min="1"
+              value={form.max_per_week}
+              onChange={(e) => setForm({ ...form, max_per_week: e.target.value })}
+              placeholder="Any"
+            />
+          </div>
+          <div>
+            <Label>Max / month</Label>
+            <Input
+              type="number"
+              min="1"
+              value={form.max_per_month}
+              onChange={(e) => setForm({ ...form, max_per_month: e.target.value })}
+              placeholder="Any"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-slate-500 -mt-1">
+          Leave blank to take as many as you win. Counts reset nightly, Monday
+          morning and on the 1st. A car you decline gives its count back.
+        </p>
+
         <div>
           <Label>Who pays pickup</Label>
           <div className="flex gap-2 mt-1">
