@@ -18,7 +18,28 @@ const selectCls =
  * It collects year, make and model, then hands them to the wizard
  * so the seller never re-types what they already told us.
  */
-export default function HeroQuoteForm() {
+type Copy = {
+  lead: string; year: string; make: string; model: string;
+  pickYear: string; pickMake: string; cta: string; going: string; note: string;
+};
+
+const EN: Copy = {
+  lead: "Start with your car. Takes about a minute.",
+  year: "Year", make: "Make", model: "Model",
+  pickYear: "Pick a year first", pickMake: "Pick a make first",
+  cta: "See what it's worth", going: "One second…",
+  note: "No account. No obligation. We never sell your details.",
+};
+
+export const ES: Copy = {
+  lead: "Empiece con su carro. Toma como un minuto.",
+  year: "Año", make: "Marca", model: "Modelo",
+  pickYear: "Elija el año primero", pickMake: "Elija la marca primero",
+  cta: "Ver cuánto vale", going: "Un momento…",
+  note: "Sin cuenta. Sin compromiso. Nunca vendemos sus datos.",
+};
+
+export default function HeroQuoteForm({ copy = EN }: { copy?: Copy }) {
   const router = useRouter();
   const [years, setYears] = useState<number[]>([]);
   const [makes, setMakes] = useState<Opt[]>([]);
@@ -66,7 +87,7 @@ export default function HeroQuoteForm() {
   return (
     <div className="mx-auto w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-5 text-left shadow-[0_20px_60px_-15px_rgba(16,24,28,.25)] sm:p-6">
       <p className="text-center text-[15px] font-bold text-zinc-900">
-        Start with your car. Takes about a minute.
+        {copy.lead}
       </p>
       <div className="mt-4 grid gap-3">
         <select
@@ -75,7 +96,7 @@ export default function HeroQuoteForm() {
           value={year}
           onChange={(e) => { setYear(e.target.value); setModel(null); }}
         >
-          <option value="">Year</option>
+          <option value="">{copy.year}</option>
           {years.map((y) => <option key={y} value={y}>{y}</option>)}
         </select>
 
@@ -89,7 +110,7 @@ export default function HeroQuoteForm() {
             setMake(m); setModel(null);
           }}
         >
-          <option value="">{year ? "Make" : "Pick a year first"}</option>
+          <option value="">{year ? copy.make : copy.pickYear}</option>
           {makes.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
 
@@ -102,7 +123,7 @@ export default function HeroQuoteForm() {
             setModel(models.find((x) => String(x.id) === e.target.value) || null)
           }
         >
-          <option value="">{make ? "Model" : "Pick a make first"}</option>
+          <option value="">{make ? copy.model : copy.pickMake}</option>
           {models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
 
@@ -112,12 +133,12 @@ export default function HeroQuoteForm() {
           className="h-14 w-full gap-2 text-base font-bold"
         >
           {going ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-          {going ? "One second…" : "See what it's worth"}
+          {going ? copy.going : copy.cta}
           {!going && <ArrowRight className="h-5 w-5" />}
         </Button>
       </div>
       <p className="mt-3 text-center text-xs text-zinc-500">
-        No account. No obligation. We never sell your details.
+        {copy.note}
       </p>
     </div>
   );
