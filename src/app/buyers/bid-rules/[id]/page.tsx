@@ -43,6 +43,13 @@ interface BidRuleResponse {
   title_statuses?: string[];
   zip_codes?: string[] | null;
   weekly_budget_cents?: number | null;
+  max_per_day?: number | null;
+  max_per_week?: number | null;
+  max_per_month?: number | null;
+  daily_count_used?: number | null;
+  weekly_count_used?: number | null;
+  monthly_count_used?: number | null;
+  weekly_spend_cents?: number | null;
   pickup_paid_by?: string;
   priority?: number;
   notification_preference?: string[] | null;
@@ -71,6 +78,9 @@ interface FormState {
   title_statuses: string[];
   zip_codes: string;
   weekly_budget_dollars: string;
+  max_per_day: string;
+  max_per_week: string;
+  max_per_month: string;
   pickup_paid_by: string;
   priority: number;
   notification_preference: string[];
@@ -149,6 +159,9 @@ export default function EditBidRule() {
     title_statuses: ["clean"],
     zip_codes: "",
     weekly_budget_dollars: "",
+    max_per_day: "",
+    max_per_week: "",
+    max_per_month: "",
     pickup_paid_by: "buyer",
     priority: 0,
     notification_preference: ["telegram"],
@@ -171,11 +184,19 @@ export default function EditBidRule() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [backtest, setBacktest] = useState<BacktestResult | null>(null);
+  const [used, setUsed] = useState<{
+    day: number; week: number; month: number;
+  }>({ day: 0, week: 0, month: 0 });
 
   useEffect(() => {
     buyerApi
       .getRule(id)
       .then((r: BidRuleResponse) => {
+        setUsed({
+          day: r.daily_count_used ?? 0,
+          week: r.weekly_count_used ?? 0,
+          month: r.monthly_count_used ?? 0,
+        });
         setForm({
           name: r.name ?? "",
           bid_dollars: ((r.bid_cents ?? 0) / 100).toFixed(2),
@@ -186,6 +207,9 @@ export default function EditBidRule() {
           conditions: r.conditions ?? ["runs"],
           title_statuses: r.title_statuses ?? ["clean"],
           zip_codes: (r.zip_codes ?? []).join(", "),
+          max_per_day: r.max_per_day != null ? String(r.max_per_day) : "",
+          max_per_week: r.max_per_week != null ? String(r.max_per_week) : "",
+          max_per_month: r.max_per_month != null ? String(r.max_per_month) : "",
           weekly_budget_dollars:
             r.weekly_budget_cents != null
               ? (r.weekly_budget_cents / 100).toFixed(2)
@@ -265,6 +289,9 @@ export default function EditBidRule() {
         zip_codes: form.zip_codes
           ? form.zip_codes.split(",").map((s: string) => s.trim()).filter(Boolean)
           : null,
+        max_per_day: form.max_per_day ? parseInt(form.max_per_day, 10) : null,
+        max_per_week: form.max_per_week ? parseInt(form.max_per_week, 10) : null,
+        max_per_month: form.max_per_month ? parseInt(form.max_per_month, 10) : null,
         weekly_budget_cents: form.weekly_budget_dollars
           ? Math.round(parseFloat(form.weekly_budget_dollars) * 100)
           : null,
@@ -564,6 +591,43 @@ export default function EditBidRule() {
             }
           />
         </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <Label>Max cars / day</Label>
+            <Input
+              type="number"
+              min="1"
+              value={form.max_per_day}
+              onChange={(e) => setForm({ ...form, max_per_day: e.target.value })}
+              placeholder="Any"
+            />
+          </div>
+          <div>
+            <Label>Max / week</Label>
+            <Input
+              type="number"
+              min="1"
+              value={form.max_per_week}
+              onChange={(e) => setForm({ ...form, max_per_week: e.target.value })}
+              placeholder="Any"
+            />
+          </div>
+          <div>
+            <Label>Max / month</Label>
+            <Input
+              type="number"
+              min="1"
+              value={form.max_per_month}
+              onChange={(e) => setForm({ ...form, max_per_month: e.target.value })}
+              placeholder="Any"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-slate-500 -mt-1">
+          Used so far: {used.day} today, {used.week} this week, {used.month}{" "}
+          this month. A car you decline gives its count back.
+        </p>
+
         <div>
           <Label>Who pays pickup</Label>
           <div className="flex gap-2 mt-1">
