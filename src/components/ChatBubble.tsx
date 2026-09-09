@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
 
@@ -7,6 +7,13 @@ type Message = { role: string; text: string };
 
 export default function ChatBubble() {
   const [open, setOpen] = useState(false);
+  // One id per visitor per tab, so every line they type joins the SAME
+  // conversation in the admin instead of creating a fresh one each message.
+  const sessionId = useRef<string>(
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `s-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  );
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
 
@@ -19,7 +26,7 @@ export default function ChatBubble() {
       const r = await fetch(`${BASE}/api/public/junkerz/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ messages: next, session_id: sessionId.current }),
       });
       const data = await r.json();
       setMessages([
