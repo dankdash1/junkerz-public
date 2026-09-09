@@ -1,6 +1,7 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { Check, Phone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,10 +30,10 @@ type Offer = {
   offer_cents?: number;
 };
 
-export default function DeclinePage({
-  params,
-}: { params: Promise<{ token: string }> }) {
-  const { token } = use(params);
+export default function DeclinePage() {
+  // Next 14: params is a plain object, and the other token pages all read it
+  // through useParams. Matching them keeps this consistent.
+  const token = String(useParams()?.token ?? "");
   const [offer, setOffer] = useState<Offer | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
 
