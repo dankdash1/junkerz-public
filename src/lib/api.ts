@@ -9,6 +9,8 @@ export async function submitQuote(payload: {
   make_id?: number | null; model_id?: number | null;
   runs?: boolean; starts?: boolean;
   all_wheels_attached?: boolean; all_tires_inflated?: boolean;
+  // Which axle is flat — decides wheel-lift vs flatbed.
+  flat_tire_position?: "none" | "front" | "rear" | "both";
   engine_state?: "intact" | "partial" | "missing";
   transmission_state?: "intact" | "partial" | "missing";
   has_catalytic?: boolean; has_battery?: boolean; has_keys?: boolean;

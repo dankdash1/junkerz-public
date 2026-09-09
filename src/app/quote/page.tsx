@@ -44,6 +44,9 @@ const T = {
     titles: { clean: "Clean title", salvage: "Salvage title", rebuilt: "Rebuilt title", no_title: "No title" },
     runs: "Does it run/drive?", starts: "Does it start?",
     wheels: "All four wheels attached?", tires: "All tires inflated?",
+    whichFlat: "Which ones are flat?",
+    flat: { front: "Front", rear: "Rear", both: "Both ends" },
+    flatHint: "It decides which truck we send, so it saves you a wasted visit.",
     engine: "Engine", trans: "Transmission",
     cat: "Catalytic converter installed?", battery: "Battery present?", keys: "Keys available?",
     zip: "Zip code", address: "Pickup address (optional)",
@@ -72,6 +75,9 @@ const T = {
     titles: { clean: "Título limpio", salvage: "Título de salvamento", rebuilt: "Título reconstruido", no_title: "Sin título" },
     runs: "¿Camina el carro?", starts: "¿Prende el motor?",
     wheels: "¿Tiene las cuatro llantas puestas?", tires: "¿Las llantas tienen aire?",
+    whichFlat: "¿Cuáles están ponchadas?",
+    flat: { front: "Adelante", rear: "Atrás", both: "Las dos puntas" },
+    flatHint: "Decide qué grúa mandamos, así no perdemos un viaje.",
     engine: "Motor", trans: "Transmisión",
     cat: "¿Tiene el convertidor catalítico?", battery: "¿Tiene batería?", keys: "¿Tiene las llaves?",
     zip: "Código postal", address: "Dirección de recogida (opcional)",
@@ -96,6 +102,7 @@ type Form = {
   starts: boolean | null;
   all_wheels_attached: boolean | null;
   all_tires_inflated: boolean | null;
+  flat_tire_position: "front" | "rear" | "both" | "";
   engine_state: "intact" | "partial" | "missing" | "";
   transmission_state: "intact" | "partial" | "missing" | "";
   has_catalytic: boolean | null;
@@ -191,6 +198,7 @@ function QuoteWizardInner() {
     title_status: "",
     runs: null, starts: null,
     all_wheels_attached: null, all_tires_inflated: null,
+    flat_tire_position: "",
     engine_state: "", transmission_state: "",
     has_catalytic: null, has_battery: null, has_keys: null,
     damage_zones: EMPTY_DAMAGE,
@@ -258,6 +266,9 @@ function QuoteWizardInner() {
         starts: form.starts ?? undefined,
         all_wheels_attached: form.all_wheels_attached ?? undefined,
         all_tires_inflated: form.all_tires_inflated ?? undefined,
+        flat_tire_position:
+          form.all_tires_inflated === true ? "none"
+          : form.flat_tire_position || undefined,
         engine_state: form.engine_state || undefined,
         transmission_state: form.transmission_state || undefined,
         has_catalytic: form.has_catalytic ?? undefined,
@@ -288,7 +299,9 @@ function QuoteWizardInner() {
     if (step === 0) return !!(form.vehicle.year && form.vehicle.make_id && form.vehicle.model_id);
     if (step === 1) return !!form.title_status;
     if (step === 2) return form.runs !== null && form.starts !== null
-                           && form.all_wheels_attached !== null;
+                           && form.all_wheels_attached !== null
+                           && (form.all_tires_inflated !== false
+                               || form.flat_tire_position !== "");
     if (step === 3) return !!form.engine_state && !!form.transmission_state
                            && form.has_catalytic !== null
                            && form.has_battery !== null && form.has_keys !== null;
@@ -409,7 +422,37 @@ function QuoteWizardInner() {
                 onChange={(v) => setForm({ ...form, all_wheels_attached: v })} />
               <YesNo label={t.tires}
                 value={form.all_tires_inflated}
-                onChange={(v) => setForm({ ...form, all_tires_inflated: v })} />
+                onChange={(v) => setForm({
+                  ...form,
+                  all_tires_inflated: v,
+                  // Saying they are all up clears any earlier answer.
+                  flat_tire_position: v ? "" : form.flat_tire_position,
+                })} />
+
+              {/* Which axle decides whether we send a wheel-lift or a flatbed. */}
+              {form.all_tires_inflated === false && (
+                <div className="rounded-xl border border-brand-200 bg-brand-50 p-4">
+                  <Label className="text-sm font-medium text-zinc-800">
+                    {t.whichFlat}
+                  </Label>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {(["front", "rear", "both"] as const).map((k) => (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => setForm({ ...form, flat_tire_position: k })}
+                        className={`h-11 rounded-xl border text-sm font-semibold transition
+                          ${form.flat_tire_position === k
+                            ? "border-brand-600 bg-brand-600 text-white shadow-sm"
+                            : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300"}`}
+                      >
+                        {t.flat[k]}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-zinc-600">{t.flatHint}</p>
+                </div>
+              )}
             </div>
           )}
 
