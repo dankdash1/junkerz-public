@@ -43,6 +43,8 @@ interface BidRuleResponse {
   title_statuses?: string[];
   zip_codes?: string[] | null;
   weekly_budget_cents?: number | null;
+  zip_center?: string | null;
+  zip_radius_miles?: number | null;
   max_per_day?: number | null;
   max_per_week?: number | null;
   max_per_month?: number | null;
@@ -77,6 +79,8 @@ interface FormState {
   conditions: string[];
   title_statuses: string[];
   zip_codes: string;
+  zip_center: string;
+  zip_radius_miles: string;
   weekly_budget_dollars: string;
   max_per_day: string;
   max_per_week: string;
@@ -158,6 +162,8 @@ export default function EditBidRule() {
     conditions: ["runs"],
     title_statuses: ["clean"],
     zip_codes: "",
+    zip_center: "",
+    zip_radius_miles: "",
     weekly_budget_dollars: "",
     max_per_day: "",
     max_per_week: "",
@@ -207,6 +213,9 @@ export default function EditBidRule() {
           conditions: r.conditions ?? ["runs"],
           title_statuses: r.title_statuses ?? ["clean"],
           zip_codes: (r.zip_codes ?? []).join(", "),
+          zip_center: r.zip_center ?? "",
+          zip_radius_miles:
+            r.zip_radius_miles != null ? String(r.zip_radius_miles) : "",
           max_per_day: r.max_per_day != null ? String(r.max_per_day) : "",
           max_per_week: r.max_per_week != null ? String(r.max_per_week) : "",
           max_per_month: r.max_per_month != null ? String(r.max_per_month) : "",
@@ -288,6 +297,10 @@ export default function EditBidRule() {
         title_statuses: form.title_statuses,
         zip_codes: form.zip_codes
           ? form.zip_codes.split(",").map((s: string) => s.trim()).filter(Boolean)
+          : null,
+        zip_center: form.zip_center.trim() || null,
+        zip_radius_miles: form.zip_radius_miles
+          ? parseInt(form.zip_radius_miles, 10)
           : null,
         max_per_day: form.max_per_day ? parseInt(form.max_per_day, 10) : null,
         max_per_week: form.max_per_week ? parseInt(form.max_per_week, 10) : null,
@@ -591,6 +604,33 @@ export default function EditBidRule() {
             }
           />
         </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Or a radius: centre ZIP</Label>
+            <Input
+              value={form.zip_center}
+              onChange={(e) => setForm({ ...form, zip_center: e.target.value })}
+              placeholder="75201"
+            />
+          </div>
+          <div>
+            <Label>Miles from that ZIP</Label>
+            <Input
+              type="number"
+              min="1"
+              value={form.zip_radius_miles}
+              onChange={(e) =>
+                setForm({ ...form, zip_radius_miles: e.target.value })
+              }
+              placeholder="Any"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-slate-500 -mt-1">
+          Set either one. A car counts if its ZIP is on your list or it sits
+          inside the circle. Leave both blank to take cars anywhere.
+        </p>
+
         <div className="grid grid-cols-3 gap-3">
           <div>
             <Label>Max cars / day</Label>

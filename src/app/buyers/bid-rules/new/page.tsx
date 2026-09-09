@@ -47,6 +47,8 @@ interface FormState {
   conditions: string[];
   title_statuses: string[];
   zip_codes: string;
+  zip_center: string;
+  zip_radius_miles: string;
   weekly_budget_dollars: string;
   max_per_day: string;
   max_per_week: string;
@@ -78,6 +80,8 @@ export default function NewBidRule() {
     conditions: ["runs"],
     title_statuses: ["clean"],
     zip_codes: "",
+    zip_center: "",
+    zip_radius_miles: "",
     weekly_budget_dollars: "",
     max_per_day: "",
     max_per_week: "",
@@ -140,6 +144,10 @@ export default function NewBidRule() {
         title_statuses: form.title_statuses,
         zip_codes: form.zip_codes
           ? form.zip_codes.split(",").map((s: string) => s.trim()).filter(Boolean)
+          : null,
+        zip_center: form.zip_center.trim() || null,
+        zip_radius_miles: form.zip_radius_miles
+          ? parseInt(form.zip_radius_miles, 10)
           : null,
         weekly_budget_cents: form.weekly_budget_dollars
           ? Math.round(parseFloat(form.weekly_budget_dollars) * 100)
@@ -442,6 +450,33 @@ export default function NewBidRule() {
             }
           />
         </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Or a radius: centre ZIP</Label>
+            <Input
+              value={form.zip_center}
+              onChange={(e) => setForm({ ...form, zip_center: e.target.value })}
+              placeholder="75201"
+            />
+          </div>
+          <div>
+            <Label>Miles from that ZIP</Label>
+            <Input
+              type="number"
+              min="1"
+              value={form.zip_radius_miles}
+              onChange={(e) =>
+                setForm({ ...form, zip_radius_miles: e.target.value })
+              }
+              placeholder="Any"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-slate-500 -mt-1">
+          Set either one. A car counts if its ZIP is on your list or it sits
+          inside the circle. Leave both blank to take cars anywhere.
+        </p>
+
         <div className="grid grid-cols-3 gap-3">
           <div>
             <Label>Max cars / day</Label>
