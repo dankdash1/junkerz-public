@@ -78,7 +78,7 @@ export default function CarroViejos() {
                className={`hidden items-center gap-1.5 text-sm font-bold text-zinc-800 hover:text-brand-700 sm:flex ${mono}`}>
               <Phone className="h-4 w-4" /> {SITE.phone}
             </a>
-            <Link href="/quote">
+            <Link href="/quote?lang=es">
               <Button className="h-10 px-4 font-semibold">Ver mi oferta</Button>
             </Link>
           </div>
@@ -97,7 +97,7 @@ export default function CarroViejos() {
           </h1>
 
           <div className="mt-7">
-            <HeroQuoteForm copy={ES} />
+            <HeroQuoteForm copy={ES} lang="es" />
           </div>
 
           <p className="mx-auto mt-7 max-w-xl text-lg text-zinc-600">
@@ -238,7 +238,7 @@ export default function CarroViejos() {
                 exactamente lo que pagamos.
               </p>
             </div>
-            <Link href="/quote" className="w-full md:w-auto">
+            <Link href="/quote?lang=es" className="w-full md:w-auto">
               <Button className="h-14 w-full gap-2 bg-white px-8 text-base font-bold text-brand-700 hover:bg-brand-50 md:w-auto">
                 Ver mi oferta <ArrowRight className="h-5 w-5" />
               </Button>
@@ -305,7 +305,7 @@ export default function CarroViejos() {
             <div>
               <h3 className="text-sm font-bold text-zinc-900">Venda su carro</h3>
               <ul className="mt-3 space-y-2 text-sm text-zinc-600">
-                <li><Link href="/quote" className="hover:text-brand-700">Ver mi oferta</Link></li>
+                <li><Link href="/quote?lang=es" className="hover:text-brand-700">Ver mi oferta</Link></li>
                 <li><Link href="/carro-viejos#compramos" className="hover:text-brand-700">Qué compramos</Link></li>
                 <li><Link href="/carro-viejos#como" className="hover:text-brand-700">Cómo funciona</Link></li>
                 <li><Link href="/carro-viejos#ciudades" className="hover:text-brand-700">Ciudades</Link></li>

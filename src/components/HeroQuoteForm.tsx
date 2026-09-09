@@ -39,7 +39,10 @@ export const ES: Copy = {
   note: "Sin cuenta. Sin compromiso. Nunca vendemos sus datos.",
 };
 
-export default function HeroQuoteForm({ copy = EN }: { copy?: Copy }) {
+export default function HeroQuoteForm({
+  copy = EN,
+  lang,
+}: { copy?: Copy; lang?: "es" }) {
   const router = useRouter();
   const [years, setYears] = useState<number[]>([]);
   const [makes, setMakes] = useState<Opt[]>([]);
@@ -75,6 +78,7 @@ export default function HeroQuoteForm({ copy = EN }: { copy?: Copy }) {
     if (!ready) return;
     setGoing(true);
     const p = new URLSearchParams({
+      ...(lang ? { lang } : {}),
       year: String(year),
       make_id: String(make!.id),
       make: make!.name,

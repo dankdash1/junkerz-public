@@ -25,6 +25,68 @@ const STEP_META: { title: string; subtitle: string }[] = [
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
 
+type Lang = "en" | "es";
+
+const T = {
+  en: {
+    steps: [
+      { title: "What are we buying?", subtitle: "Pick your vehicle — VIN and mileage are optional." },
+      { title: "Do you have the title?", subtitle: "No title is often fine — just let us know." },
+      { title: "Does it run?", subtitle: "Be honest — dead cars are still worth real cash." },
+      { title: "What's still on it?", subtitle: "Engine, transmission and key parts drive the offer." },
+      { title: "Any damage?", subtitle: "Tap any areas that are wrecked or missing." },
+      { title: "Where is it?", subtitle: "We tow from your location — always free." },
+      { title: "Where do we send the offer?", subtitle: "We'll text and email your guaranteed number." },
+    ],
+    guaranteed: "Guaranteed offer", step: "Step", of: "of",
+    back: "Back", cont: "Continue", submit: "Get my offer", submitting: "Getting your offer…",
+    vin: "VIN (optional)", mileage: "Mileage (optional)",
+    titles: { clean: "Clean title", salvage: "Salvage title", rebuilt: "Rebuilt title", no_title: "No title" },
+    runs: "Does it run/drive?", starts: "Does it start?",
+    wheels: "All four wheels attached?", tires: "All tires inflated?",
+    engine: "Engine", trans: "Transmission",
+    cat: "Catalytic converter installed?", battery: "Battery present?", keys: "Keys available?",
+    zip: "Zip code", address: "Pickup address (optional)",
+    addressHint: "You can leave this blank and we'll ask when we schedule pickup.",
+    phone: "Phone", email: "Email",
+    phoneReq: "Phone is required", phoneBad: "Enter a valid 10-digit phone number",
+    emailReq: "Email is required", emailBad: "Enter a valid email address",
+    contactHint: "We'll text your offer to your phone and email you the confirmation. Both are required.",
+    footer: "{t.footer}",
+    yes: "Yes", no: "No",
+    choice: { intact: "intact", partial: "partial", missing: "missing" },
+  },
+  es: {
+    steps: [
+      { title: "¿Qué carro vamos a comprar?", subtitle: "Elija su vehículo — el VIN y el millaje son opcionales." },
+      { title: "¿Tiene el título?", subtitle: "Sin título casi siempre está bien — solo díganos." },
+      { title: "¿Enciende?", subtitle: "Sea honesto — los carros muertos todavía valen dinero." },
+      { title: "¿Qué le queda puesto?", subtitle: "El motor, la transmisión y las piezas mueven la oferta." },
+      { title: "¿Tiene daño?", subtitle: "Toque las partes chocadas o que faltan." },
+      { title: "¿Dónde está?", subtitle: "Lo recogemos donde esté — la grúa siempre es gratis." },
+      { title: "¿A dónde le mandamos la oferta?", subtitle: "Le mandamos su número garantizado por texto y correo." },
+    ],
+    guaranteed: "Oferta garantizada", step: "Paso", of: "de",
+    back: "Atrás", cont: "Continuar", submit: "Ver mi oferta", submitting: "Buscando su oferta…",
+    vin: "VIN (opcional)", mileage: "Millaje (opcional)",
+    titles: { clean: "Título limpio", salvage: "Título de salvamento", rebuilt: "Título reconstruido", no_title: "Sin título" },
+    runs: "¿Camina el carro?", starts: "¿Prende el motor?",
+    wheels: "¿Tiene las cuatro llantas puestas?", tires: "¿Las llantas tienen aire?",
+    engine: "Motor", trans: "Transmisión",
+    cat: "¿Tiene el convertidor catalítico?", battery: "¿Tiene batería?", keys: "¿Tiene las llaves?",
+    zip: "Código postal", address: "Dirección de recogida (opcional)",
+    addressHint: "Puede dejarlo en blanco y se lo preguntamos al programar la recogida.",
+    phone: "Teléfono", email: "Correo electrónico",
+    phoneReq: "El teléfono es obligatorio", phoneBad: "Ponga un teléfono válido de 10 dígitos",
+    emailReq: "El correo es obligatorio", emailBad: "Ponga un correo válido",
+    contactHint: "Le mandamos la oferta por texto y la confirmación por correo. Los dos son obligatorios.",
+    footer: "Grúa gratis · Sin cargos · Le pagamos al recoger",
+    yes: "Sí", no: "No",
+    choice: { intact: "completo", partial: "parcial", missing: "falta" },
+  },
+} as const;
+
+
 type Form = {
   vehicle: VehicleSelection;
   vin: string;
@@ -119,6 +181,8 @@ function isValidEmail(email: string) {
 function QuoteWizardInner() {
   const router = useRouter();
   const sp = useSearchParams();
+  const lang: Lang = sp.get("lang") === "es" ? "es" : "en";
+  const t = T[lang];
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Form>({
     vehicle: EMPTY_VEHICLE,
@@ -226,14 +290,14 @@ function QuoteWizardInner() {
   })();
 
   const phoneError = touched.phone && !isValidPhone(form.phone)
-    ? (form.phone.trim() === "" ? "Phone is required" : "Enter a valid 10-digit phone number")
+    ? (form.phone.trim() === "" ? t.phoneReq : t.phoneBad)
     : null;
   const emailError = touched.email && !isValidEmail(form.email)
-    ? (form.email.trim() === "" ? "Email is required" : "Enter a valid email address")
+    ? (form.email.trim() === "" ? t.emailReq : t.emailBad)
     : null;
 
   const pct = Math.round(((step + 1) / STEPS.length) * 100);
-  const meta = STEP_META[step];
+  const meta = t.steps[step];
 
   return (
     <main className="min-h-screen bg-zinc-50 text-zinc-900">
@@ -244,7 +308,7 @@ function QuoteWizardInner() {
             <Logo height={30} />
           </Link>
           <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
-            <ShieldCheck className="h-4 w-4 text-brand-600" /> Guaranteed offer
+            <ShieldCheck className="h-4 w-4 text-brand-600" /> {t.guaranteed}
           </span>
         </div>
       </header>
@@ -254,7 +318,7 @@ function QuoteWizardInner() {
         <div className="mb-8">
           <div className="mb-2 flex items-center justify-between">
             <span className={`text-xs font-semibold uppercase tracking-[0.16em] text-brand-700 ${mono}`}>
-              Step {step + 1} of {STEPS.length}
+              {t.step} {step + 1} {t.of} {STEPS.length}
             </span>
             <span className={`text-xs font-semibold text-zinc-400 ${mono}`}>{pct}%</span>
           </div>
@@ -292,12 +356,12 @@ function QuoteWizardInner() {
                 onChange={(v) => setForm({ ...form, vehicle: v })}
               />
               <div>
-                <Label>VIN (optional)</Label>
+                <Label>{t.vin}</Label>
                 <Input value={form.vin} onChange={(e) =>
                   setForm({ ...form, vin: e.target.value })} />
               </div>
               <div>
-                <Label>Mileage (optional)</Label>
+                <Label>{t.mileage}</Label>
                 <Input type="number" value={form.mileage} onChange={(e) =>
                   setForm({ ...form, mileage: e.target.value })} />
               </div>
@@ -306,18 +370,18 @@ function QuoteWizardInner() {
 
           {step === 1 && (
             <div className="space-y-2.5">
-              {["clean", "salvage", "rebuilt", "no_title"].map((t) => (
+              {(["clean", "salvage", "rebuilt", "no_title"] as const).map((ts) => (
                 <button
-                  key={t}
+                  key={ts}
                   type="button"
-                  onClick={() => setForm({ ...form, title_status: t })}
+                  onClick={() => setForm({ ...form, title_status: ts })}
                   className={`flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left text-sm font-semibold capitalize transition
-                    ${form.title_status === t
+                    ${form.title_status === ts
                       ? "border-brand-600 bg-brand-50 text-brand-800"
                       : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"}`}
                 >
-                  {t.replace("_", " ")}
-                  {form.title_status === t && <Check className="h-5 w-5 text-brand-600" />}
+                  {t.titles[ts]}
+                  {form.title_status === ts && <Check className="h-5 w-5 text-brand-600" />}
                 </button>
               ))}
             </div>
@@ -325,16 +389,16 @@ function QuoteWizardInner() {
 
           {step === 2 && (
             <div className="space-y-5">
-              <YesNo label="Does it run/drive?"
+              <YesNo label={t.runs}
                 value={form.runs}
                 onChange={(v) => setForm({ ...form, runs: v })} />
-              <YesNo label="Does it start?"
+              <YesNo label={t.starts}
                 value={form.starts}
                 onChange={(v) => setForm({ ...form, starts: v })} />
-              <YesNo label="All four wheels attached?"
+              <YesNo label={t.wheels}
                 value={form.all_wheels_attached}
                 onChange={(v) => setForm({ ...form, all_wheels_attached: v })} />
-              <YesNo label="All tires inflated?"
+              <YesNo label={t.tires}
                 value={form.all_tires_inflated}
                 onChange={(v) => setForm({ ...form, all_tires_inflated: v })} />
             </div>
@@ -343,7 +407,7 @@ function QuoteWizardInner() {
           {step === 3 && (
             <div className="space-y-5">
               <div>
-                <Label className="text-sm font-medium text-zinc-700">Engine</Label>
+                <Label className="text-sm font-medium text-zinc-700">{t.engine}</Label>
                 <div className="mt-2">
                   <ChoiceRow options={["intact", "partial", "missing"] as const}
                     value={form.engine_state}
@@ -351,20 +415,20 @@ function QuoteWizardInner() {
                 </div>
               </div>
               <div>
-                <Label className="text-sm font-medium text-zinc-700">Transmission</Label>
+                <Label className="text-sm font-medium text-zinc-700">{t.trans}</Label>
                 <div className="mt-2">
                   <ChoiceRow options={["intact", "partial", "missing"] as const}
                     value={form.transmission_state}
                     onChange={(s) => setForm({ ...form, transmission_state: s as Form["transmission_state"] })} />
                 </div>
               </div>
-              <YesNo label="Catalytic converter installed?"
+              <YesNo label={t.cat}
                 value={form.has_catalytic}
                 onChange={(v) => setForm({ ...form, has_catalytic: v })} />
-              <YesNo label="Battery present?"
+              <YesNo label={t.battery}
                 value={form.has_battery}
                 onChange={(v) => setForm({ ...form, has_battery: v })} />
-              <YesNo label="Keys available?"
+              <YesNo label={t.keys}
                 value={form.has_keys}
                 onChange={(v) => setForm({ ...form, has_keys: v })} />
             </div>
@@ -380,12 +444,12 @@ function QuoteWizardInner() {
           {step === 5 && (
             <div className="space-y-4">
               <div>
-                <Label>Zip code</Label>
+                <Label>{t.zip}</Label>
                 <Input value={form.zip_code} onChange={(e) =>
                   setForm({ ...form, zip_code: e.target.value })} />
               </div>
               <div>
-                <Label>Pickup address (optional)</Label>
+                <Label>{t.address}</Label>
                 <Input
                   value={form.pickup_address}
                   onChange={(e) =>
@@ -395,7 +459,7 @@ function QuoteWizardInner() {
                 />
               </div>
               <p className="text-xs text-zinc-500">
-                You can leave this blank and we&apos;ll ask when we schedule pickup.
+                {t.addressHint}
               </p>
             </div>
           )}
@@ -404,7 +468,7 @@ function QuoteWizardInner() {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="phone">
-                  Phone <span className="text-red-600">*</span>
+                  {t.phone} <span className="text-red-600">*</span>
                 </Label>
                 <Input
                   id="phone"
@@ -425,7 +489,7 @@ function QuoteWizardInner() {
               </div>
               <div>
                 <Label htmlFor="email">
-                  Email <span className="text-red-600">*</span>
+                  {t.email} <span className="text-red-600">*</span>
                 </Label>
                 <Input
                   id="email"
@@ -445,8 +509,7 @@ function QuoteWizardInner() {
                 )}
               </div>
               <p className="text-xs text-zinc-500">
-                We&apos;ll text your offer to your phone and email you the
-                confirmation. Both are required.
+                {t.contactHint}
               </p>
             </div>
           )}
@@ -459,22 +522,22 @@ function QuoteWizardInner() {
           {step > 0 && (
             <Button variant="outline" className="h-12 gap-1.5 px-4"
               onClick={() => setStep((s) => s - 1)}>
-              <ArrowLeft className="h-4 w-4" /> Back
+              <ArrowLeft className="h-4 w-4" /> {t.back}
             </Button>
           )}
           {step < STEPS.length - 1 ? (
             <Button className="h-12 flex-1 text-base font-semibold" disabled={!canAdvance}
-              onClick={() => setStep((s) => s + 1)}>Continue</Button>
+              onClick={() => setStep((s) => s + 1)}>{t.cont}</Button>
           ) : (
             <Button className="h-12 flex-1 text-base font-bold" disabled={!canAdvance || submitting}
               onClick={submit}>
-              {submitting ? "Getting your offer…" : "Get my offer"}
+              {submitting ? t.submitting : t.submit}
             </Button>
           )}
         </div>
 
         <p className="mt-5 text-center text-xs text-zinc-400">
-          Free towing · No fees · Paid at pickup
+          {t.footer}
         </p>
       </div>
     </main>
