@@ -1,3 +1,4 @@
+import { getAttribution } from "@/lib/attribution";
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
 
 export async function submitQuote(payload: {
@@ -15,10 +16,13 @@ export async function submitQuote(payload: {
   contact_phone: string; contact_email: string;
   pickup_address?: string;
 }) {
+  // Attach where this seller came from, so the offer row can say
+  // whether the car arrived from Google, Bing, Facebook or direct.
+  const attribution = getAttribution() || undefined;
   const r = await fetch(`${BASE}/api/public/junkerz/quote`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, attribution }),
   });
   if (!r.ok) {
     const err = await r.json().catch(() => ({}));

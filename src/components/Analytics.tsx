@@ -1,5 +1,7 @@
 "use client";
 import Script from "next/script";
+import { useEffect } from "react";
+import { getAttribution } from "@/lib/attribution";
 
 /**
  * The tracking that came across from the WordPress site.
@@ -17,6 +19,14 @@ export const GA_ID = "G-BXMCTZMR2P";
 export const GTM_ID = "GTM-5XGL789";
 
 export default function Analytics() {
+  // Capture where they came from on the FIRST page they land on. By the time
+  // they finish the quote the referrer is junkerz.com and the ad parameters
+  // have gone from the address bar.
+  useEffect(() => {
+    const a = getAttribution();
+    if (a) track("attribution", { lead_source: a.source, lead_medium: a.medium });
+  }, []);
+
   return (
     <>
       <Script
