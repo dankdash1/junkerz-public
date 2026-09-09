@@ -267,7 +267,16 @@ function QuoteWizardInner() {
         contact_phone: form.phone,
         contact_email: form.email,
       });
-      router.push(`/quote/result?id=${result.offer_id}&status=${result.status}`);
+      const q = new URLSearchParams({
+        id: String(result.offer_id),
+        status: String(result.status ?? ""),
+      });
+      // Carry the number and token straight over so the seller sees a price
+      // instantly instead of a spinner waiting on a status that may never come.
+      if (result.offer_cents) q.set("cents", String(result.offer_cents));
+      if (result.token) q.set("token", String(result.token));
+      if (lang === "es") q.set("lang", "es");
+      router.push(`/quote/result?${q.toString()}`);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to submit");
     } finally {

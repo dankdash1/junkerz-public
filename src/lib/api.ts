@@ -62,3 +62,31 @@ export async function verifyOtp(phone: string, code: string) {
   }
   return r.json();
 }
+
+/** What the seller is being asked to accept or turn down. */
+export async function getOfferForToken(token: string) {
+  const r = await fetch(`${BASE}/api/public/junkerz/seller/decline/${token}`);
+  if (!r.ok) throw new Error(`lookup failed: ${r.status}`);
+  return r.json();
+}
+
+/** The seller says no — and tells us why. */
+export async function declineOffer(token: string, body: {
+  reason: "price" | "timing" | "already_sold" | "other";
+  note?: string;
+  desired_cents?: number;
+  competitor_name?: string;
+  competitor_cents?: number;
+  wants_callback?: boolean;
+}) {
+  const r = await fetch(`${BASE}/api/public/junkerz/seller/decline/${token}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error((e as { error?: string }).error || `decline failed: ${r.status}`);
+  }
+  return r.json();
+}
