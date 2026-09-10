@@ -249,13 +249,12 @@ function QuoteWizardInner() {
     try {
       const v = form.vehicle;
       const result = await submitQuote({
-        vin: form.vin || `UNK_${v.year}_${v.make_name}_${v.model_name}`,
+        vin: form.vin.trim() || undefined,
         year: v.year ?? 0,
         make: v.make_name ?? "",
         model: v.model_name ?? "",
         condition: conditionFromAnswers(),
         title_status: form.title_status,
-        weight_lbs: 3000,
         zip_code: form.zip_code,
         pickup_address: form.pickup_address || undefined,
         photo_count: 0,

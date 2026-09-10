@@ -2,8 +2,8 @@ import { getAttribution } from "@/lib/attribution";
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
 
 export async function submitQuote(payload: {
-  vin: string; year: number; make: string; model: string;
-  condition: string; title_status: string; weight_lbs: number;
+  vin?: string; year: number; make: string; model: string;
+  condition: string; title_status: string;
   zip_code: string; photo_count?: number;
   trim?: string; mileage?: number;
   make_id?: number | null; model_id?: number | null;
