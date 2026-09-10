@@ -20,7 +20,13 @@ const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL || "https://dankdash.ai";
 export const dynamic = "force-dynamic";
 
 function back(status: "connected" | "failed", detail?: string) {
-  const url = new URL("/admin/junkerz/tiktok", ADMIN_URL);
+  // The TikTok panel is a TAB on the Junkyard dashboard, not a route of its
+  // own. /admin/junkerz/tiktok does not exist — every other legacy Junkerz
+  // path has an explicit <Navigate> in App.jsx and this one never did, so
+  // sending people there lands them on a blank page after a successful
+  // connect. Go straight to the canonical URL.
+  const url = new URL("/admin/junkyard", ADMIN_URL);
+  url.searchParams.set("tab", "tiktok");
   url.searchParams.set("tiktok", status);
   if (detail) url.searchParams.set("reason", detail);
   return NextResponse.redirect(url.toString(), { status: 303 });
