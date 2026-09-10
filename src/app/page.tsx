@@ -413,6 +413,7 @@ export function SiteFooter({ phone }: { phone?: string }) {
               <li><Link href="/about-us" className="hover:text-brand-700">About us</Link></li>
               <li><Link href="/contact-us" className="hover:text-brand-700">Contact us</Link></li>
               <li><Link href="/privacy-policy" className="hover:text-brand-700">Privacy policy</Link></li>
+              <li><Link href="/terms" className="hover:text-brand-700">Terms of service</Link></li>
               <li><Link href="/buyers/login" className="hover:text-brand-700">Salvage yard login</Link></li>
             </ul>
           </div>
