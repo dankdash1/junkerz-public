@@ -3,20 +3,23 @@ import { SITE } from "@/lib/site";
 
 /**
  * Search engines and AI assistants are both welcome.
- * The AI crawlers are listed explicitly because several of them
- * ignore a bare wildcard and look for their own user-agent block.
+ * Keep the same private-path exclusions for every crawler. A more specific
+ * user-agent group replaces the wildcard rules; it does not inherit them.
  */
 const AI_AGENTS = [
-  "GPTBot",            // OpenAI training + ChatGPT browsing
+  "GPTBot",            // Training permission, separate from search
   "OAI-SearchBot",     // ChatGPT search index
   "ChatGPT-User",      // ChatGPT live fetch on a user's behalf
   "ClaudeBot",         // Anthropic Claude
+  "Claude-SearchBot",
+  "Claude-User",
   "Claude-Web",
   "anthropic-ai",
-  "Google-Extended",   // Gemini / Google AI answers
+  "Google-Extended",   // Some Gemini uses; Googlebot controls Google Search
   "PerplexityBot",
   "Perplexity-User",
   "Applebot-Extended",
+  "Applebot",
   "Bingbot",
   "CCBot",
 ];
@@ -24,8 +27,7 @@ const AI_AGENTS = [
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
-      { userAgent: "*", allow: "/", disallow: ["/api/", "/buyers/", "/pickup/", "/status/", "/schedule/", "/sign/", "/vin/"] },
-      ...AI_AGENTS.map((ua) => ({ userAgent: ua, allow: "/" })),
+      { userAgent: ["*", ...AI_AGENTS], allow: "/", disallow: ["/api/", "/buyers/", "/pickup/", "/status/", "/schedule/", "/sign/", "/vin/", "/decline/", "/quote/result"] },
     ],
     sitemap: `${SITE.url}/sitemap.xml`,
     host: SITE.url,
