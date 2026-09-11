@@ -35,6 +35,18 @@ test('official MCP handshake and tool list distinguish writes from reads', async
   await app.close();
 });
 
+test('current MCP discovery accepts the required per-request envelope', async () => {
+  const app = createBusinessAssistant({ fetchImpl: async () => { throw Error('unexpected network'); } });
+  const { response, body } = await rpc(app, 'server/discover', { _meta: {
+    'io.modelcontextprotocol/protocolVersion': '2026-07-28',
+    'io.modelcontextprotocol/clientInfo': { name: 'test', version: '1' },
+    'io.modelcontextprotocol/clientCapabilities': {},
+  } }, { headers: { 'MCP-Protocol-Version': '2026-07-28', 'Mcp-Method': 'server/discover' } });
+  assert.equal(response.status, 200);
+  assert.ok(body.result.supportedVersions.includes('2026-07-28'));
+  await app.close();
+});
+
 test('search filters live tenant-pinned catalog by words and integer cents', async () => {
   const seen = [];
   const app = createBusinessAssistant({ fetchImpl: async (url, opts) => { seen.push([url, opts]); return json({ success: true, products: catalog }); } });
