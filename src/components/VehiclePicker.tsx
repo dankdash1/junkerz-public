@@ -83,6 +83,7 @@ export default function VehiclePicker({
           })}
         >
           <option value="">Select year</option>
+          {value.year && !years.includes(value.year) && <option value={value.year}>{value.year}</option>}
           {years.map((y) => <option key={y} value={y}>{y}</option>)}
         </select>
       </div>
@@ -91,7 +92,7 @@ export default function VehiclePicker({
         <Label>Make</Label>
         <select
           className="w-full border rounded h-10 px-2"
-          value={value.make_id ?? ""}
+          value={value.make_id ?? (value.make_name ? "decoded" : "")}
           disabled={!value.year}
           onChange={(e) => {
             const id = e.target.value ? parseInt(e.target.value, 10) : null;
@@ -101,6 +102,7 @@ export default function VehiclePicker({
           }}
         >
           <option value="">{value.year ? "Select make" : "Pick a year first"}</option>
+          {!value.make_id && value.make_name && <option value="decoded">{value.make_name}</option>}
           {makes.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
       </div>
@@ -109,8 +111,8 @@ export default function VehiclePicker({
         <Label>Model</Label>
         <select
           className="w-full border rounded h-10 px-2"
-          value={value.model_id ?? ""}
-          disabled={!value.make_id}
+          value={value.model_id ?? (value.model_name ? "decoded" : "")}
+          disabled={!value.make_id && !value.model_name}
           onChange={(e) => {
             const id = e.target.value ? parseInt(e.target.value, 10) : null;
             const name = models.find((m) => m.id === id)?.name ?? null;
@@ -118,6 +120,7 @@ export default function VehiclePicker({
           }}
         >
           <option value="">{value.make_id ? "Select model" : "Pick a make first"}</option>
+          {!value.model_id && value.model_name && <option value="decoded">{value.model_name}</option>}
           {models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
       </div>

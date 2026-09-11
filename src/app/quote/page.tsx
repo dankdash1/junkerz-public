@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { submitQuote } from "@/lib/api";
 import { trackLeadSubmission } from "@/components/Analytics";
 import VehiclePicker, { VehicleSelection } from "@/components/VehiclePicker";
+import VehicleAutofill from "@/components/VehicleAutofill";
 import ConditionGrid, { DamageZones } from "@/components/ConditionGrid";
 
 const STEPS = ["vehicle", "title", "drivability", "components", "damage", "zip", "contact"] as const;
@@ -97,6 +98,7 @@ const T = {
 type Form = {
   vehicle: VehicleSelection;
   vin: string;
+  vehicle_lookup_token?: string;
   mileage: string;
   title_status: string;
   runs: boolean | null;
@@ -192,6 +194,7 @@ function QuoteWizardInner() {
   const lang: Lang = sp.get("lang") === "es" ? "es" : "en";
   const t = T[lang];
   const [step, setStep] = useState(0);
+  const [vehicleRevision, setVehicleRevision] = useState(0);
   const [form, setForm] = useState<Form>({
     vehicle: EMPTY_VEHICLE,
     vin: "",
@@ -251,6 +254,7 @@ function QuoteWizardInner() {
       const v = form.vehicle;
       const result = await submitQuote({
         vin: form.vin.trim() || undefined,
+        vehicle_lookup_token: form.vehicle_lookup_token,
         year: v.year ?? 0,
         make: v.make_name ?? "",
         model: v.model_name ?? "",
@@ -297,7 +301,7 @@ function QuoteWizardInner() {
   }
 
   const canAdvance = (() => {
-    if (step === 0) return !!(form.vehicle.year && form.vehicle.make_id && form.vehicle.model_id);
+    if (step === 0) return !!(form.vehicle.year && form.vehicle.make_name && form.vehicle.model_name);
     if (step === 1) return !!form.title_status;
     if (step === 2) return form.runs !== null && form.starts !== null
                            && form.all_wheels_attached !== null
@@ -374,14 +378,20 @@ function QuoteWizardInner() {
         <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
           {step === 0 && (
             <div className="space-y-4">
+              <VehicleAutofill lang={lang} revision={vehicleRevision}
+                onResolved={(v, token) => setForm(current => ({ ...current, vin: v.vin,
+                  vehicle_lookup_token: token,
+                  vehicle: { year: v.year, make_id: null, make_name: v.make,
+                    model_id: null, model_name: v.model, trim: v.trim || "" } }))} />
               <VehiclePicker
                 value={form.vehicle}
-                onChange={(v) => setForm({ ...form, vehicle: v })}
+                onChange={(v) => { setVehicleRevision(n => n + 1); setForm({ ...form, vehicle: v, vehicle_lookup_token: undefined }); }}
               />
               <div>
                 <Label>{t.vin}</Label>
-                <Input value={form.vin} onChange={(e) =>
-                  setForm({ ...form, vin: e.target.value })} />
+                <Input value={form.vin} onChange={(e) => {
+                  setVehicleRevision(n => n + 1);
+                  setForm({ ...form, vin: e.target.value, vehicle_lookup_token: undefined }); }} />
               </div>
               <div>
                 <Label>{t.mileage}</Label>
