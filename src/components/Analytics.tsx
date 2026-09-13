@@ -17,6 +17,10 @@ import { getAttribution } from "@/lib/attribution";
  */
 export const GA_ID = "G-BXMCTZMR2P";
 export const GTM_ID = "GTM-5XGL789";
+// Existing actions verified in Junkerz Ads account 377-413-2333.
+export const ADS_ID = "AW-583352549";
+const LEAD_LABEL = "POO5CMWl_5AYEOWBlZYC";
+const CALL_LABEL = "ygzLCNmyifoCEOWBlZYC";
 
 export default function Analytics() {
   // Capture where they came from on the FIRST page they land on. By the time
@@ -40,6 +44,10 @@ export default function Analytics() {
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
           gtag('config', '${GA_ID}');
+          gtag('config', '${ADS_ID}');
+          gtag('config', '${ADS_ID}/${CALL_LABEL}', {
+            phone_conversion_number: '817-420-9180'
+          });
         `}
       </Script>
       <Script id="gtm" strategy="afterInteractive">
@@ -61,4 +69,26 @@ export function track(event: string, params: Record<string, unknown> = {}) {
   const w = window as unknown as { dataLayer?: unknown[] };
   w.dataLayer = w.dataLayer || [];
   w.dataLayer.push({ event, ...params });
+}
+
+/** Count an accepted quote, never a button click or a failed request. */
+export function trackLeadSubmission(offerId: number) {
+  if (typeof window === "undefined" || !Number.isSafeInteger(offerId) || offerId <= 0) return;
+  const transactionId = `junkerz-offer-${offerId}`;
+  try {
+    if (window.sessionStorage.getItem(transactionId)) return;
+  } catch { /* Storage may be disabled; Google also deduplicates by transaction ID. */ }
+  try {
+    const w = window as unknown as { dataLayer?: unknown[] };
+    w.dataLayer = w.dataLayer || [];
+    // gtag consumes argument tuples; a plain GTM custom event does not send an Ads conversion.
+    const gtag = function (..._args: unknown[]) { w.dataLayer!.push(arguments); };
+    gtag("event", "conversion", {
+      send_to: `${ADS_ID}/${LEAD_LABEL}`,
+      value: 50,
+      currency: "USD",
+      transaction_id: transactionId,
+    });
+    try { window.sessionStorage.setItem(transactionId, "1"); } catch { /* Optional deduplication. */ }
+  } catch { /* Measurement must never interrupt delivery of the seller's offer. */ }
 }

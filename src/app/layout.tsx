@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { SITE } from "@/lib/site";
 import SiteExtras from "@/components/SiteExtras";
+import { ShopCartProvider } from "@/components/ShopCart";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -24,7 +25,15 @@ export const metadata: Metadata = {
   description:
     "Junkerz buys junk, wrecked and non-running cars across Dallas–Fort Worth. Guaranteed offer in about a minute, free towing, cash at pickup. Call 817-420-9180.",
   applicationName: SITE.name,
-  icons: { icon: "/Red-Car-Favicon.png", apple: "/Red-Car-Favicon.png" },
+  icons: {
+    icon: [
+      { url: "/junkerz-car-v4.ico", sizes: "32x32 256x256", type: "image/x-icon" },
+      { url: "/junkerz-car-32-v4.png", sizes: "32x32", type: "image/png" },
+      { url: "/junkerz-car-256-v4.png", sizes: "256x256", type: "image/png" },
+    ],
+    shortcut: "/junkerz-car-v4.ico",
+    apple: [{ url: "/junkerz-car-apple-v4.png", sizes: "180x180" }],
+  },
   keywords: [
     "cash for junk cars",
     "junk car removal",
@@ -72,7 +81,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ShopCartProvider>{children}</ShopCartProvider>
         <SiteExtras />
       </body>
     </html>

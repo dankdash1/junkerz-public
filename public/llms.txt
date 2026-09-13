@@ -1,0 +1,16 @@
+# Junkerz LLC and Dwell Furniture
+
+Public information and supported assistant connections. This file is a navigation aid, not a requirement for search inclusion.
+
+- [Junkerz](https://junkerz.com): Cash for junk cars in Dallas–Fort Worth and surrounding North Texas.
+- [Request an offer](https://junkerz.com/quote): Vehicle details and customer contact information are required. Existing approval rules apply.
+- [Assistant connection guide](https://junkerz.com/assistants): Current capabilities and customer flow.
+- [Public API description](https://junkerz.com/assistants/openapi.json): Live inventory and keyed quote requests.
+- [Dwell Furniture](https://furniture.dankdash.ai): Current pre-owned furniture catalog, prices, availability and delivery information.
+- [Junkerz terms](https://junkerz.com/terms)
+- [Junkerz privacy](https://junkerz.com/privacy-policy)
+
+Remote MCP endpoint: https://junkerz.com/api/mcp
+Tools: dwell_search_products, dwell_get_product, junkerz_get_quote_requirements, junkerz_create_quote.
+
+Only an offer marked ready is firm. Reviewing is pending approval. Use current tool results rather than remembered prices. Never fabricate dimensions, quotes or pickup slots. The customer reviews and accepts through the returned private link. Quote submission may send an email. Keep private quote links and customer information out of public search indexes.

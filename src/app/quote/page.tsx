@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { submitQuote } from "@/lib/api";
+import { trackLeadSubmission } from "@/components/Analytics";
 import VehiclePicker, { VehicleSelection } from "@/components/VehiclePicker";
 import ConditionGrid, { DamageZones } from "@/components/ConditionGrid";
 
@@ -277,6 +278,7 @@ function QuoteWizardInner() {
         contact_phone: form.phone,
         contact_email: form.email,
       });
+      trackLeadSubmission(result.offer_id);
       const q = new URLSearchParams({
         id: String(result.offer_id),
         status: String(result.status ?? ""),
