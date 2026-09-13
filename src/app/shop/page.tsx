@@ -4,9 +4,8 @@ import { SiteHeader } from "@/components/PageShell";
 import CarPartsShop from "@/components/CarPartsShop";
 import {
   CLOSED_CATALOG_SETTINGS,
-  categoryMode,
   getCatalogSettings,
-  getShopCatalog,
+  loadShopPageCatalog,
   type ShopCategory,
   type ShopProduct,
 } from "@/lib/shop-catalog";
@@ -25,15 +24,18 @@ export default async function ShopPage({ searchParams }: { searchParams: { categ
   try { settings = await getCatalogSettings(); }
   catch { settingsUnavailable = true; }
 
-  if (!settingsUnavailable && categoryMode(settings, category) === "off") notFound();
-
   let products: ShopProduct[] = [];
   let catalogUnavailable = false;
-  if (!settingsUnavailable && categoryMode(settings, category) === "live") {
-    try { products = await getShopCatalog(settings); }
+  if (!settingsUnavailable) {
+    let pageCatalog;
+    try {
+      pageCatalog = await loadShopPageCatalog(settings, category);
+    }
     catch { catalogUnavailable = true; }
+    if (pageCatalog?.notFound) notFound();
+    products = pageCatalog?.products || [];
   }
-  const hasLive = categoryMode(settings, category) === "live" && !settingsUnavailable;
+  const hasLive = !settingsUnavailable && Object.values(settings.sections).some((mode) => mode === "live");
 
   return <main className="min-h-screen bg-zinc-50 text-zinc-900">
     <SiteHeader catalogSettings={settingsUnavailable ? null : settings} />

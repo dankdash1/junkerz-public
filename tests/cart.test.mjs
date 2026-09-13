@@ -78,3 +78,25 @@ test("all coming-soon settings expose no catalog data", async () => {
   assert.deepEqual(products, []);
   assert.equal(requests, 0);
 });
+
+test("opening a coming-soon category still preloads live products for a client category transition", async () => {
+  const calls = [];
+  const settings = {
+    sections: { parts: "live", cars_for_parts: "coming_soon", cars_for_sale: "coming_soon" },
+    parts_fulfillment: "delivery_only",
+    checkout_enabled: false,
+  };
+  const result = await catalog.loadShopPageCatalog(settings, "car", async (url) => {
+    calls.push(url);
+    return Response.json({
+      items: [{ id: 901, part_name: "Preview alternator", condition: "good", price_cents: 12900 }],
+      count: 1,
+      state: "live",
+    });
+  });
+  assert.equal(result.notFound, false);
+  assert.deepEqual(calls, ["https://api.dankdash.ai/api/junkyard-public/parts-inventory?limit=200"]);
+  assert.deepEqual(result.products.map(({ key, name }) => ({ key, name })), [
+    { key: "part:901", name: "Preview alternator" },
+  ]);
+});

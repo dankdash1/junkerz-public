@@ -149,6 +149,15 @@ export async function getShopCatalog(settings: CatalogSettings, fetchImpl: typeo
   }));
 }
 
+export async function loadShopPageCatalog(
+  settings: CatalogSettings,
+  category: ShopCategory,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ notFound: boolean; products: ShopProduct[] }> {
+  if (categoryMode(settings, category) === "off") return { notFound: true, products: [] };
+  return { notFound: false, products: await getShopCatalog(settings, fetchImpl) };
+}
+
 export function validateCart(input: unknown): { key: string; quantity: number }[] {
   if (!Array.isArray(input) || input.length === 0 || input.length > 30) throw new Error("Choose between 1 and 30 items.");
   const seen = new Set<string>();
