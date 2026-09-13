@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { buyerApi } from "@/lib/buyer-api";
+import PickupShare from "@/components/junkerz/PickupShare";
+import PrivatePhoto from "@/components/junkerz/PrivatePhoto";
 import PaymentRecovery from "@/components/junkerz/PaymentRecovery";
 import PickupStart from "@/components/junkerz/PickupStart";
 import SignaturePad from "@/components/junkerz/SignaturePad";
@@ -68,6 +70,7 @@ const PHOTO_KINDS = [
   { key: "odometer", label: "Odometer" },
   { key: "vin_plate", label: "VIN plate" },
   { key: "title_document", label: "Title document" },
+  { key: "id_document", label: "Seller ID (private)" },
   { key: "damage", label: "Damage" },
 ];
 
@@ -259,9 +262,13 @@ export default function BuyerPickupDetail() {
         </div>
       </section>
 
+      <PickupShare matchId={matchId} completed={isCompleted} />
+
       {!isCompleted && <PickupStart matchId={matchId} status={d.match_status === "delivered" ? "completed" : (d.po_status || d.purchase_status)} etaAt={d.eta_at} onStarted={load} />}
 
       {completeMsg && <p role="status" className="rounded border bg-white p-4 text-sm">{completeMsg} <a href="/buyers/settings" className="underline">Payment settings</a></p>}
+
+      {isCompleted && d.photos.length > 0 && <section className="rounded-lg border bg-white p-4 space-y-3"><h2 className="font-semibold">Pickup photos ({d.photos.length})</h2><div className="grid grid-cols-2 gap-3">{d.photos.map(p => <PrivatePhoto key={p.id} id={p.id} label={p.photo_kind === "id_document" ? "seller ID · private" : p.photo_kind.replace(/_/g, " ")} load={buyerApi.pickupPhotoBlob}/>)}</div></section>}
 
       {isCompleted && <PaymentRecovery matchId={matchId} status={d.picked_up_charge_status} cents={d.picked_up_charge_cents} invoiceId={d.picked_up_invoice_id} onUpdated={async () => { setCompleteMsg(null); await load(); }} />}
 
@@ -308,14 +315,7 @@ export default function BuyerPickupDetail() {
               <div className="grid grid-cols-3 gap-2 pt-3 border-t">
                 {d.photos.map((p) => (
                   <div key={p.id} className="border rounded overflow-hidden">
-                    <img
-                      src={
-                        (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai") +
-                        p.url
-                      }
-                      alt={p.photo_kind}
-                      className="w-full h-24 object-cover"
-                    />
+                    <PrivatePhoto id={p.id} label={p.photo_kind === "id_document" ? "seller ID · private" : p.photo_kind.replace(/_/g, " ")} load={buyerApi.pickupPhotoBlob}/>
                     <div className="px-1.5 py-1 text-[10px] text-slate-600">
                       {p.photo_kind.replace(/_/g, " ")}
                     </div>

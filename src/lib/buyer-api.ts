@@ -131,6 +131,13 @@ export const buyerApi = {
   listDisputes: () => _fetch("/api/buyers/disputes").then(_json),
   openDispute: (b: { match_id: number; reason: string; description?: string; evidence_urls?: string[] }) =>
     _fetch("/api/buyers/disputes", { method: "POST", body: JSON.stringify(b) }).then(_json),
+  createPickupAccessLink: (matchId: number) => _fetch(`/api/buyers/pickup/${matchId}/access-link`, {method: "POST"}).then(_json),
+  revokePickupAccessLink: (matchId: number) => _fetch(`/api/buyers/pickup/${matchId}/access-link`, {method: "DELETE"}).then(_json),
+  pickupPhotoBlob: async (photoId: number) => {
+    const response = await _fetch(`/api/buyers/pickup/photos/${photoId}/raw`, {cache: "no-store", referrerPolicy: "no-referrer"});
+    if (!response.ok) throw new Error("Photo unavailable.");
+    return response.blob();
+  },
   pickupDetail: (matchId: number) =>
     _fetch(`/api/buyers/pickup/${matchId}/detail`).then(_json),
   pickupPhoto: async (matchId: number, kind: string, file: File, caption?: string) => {

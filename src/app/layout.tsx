@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { SITE } from "@/lib/site";
-import ChatBubble from "@/components/ChatBubble";
-import Analytics from "@/components/Analytics";
+import SiteExtras from "@/components/SiteExtras";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -74,8 +73,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
-        <ChatBubble />
-        <Analytics />
+        <SiteExtras />
       </body>
     </html>
   );
