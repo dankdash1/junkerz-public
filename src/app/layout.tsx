@@ -4,6 +4,7 @@ import "./globals.css";
 import { SITE } from "@/lib/site";
 import ChatBubble from "@/components/ChatBubble";
 import Analytics from "@/components/Analytics";
+import { ShopCartProvider } from "@/components/ShopCart";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -73,7 +74,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ShopCartProvider>{children}</ShopCartProvider>
         <ChatBubble />
         <Analytics />
       </body>

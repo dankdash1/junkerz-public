@@ -1,26 +1,29 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { CartLink } from "@/components/ShopCart";
 import { BadgeDollarSign, Phone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SITE } from "@/lib/site";
-import { SiteFooter } from "@/app/page";
+import { SiteFooter } from "@/components/SiteFooter";
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
 
 export function SiteHeader({ ctaLabel = "Get my offer" }: { ctaLabel?: string }) {
   return (
     <header className="sticky top-0 z-40 border-b border-zinc-200/70 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
+      <div className="mx-auto flex min-h-16 max-w-6xl flex-wrap gap-y-2 py-2 items-center justify-between px-5">
         <Link href="/" className="flex items-center gap-2">
           <Logo height={34} priority />
         </Link>
-        <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-600 lg:flex">
+        <nav className="hidden items-center gap-4 text-sm font-medium text-zinc-600 lg:flex">
+            <Link href="/shop" className="font-bold text-brand-700">Cars &amp; Parts</Link>
           <Link href="/junk-cars" className="hover:text-zinc-900">Wrecked cars</Link>
           <Link href="/not-running" className="hover:text-zinc-900">Not running</Link>
           <Link href="/about-us" className="hover:text-zinc-900">About</Link>
           <Link href="/carro-viejos" className="hover:text-zinc-900">Español</Link>
         </nav>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 sm:gap-3">
+            <CartLink />
           <a href={SITE.phoneHref}
              className={`hidden items-center gap-1.5 text-sm font-bold text-zinc-800 hover:text-brand-700 sm:flex ${mono}`}>
             <Phone className="h-4 w-4" /> {SITE.phone}
@@ -30,6 +33,7 @@ export function SiteHeader({ ctaLabel = "Get my offer" }: { ctaLabel?: string })
           </Link>
         </div>
       </div>
+      <nav aria-label="Mobile shop navigation" className="border-t border-zinc-100 px-5 py-2 text-sm font-bold text-brand-700 lg:hidden"><Link href="/shop" className="inline-flex min-h-9 items-center">Shop cars &amp; parts →</Link></nav>
     </header>
   );
 }

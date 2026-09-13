@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, FlaskConical, ShieldCheck } from "lucide-react";
 import Logo from "@/components/Logo";
+import { CartLink } from "@/components/ShopCart";
 
 export const metadata: Metadata = {
   title: "Test a finder’s-fee payment",
@@ -23,6 +24,7 @@ export default function PaymentTestPage() {
       <header className="border-b border-zinc-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-5">
           <Link href="/" aria-label="Junkerz home"><Logo height={30} priority /></Link>
+          <CartLink />
           <Link href="/buyers/login" className="text-sm font-semibold text-zinc-600 hover:text-brand-700">
             Buyer sign in <span aria-hidden="true">↗</span>
           </Link>
