@@ -35,7 +35,7 @@ export default function BuyersLayout({
   return (
     <div className="min-h-screen bg-slate-50">
       {showNav && (
-        <nav className="bg-slate-900 text-white p-3 flex gap-4 text-sm">
+        <nav className="bg-slate-900 text-white p-3 flex flex-wrap gap-4 text-sm">
           <Link href="/buyers/dashboard" className="hover:underline">
             Dashboard
           </Link>
@@ -51,6 +51,7 @@ export default function BuyersLayout({
           <Link href="/buyers/disputes" className="hover:underline">
             Disputes
           </Link>
+          <Link href="/buyers/settings" className="hover:underline">Settings</Link>
           <button
             className="ml-auto hover:underline"
             onClick={() => {

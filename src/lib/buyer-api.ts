@@ -78,6 +78,11 @@ export const buyerApi = {
       body: JSON.stringify({ email, password }),
     }).then(_json),
   me: () => _fetch("/api/buyers/me").then(_json),
+  paymentMethod: () => _fetch("/api/buyers/onboarding/payment-method").then(_json),
+  createPaymentSetup: () => _fetch("/api/buyers/onboarding/payment-setup", { method: "POST" }).then(_json),
+  savePaymentMethod: (setupIntentId: string) => _fetch("/api/buyers/onboarding/payment-method", { method: "POST", body: JSON.stringify({setup_intent_id: setupIntentId}) }).then(_json),
+  retryPickupPayment: (matchId: number) => _fetch(`/api/buyers/pickup/${matchId}/retry-payment`, { method: "POST" }).then(_json),
+  startPickup: (matchId: number, etaMinutes: number) => _fetch(`/api/buyers/pickup/${matchId}/start`, { method: "POST", body: JSON.stringify({eta_minutes: etaMinutes}) }).then(_json),
   onboardingStatus: () => _fetch("/api/buyers/onboarding/status").then(_json),
   signTerms: () => _fetch("/api/buyers/onboarding/sign-terms", { method: "POST" }).then(_json),
   uploadW9: async (file: File) => {

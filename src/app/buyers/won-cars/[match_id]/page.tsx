@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { buyerApi } from "@/lib/buyer-api";
+import PaymentRecovery from "@/components/junkerz/PaymentRecovery";
+import PickupStart from "@/components/junkerz/PickupStart";
 import SignaturePad from "@/components/junkerz/SignaturePad";
 
 type Detail = {
@@ -12,6 +14,9 @@ type Detail = {
   car_offer_id: number;
   bid_cents: number | null;
   match_status: string;
+  picked_up_charge_status: string | null;
+  picked_up_charge_cents: number | null;
+  picked_up_invoice_id: number | null;
   created_at: string;
   buyer_completed_at: string | null;
   vin: string | null;
@@ -168,7 +173,13 @@ export default function BuyerPickupDetail() {
       const emailLine = r.email_result?.sent
         ? `Seller copy emailed to ${r.email_result.sent_to}.`
         : `Pickup marked complete. Seller email could not be sent (${r.email_result?.reason || "no detail"}).`;
-      setCompleteMsg(`✓ Done. ${emailLine}`);
+      const fee = typeof r.spread_cents === "number" ? `$${(r.spread_cents / 100).toFixed(2)}` : "the finder fee";
+      const paymentLine = r.charge_status === "paid"
+        ? `Finder fee paid: ${fee}.`
+        : r.charge_status === "declined"
+          ? `Payment needs attention: ${fee} was declined. Update your card, then retry payment below; matching is paused.`
+          : `Finder fee payment is pending. See payment status below.`;
+      setCompleteMsg(`✓ Pickup completed. ${paymentLine} ${emailLine}`);
       await load();
     } catch (e) {
       setCompleteMsg((e as Error)?.message ?? "complete failed");
@@ -247,6 +258,12 @@ export default function BuyerPickupDetail() {
           </div>
         </div>
       </section>
+
+      {!isCompleted && <PickupStart matchId={matchId} status={d.match_status === "delivered" ? "completed" : (d.po_status || d.purchase_status)} etaAt={d.eta_at} onStarted={load} />}
+
+      {completeMsg && <p role="status" className="rounded border bg-white p-4 text-sm">{completeMsg} <a href="/buyers/settings" className="underline">Payment settings</a></p>}
+
+      {isCompleted && <PaymentRecovery matchId={matchId} status={d.picked_up_charge_status} cents={d.picked_up_charge_cents} invoiceId={d.picked_up_invoice_id} onUpdated={async () => { setCompleteMsg(null); await load(); }} />}
 
       {isCompleted ? (
         <div className="bg-brand-50 border border-brand-200 rounded-lg p-4">
@@ -346,20 +363,17 @@ export default function BuyerPickupDetail() {
             <h2 className="font-semibold">Mark complete</h2>
             <p className="text-xs text-slate-600">
               Requires the seller&apos;s signature on file. Marking complete
-              auto-emails them their signed Bill of Sale.
+              auto-emails them their signed Bill of Sale and charges your saved card the finder fee
+              {d.bid_cents != null && d.offer_cents != null ? ` of $${(Math.max(0, d.bid_cents - d.offer_cents) / 100).toFixed(2)}` : ""}.
             </p>
             <Button
               onClick={() => void markComplete()}
               disabled={!sellerSigned || completing}
               className="w-full h-12"
             >
-              {completing ? "Completing…" : "✓ Mark pickup complete"}
+              {completing ? "Completing…" : "Complete pickup & pay finder fee"}
             </Button>
-            {completeMsg && (
-              <p className={`text-sm ${completeMsg.startsWith("✓") ? "text-brand-700" : "text-red-600"}`}>
-                {completeMsg}
-              </p>
-            )}
+
           </section>
         </>
       )}

@@ -72,6 +72,8 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <p className="text-sm mb-5">Set up your <a href="/buyers/settings" className="text-brand-700 underline">payment method</a> for pickup finder fees.</p>
+
       {!me.active && (
         <div className="bg-amber-100 border border-amber-300 text-amber-900 p-4 rounded mb-6">
           <p className="font-semibold">Account pending approval</p>
