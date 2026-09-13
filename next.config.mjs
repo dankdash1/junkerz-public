@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async rewrites() {
+    // Browsers and saved Apple shortcuts can request these default paths
+    // independently of the page's icon metadata. Serve the actual PNG asset.
+    return [
+      { source: "/favicon.ico", destination: "/junkerz-brand-icon-v2.png" },
+      { source: "/apple-touch-icon.png", destination: "/junkerz-brand-icon-v2.png" },
+      { source: "/apple-touch-icon-precomposed.png", destination: "/junkerz-brand-icon-v2.png" },
+    ];
+  },
   async redirects() {
     return [
       // The old WordPress site served every page with a trailing slash.
