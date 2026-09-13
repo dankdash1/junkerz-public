@@ -28,12 +28,12 @@ export const metadata: Metadata = {
   applicationName: SITE.name,
   icons: {
     icon: [
-      { url: "/junkerz-favicon-v3.ico", sizes: "32x32 256x256", type: "image/x-icon" },
-      { url: "/junkerz-icon-32-v3.png", sizes: "32x32", type: "image/png" },
-      { url: "/junkerz-icon-256-v3.png", sizes: "256x256", type: "image/png" },
+      { url: "/junkerz-car-v4.ico", sizes: "32x32 256x256", type: "image/x-icon" },
+      { url: "/junkerz-car-32-v4.png", sizes: "32x32", type: "image/png" },
+      { url: "/junkerz-car-256-v4.png", sizes: "256x256", type: "image/png" },
     ],
-    shortcut: "/junkerz-favicon-v3.ico",
-    apple: [{ url: "/apple-touch-icon.png?v=3", sizes: "180x180" }],
+    shortcut: "/junkerz-car-v4.ico",
+    apple: [{ url: "/junkerz-car-apple-v4.png", sizes: "180x180" }],
   },
   keywords: [
     "cash for junk cars",
