@@ -5,10 +5,27 @@ import { BadgeDollarSign, Phone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SITE } from "@/lib/site";
 import { SiteFooter } from "@/components/SiteFooter";
+import { getCatalogSettings, type CatalogSettings } from "@/lib/shop-catalog";
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
 
-export function SiteHeader({ ctaLabel = "Get my offer" }: { ctaLabel?: string }) {
+export async function SiteHeader({
+  ctaLabel = "Get my offer",
+  phone = SITE.phone,
+  catalogSettings,
+}: {
+  ctaLabel?: string;
+  phone?: string;
+  catalogSettings?: CatalogSettings | null;
+}) {
+  let settings = catalogSettings;
+  if (settings === undefined) {
+    try { settings = await getCatalogSettings(); }
+    catch { settings = null; }
+  }
+  const showShop = Boolean(settings && Object.values(settings.sections).some((mode) => mode !== "off"));
+  const hasLive = Boolean(settings && Object.values(settings.sections).some((mode) => mode === "live"));
+  const phoneHref = `tel:+1${phone.replace(/\D/g, "")}`;
   return (
     <header className="sticky top-0 z-40 border-b border-zinc-200/70 bg-white/90 backdrop-blur">
       <div className="mx-auto flex min-h-16 max-w-6xl flex-wrap gap-y-2 py-2 items-center justify-between px-5">
@@ -16,24 +33,24 @@ export function SiteHeader({ ctaLabel = "Get my offer" }: { ctaLabel?: string })
           <Logo height={34} priority />
         </Link>
         <nav className="hidden items-center gap-4 text-sm font-medium text-zinc-600 lg:flex">
-            <Link href="/shop" className="font-bold text-brand-700">Cars &amp; Parts</Link>
+          {showShop && <Link href="/shop" className="font-bold text-brand-700">Cars &amp; Parts{!hasLive && <span className="font-medium text-zinc-500"> · Coming soon</span>}</Link>}
           <Link href="/junk-cars" className="hover:text-zinc-900">Wrecked cars</Link>
           <Link href="/not-running" className="hover:text-zinc-900">Not running</Link>
           <Link href="/about-us" className="hover:text-zinc-900">About</Link>
           <Link href="/carro-viejos" className="hover:text-zinc-900">Español</Link>
         </nav>
         <div className="flex items-center gap-1 sm:gap-3">
-            <CartLink />
-          <a href={SITE.phoneHref}
+          {hasLive && <CartLink />}
+          <a href={phoneHref}
              className={`hidden items-center gap-1.5 text-sm font-bold text-zinc-800 hover:text-brand-700 sm:flex ${mono}`}>
-            <Phone className="h-4 w-4" /> {SITE.phone}
+            <Phone className="h-4 w-4" /> {phone}
           </a>
           <Link href="/quote">
             <Button className="h-10 px-4 font-semibold">{ctaLabel}</Button>
           </Link>
         </div>
       </div>
-      <nav aria-label="Mobile shop navigation" className="border-t border-zinc-100 px-5 py-2 text-sm font-bold text-brand-700 lg:hidden"><Link href="/shop" className="inline-flex min-h-9 items-center">Shop cars &amp; parts →</Link></nav>
+      {showShop && <nav aria-label="Mobile shop navigation" className="border-t border-zinc-100 px-5 py-2 text-sm font-bold text-brand-700 lg:hidden"><Link href="/shop" className="inline-flex min-h-9 items-center">{hasLive ? "Shop cars & parts" : "Cars & parts coming soon"} →</Link></nav>}
     </header>
   );
 }
@@ -69,14 +86,16 @@ export function BottomCTA({
   );
 }
 
-export default function PageShell({
+export default async function PageShell({
   eyebrow, title, lede, children,
 }: {
   eyebrow: string; title: string; lede: string; children: React.ReactNode;
 }) {
+  let catalogSettings: CatalogSettings | null = null;
+  try { catalogSettings = await getCatalogSettings(); } catch {}
   return (
     <main className="min-h-screen bg-white text-zinc-900">
-      <SiteHeader />
+      <SiteHeader catalogSettings={catalogSettings} />
       <section className="border-b border-zinc-100">
         <div className="mx-auto max-w-3xl px-5 py-14 md:py-20">
           <p className={`text-xs font-semibold uppercase tracking-[0.18em] text-brand-700 ${mono}`}>
@@ -89,7 +108,7 @@ export default function PageShell({
         </div>
       </section>
       <div className="mx-auto max-w-3xl px-5 py-12">{children}</div>
-      <SiteFooter />
+      <SiteFooter catalogSettings={catalogSettings} />
     </main>
   );
 }

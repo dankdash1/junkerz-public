@@ -2,11 +2,18 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import { Phone } from "lucide-react";
 import { SITE, CITIES } from "@/lib/site";
+import { getCatalogSettings, type CatalogSettings } from "@/lib/shop-catalog";
 const mono = "font-[family-name:var(--font-geist-mono)]";
 
-export function SiteFooter({ phone }: { phone?: string }) {
+export async function SiteFooter({ phone, catalogSettings }: { phone?: string; catalogSettings?: CatalogSettings | null }) {
   const p = phone || SITE.phone;
   const telHref = `tel:+1${p.replace(/\D/g, "")}`;
+  let settings = catalogSettings;
+  if (settings === undefined) {
+    try { settings = await getCatalogSettings(); } catch { settings = null; }
+  }
+  const showShop = Boolean(settings && Object.values(settings.sections).some((mode) => mode !== "off"));
+  const hasLive = Boolean(settings && Object.values(settings.sections).some((mode) => mode === "live"));
   return (
     <footer className="border-t border-zinc-200 bg-zinc-50">
       <div className="mx-auto max-w-6xl px-5 py-12">
@@ -40,6 +47,7 @@ export function SiteFooter({ phone }: { phone?: string }) {
             <ul className="mt-3 space-y-2 text-sm text-zinc-600">
               <li><Link href="/about-us" className="hover:text-brand-700">About us</Link></li>
               <li><Link href="/contact-us" className="hover:text-brand-700">Contact us</Link></li>
+              {showShop && <li><Link href="/shop" className="hover:text-brand-700">Cars &amp; parts{!hasLive && " · Coming soon"}</Link></li>}
               <li><Link href="/assistants" className="hover:text-brand-700">AI assistants</Link></li>
               <li><Link href="/privacy-policy" className="hover:text-brand-700">Privacy policy</Link></li>
               <li><Link href="/terms" className="hover:text-brand-700">Terms of service</Link></li>
