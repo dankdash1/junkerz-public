@@ -63,47 +63,6 @@ export default function WonCars() {
     }
   }
 
-  async function markPickedUp(matchId: number, bidCents: number, vehicle: string) {
-    const bid = (bidCents / 100).toFixed(2);
-    if (
-      !confirm(
-        `Mark ${vehicle} as picked up?\n\n` +
-          `Your card on file will be charged the finder fee ` +
-          `(your bid $${bid} minus the seller's cash offer).\n\n` +
-          `The match will move to the Picked Up tab.`
-      )
-    )
-      return;
-    setBusy(true);
-    try {
-      const r = await buyerApi.markPickedUp(matchId);
-      if (r?.charge_status === "paid") {
-        alert(`Picked up. Card charged $${(r.spread_cents / 100).toFixed(2)}.`);
-      } else if (r?.charge_status === "declined") {
-        alert(
-          `Picked up — BUT card was declined ($${(r.spread_cents / 100).toFixed(2)}). ` +
-            `Matching has been paused on your account until you update your card.`
-        );
-      } else if (r?.stub_mode) {
-        alert(
-          `Picked up. Invoice posted ($${(r.spread_cents / 100).toFixed(2)}). ` +
-            `Stripe is not live yet — payment will reconcile when it goes live.`
-        );
-      } else {
-        alert(`Picked up. Invoice #${r?.invoice_id}.`);
-      }
-      reload();
-    } catch (e: unknown) {
-      const msg = (e as Error)?.message ?? "mark-picked-up failed";
-      if (msg.includes("no_card_on_file")) {
-        alert("Add a payment method on the Settings page before completing pickups.");
-      } else {
-        setErr(msg);
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
 
   return (
     <main className="p-6 max-w-6xl mx-auto">
@@ -210,22 +169,12 @@ export default function WonCars() {
                         >
                           Decline
                         </Button>
-                        <Button
-                          variant="default"
-                          size="default"
-                          className="bg-brand-600 hover:bg-brand-700"
-                          onClick={() =>
-                            markPickedUp(
-                              r.match_id,
-                              r.bid_cents,
-                              `${r.year || ""} ${r.make || ""} ${r.model || ""}`.trim() ||
-                                `match #${r.match_id}`
-                            )
-                          }
-                          disabled={busy}
+                        <Link
+                          href={`/buyers/won-cars/${r.match_id}`}
+                          className="inline-flex items-center rounded-md bg-brand-600 px-4 py-2 text-white hover:bg-brand-700"
                         >
-                          Mark Picked Up
-                        </Button>
+                          Open pickup checklist
+                        </Link>
                       </>
                     )}
                   </td>

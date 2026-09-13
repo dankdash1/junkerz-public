@@ -1,0 +1,21 @@
+import React from 'react';
+import { afterEach, expect, test, vi } from 'vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import Detail from '@/app/buyers/won-cars/[match_id]/page';
+const api = vi.hoisted(()=>({pickupDetail:vi.fn(),pickupComplete:vi.fn()}));
+vi.mock('@/lib/buyer-api',()=>({buyerApi:api}));
+vi.mock('next/navigation',()=>({useParams:()=>({match_id:'42'}),useRouter:()=>({push:vi.fn()})}));
+vi.mock('@/components/junkerz/SignaturePad',()=>({default:()=>null}));
+afterEach(cleanup);
+test('completion preserves declined-fee notice when pickup moves to completed view',async()=>{
+ const detail={match_id:42,match_status:'won',purchase_status:'scheduled',po_status:'scheduled',bid_cents:70000,offer_cents:33000,signatures:[{signer_role:'seller',signed_at:'2026-09-13T10:00:00Z'}],photos:[],completion:{buyer_completed_at:null}};
+ api.pickupDetail.mockResolvedValueOnce(detail).mockResolvedValueOnce({...detail,completion:{buyer_completed_at:'2026-09-13T11:00:00Z'}});
+ api.pickupComplete.mockResolvedValue({charge_status:'declined',spread_cents:37000,email_result:{sent:true,sent_to:'seller@example.test'}});
+ render(<Detail/>);
+ await userEvent.click(await screen.findByRole('button',{name:/at the car/}));
+ await userEvent.click(screen.getByRole('button',{name:'Complete pickup & pay finder fee'}));
+ expect(await screen.findByText('✓ Pickup completed')).toBeTruthy();
+ expect(screen.getAllByRole('status').map(el=>el.textContent).join(' ')).toContain('Payment needs attention: $370.00 was declined');
+ expect(screen.getByRole('link',{name:'Payment settings'}).getAttribute('href')).toBe('/buyers/settings');
+});

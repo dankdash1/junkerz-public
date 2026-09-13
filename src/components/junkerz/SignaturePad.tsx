@@ -21,8 +21,11 @@ export default function SignaturePad({
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
+  const ink = useRef(false);
   const lastPt = useRef<{ x: number; y: number } | null>(null);
   const [hasInk, setHasInk] = useState(false);
+  const changeRef = useRef(onChange);
+  changeRef.current = onChange;
 
   const getCtx = useCallback(() => {
     const c = canvasRef.current;
@@ -55,6 +58,13 @@ export default function SignaturePad({
     const ctx = c.getContext("2d");
     if (!ctx) return;
 
+    // Reset only when the actual bitmap dimensions change. Temporarily disabling
+    // input during a save must not wipe the visible signature.
+    drawing.current = false;
+    lastPt.current = null;
+    ink.current = false;
+    setHasInk(false);
+    changeRef.current?.(null);
     // White background so PNG is opaque
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, c.width, c.height);
@@ -63,6 +73,11 @@ export default function SignaturePad({
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
+  }, [width, height]);
+
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (!c) return;
     const start = (ev: PointerEvent | TouchEvent) => {
       if (disabled) return;
       drawing.current = true;
@@ -73,12 +88,13 @@ export default function SignaturePad({
       if (!drawing.current || disabled) return;
       const p = point(ev);
       const ctx2 = getCtx();
-      if (!ctx2 || !lastPt.current) return;
+      if (!ctx2 || !lastPt.current || (p.x === lastPt.current.x && p.y === lastPt.current.y)) return;
       ctx2.beginPath();
       ctx2.moveTo(lastPt.current.x, lastPt.current.y);
       ctx2.lineTo(p.x, p.y);
       ctx2.stroke();
       lastPt.current = p;
+      ink.current = true;
       setHasInk(true);
       ev.preventDefault();
     };
@@ -86,8 +102,8 @@ export default function SignaturePad({
       if (!drawing.current) return;
       drawing.current = false;
       lastPt.current = null;
-      if (onChange && canvasRef.current) {
-        onChange(canvasRef.current.toDataURL("image/png"));
+      if (changeRef.current && canvasRef.current) {
+        changeRef.current(ink.current ? canvasRef.current.toDataURL("image/png") : null);
       }
     };
 
@@ -100,6 +116,8 @@ export default function SignaturePad({
     c.addEventListener("touchend", end);
 
     return () => {
+      drawing.current = false;
+      lastPt.current = null;
       c.removeEventListener("pointerdown", start);
       c.removeEventListener("pointermove", move);
       c.removeEventListener("pointerup", end);
@@ -108,7 +126,7 @@ export default function SignaturePad({
       c.removeEventListener("touchmove", move);
       c.removeEventListener("touchend", end);
     };
-  }, [point, getCtx, onChange, disabled]);
+  }, [point, getCtx, disabled]);
 
   const clear = () => {
     const c = canvasRef.current;
@@ -117,8 +135,11 @@ export default function SignaturePad({
     if (!ctx) return;
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, c.width, c.height);
+    drawing.current = false;
+    lastPt.current = null;
+    ink.current = false;
     setHasInk(false);
-    onChange?.(null);
+    changeRef.current?.(null);
   };
 
   return (

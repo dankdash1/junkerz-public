@@ -230,6 +230,7 @@ export default function SellerSchedulePage() {
     );
   }
   if (!offer) return null;
+  const arrivalChannels = [offer.contact_email ? "email" : null, offer.contact_phone ? "text" : null].filter(Boolean).join(" and ");
 
   if (done) {
     return (
@@ -249,8 +250,7 @@ export default function SellerSchedulePage() {
             </p>
           )}
           <p className="text-sm text-slate-600">
-            We&apos;ll text you 30 minutes before the driver arrives.
-            {offer.contact_phone ? ` (We have ${offer.contact_phone} on file.)` : ""}
+            {arrivalChannels ? `We'll ${arrivalChannels} you when the driver is on the way and about 30 minutes before arrival.` : "Contact Junkerz to confirm how to receive driver arrival updates."}
           </p>
         </div>
 
@@ -464,7 +464,7 @@ export default function SellerSchedulePage() {
       <div className="bg-slate-50 border border-slate-200 rounded p-3 text-xs text-slate-600 space-y-1">
         <p>
           <strong>Pickup window:</strong> driver arrives within a 1-3 hour window
-          of your chosen time. We&apos;ll text you 30 minutes out.
+          of your chosen time. {arrivalChannels ? `We'll ${arrivalChannels} you when the driver is on the way and about 30 minutes before arrival.` : "Contact Junkerz for driver arrival updates."}
         </p>
         <p>
           Link good for 72 hours. If you don&apos;t pick one we&apos;ll text you to schedule.

@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { SITE } from "@/lib/site";
-import ChatBubble from "@/components/ChatBubble";
-import Analytics from "@/components/Analytics";
+import SiteExtras from "@/components/SiteExtras";
 import { ShopCartProvider } from "@/components/ShopCart";
 
 const geistSans = localFont({
@@ -83,8 +82,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ShopCartProvider>{children}</ShopCartProvider>
-        <ChatBubble />
-        <Analytics />
+        <SiteExtras />
       </body>
     </html>
   );

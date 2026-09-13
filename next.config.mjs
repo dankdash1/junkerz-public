@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async headers() {
+    const apiOrigin = new URL(process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai").origin;
+    return [{source: "/pickup", headers: [
+      {key: "Referrer-Policy", value: "no-referrer"},
+      {key: "X-Robots-Tag", value: "noindex, nofollow, noarchive"},
+      {key: "Cache-Control", value: "no-store"},
+      {key: "Content-Security-Policy", value: `default-src 'self'; script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}; style-src 'self' 'unsafe-inline'; connect-src 'self' ${apiOrigin}${process.env.NODE_ENV === "development" ? " ws://localhost:*" : ""}; img-src 'self' blob: data:; font-src 'self'; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'`},
+    ]}];
+  },
   async redirects() {
     return [
       // The old WordPress site served every page with a trailing slash.
