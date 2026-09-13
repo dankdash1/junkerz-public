@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   if (!key || !key.startsWith("sk_test_")) return NextResponse.json({ error: "Your cart is ready. Sandbox cart checkout is awaiting its Stripe connection; no payment was taken." }, { status: 503 });
   try {
     const catalog = await getShopCatalog();
-    const form = new URLSearchParams({ mode: "payment", success_url: "https://junkerz.com/cart/success?session_id={CHECKOUT_SESSION_ID}", cancel_url: "https://junkerz.com/shop", "metadata[source]": "junkerz_sandbox_cart", "metadata[organization_id]": "4", "submit_type": "pay" });
+    const form = new URLSearchParams({ mode: "payment", success_url: "https://junkerz.com/cart/success?session_id={CHECKOUT_SESSION_ID}", cancel_url: "https://junkerz.com/cart", "metadata[source]": "junkerz_sandbox_cart", "metadata[organization_id]": "4", "submit_type": "pay" });
     for (let index = 0; index < items.length; index++) {
       const item = items[index];
       const product = catalog.find((p) => p.key === item.key);
