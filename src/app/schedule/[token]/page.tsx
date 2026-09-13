@@ -1,4 +1,5 @@
 "use client";
+import { schedulePayload, quickPickDate } from "@/lib/seller-schedule";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -122,6 +123,7 @@ export default function SellerSchedulePage() {
           body: JSON.stringify({
             slot: qp.label,
             quick_pick: qp.key,
+            ...schedulePayload(quickPickDate(qp.key)),
             pickup_address: address.trim(),
           }),
         });
@@ -165,14 +167,13 @@ export default function SellerSchedulePage() {
     // browser timezone is the source of truth for what "1pm-3pm" means.
     const d = new Date(date + "T00:00:00");
     d.setHours(startHour, 0, 0, 0);
-    const etaIso = d.toISOString();
     const slot = `${fmtDate(d)} — ${windowSlot}`;
     setBusy(true); setSubmitErr(null);
     try {
       const r = await fetch(`${BASE}/api/public/junkerz/seller/schedule/${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slot, eta_at: etaIso, pickup_address: address.trim() }),
+        body: JSON.stringify({ slot, ...schedulePayload(d), pickup_address: address.trim() }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error((data as { error?: string }).error || "submit failed");
