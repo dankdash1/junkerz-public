@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import StickyMobileBar from "@/components/StickyMobileBar";
+import HeroQuoteForm from "@/components/HeroQuoteForm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Check, Phone, ArrowRight, MapPin } from "lucide-react";
@@ -86,31 +87,30 @@ export default async function CityPage(
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <SiteHeader />
 
-      {/* hero — plain and centred */}
+      {/* Each city starts the same quote flow as the homepage. */}
       <section className="border-b border-zinc-100">
-        <div className="mx-auto max-w-3xl px-5 py-14 text-center md:py-20">
-          <p className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-brand-700 ${mono}`}>
-            <MapPin className="h-3.5 w-3.5" /> {c.name} · {c.county}
-          </p>
-          <h1 className="mx-auto mt-4 max-w-2xl text-balance text-4xl font-extrabold leading-[1.06] tracking-tight sm:text-5xl">
-            Cash for junk cars in {c.name}, TX
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-lg text-zinc-600">
-            Junkerz buys junk, wrecked and non-running vehicles across {c.name} and
-            the rest of {c.county}. Free towing, cash in your hand at pickup.
-          </p>
-          <p className="mx-auto mt-4 max-w-xl text-[17px] leading-relaxed text-zinc-700">{c.note}</p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/quote" className="w-full sm:w-auto">
-              <Button className="h-14 w-full gap-2 px-9 text-base font-bold sm:w-auto">
-                Get my offer <ArrowRight className="h-5 w-5" />
-              </Button>
-            </Link>
-            <a href={SITE.phoneHref} className="w-full sm:w-auto">
-              <Button variant="outline" className="h-14 w-full gap-2 px-7 text-base font-bold sm:w-auto">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 px-5 py-8 text-center md:grid-cols-2 md:gap-12 md:py-14 md:text-left">
+          <div>
+            <p className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-brand-700 ${mono}`}>
+              <MapPin className="h-3.5 w-3.5" /> {c.name} · {c.county}
+            </p>
+            <h1 className="mx-auto mt-4 max-w-2xl text-balance text-4xl font-extrabold leading-[1.06] tracking-tight sm:text-5xl">
+              Cash for junk cars in {c.name}, TX
+            </h1>
+            <p className="mx-auto mt-5 max-w-xl text-lg text-zinc-600">
+              Junkerz buys junk, wrecked and non-running vehicles across {c.name} and
+              the rest of {c.county}. Free towing, cash in your hand at pickup.
+            </p>
+          </div>
+          <HeroQuoteForm />
+          <div className="md:col-span-2">
+            <p className="mx-auto max-w-3xl text-center text-[17px] leading-relaxed text-zinc-700">{c.note}</p>
+            <p className="mt-4 text-center text-sm text-zinc-600">
+              Prefer to talk?{" "}
+              <a href={SITE.phoneHref} className="inline-flex items-center gap-1.5 font-bold text-brand-700 underline underline-offset-4">
                 <Phone className="h-4 w-4" /> {SITE.phone}
-              </Button>
-            </a>
+              </a>
+            </p>
           </div>
         </div>
       </section>
