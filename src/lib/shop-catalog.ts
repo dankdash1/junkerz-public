@@ -1,6 +1,7 @@
 export type ShopProduct = {
   key: string; name: string; kind: "car" | "part"; priceCents: number | null;
   image: string | null; detail: string; maxQuantity: number;
+  mileage?: number | null; condition?: string | null;
 };
 
 const catalogBase = "https://api.dankdash.ai/api/junkyard-public";
@@ -20,6 +21,8 @@ export async function getShopCatalog(): Promise<ShopProduct[]> {
     const photo = photos?.side_fl || photos?.front;
     return {
       key: `${kind}:${row.id}`, kind,
+      mileage: kind === "car" && typeof row.mileage === "number" && Number.isFinite(row.mileage) && row.mileage >= 0 ? row.mileage : null,
+      condition: kind === "part" && typeof row.condition === "string" ? row.condition.replace(/_/g, " ") : null,
       name: kind === "car" ? [row.year, row.make, row.model].filter(Boolean).join(" ") : String(row.part_name || "Auto part"),
       priceCents: typeof cents === "number" && Number.isSafeInteger(cents) && cents > 0 ? cents : null,
       image: typeof photo === "string" && photo.startsWith("https://") ? photo : null,

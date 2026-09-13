@@ -13,11 +13,14 @@ test("catalog preserves trusted prices and refuses missing or invalid prices", a
   const calls = [];
   globalThis.fetch = async (url) => {
     calls.push(url);
-    return Response.json({items: url.includes('/cars?') ? [{id:7,year:2025,make:'TEST',model:'Car',asking_price_cents:55000},{id:8,asking_price_cents:null}] : [{id:7,part_name:'Test part',price_cents:12000},{id:8,price_cents:-1}]});
+    return Response.json({items: url.includes('/cars?') ? [{id:7,year:2025,make:'TEST',model:'Car',mileage:123456,asking_price_cents:55000},{id:8,asking_price_cents:null}] : [{id:7,part_name:'Test part',condition:'like_new',price_cents:12000},{id:8,price_cents:-1}]});
   };
   try {
     const products = await getShopCatalog();
     assert.deepEqual(products.map((p)=>[p.key,p.priceCents,p.maxQuantity]), [['car:7',55000,1],['car:8',null,1],['part:7',12000,1],['part:8',null,1]]);
+    assert.equal(products[0].mileage, 123456);
+    assert.equal(products[1].mileage, null);
+    assert.equal(products[2].condition, 'like new');
     assert(calls.every((url)=>url.startsWith('https://api.dankdash.ai/api/junkyard-public/')));
   } finally { globalThis.fetch = original; }
 });

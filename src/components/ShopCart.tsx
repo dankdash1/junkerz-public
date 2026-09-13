@@ -50,7 +50,7 @@ export function useShopCart() {
 }
 export function CartLink() {
   const { items } = useShopCart();
-  return <Link href="/cart" className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg px-2 text-sm font-bold text-zinc-900 hover:bg-zinc-100" aria-label={`Cart (${items.length} items)`}>
+  return <Link href="/cart" className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg px-2 text-sm font-bold text-zinc-900 hover:bg-zinc-100" aria-label={`Cart (${items.length} ${items.length === 1 ? "item" : "items"})`}>
     <ShoppingCart className="h-5 w-5" aria-hidden="true" /><span>Cart</span>
     {items.length > 0 && <span className="rounded-full bg-brand-600 px-1.5 text-xs text-white">{items.length}</span>}
   </Link>;
