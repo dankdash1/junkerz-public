@@ -29,7 +29,7 @@ export default function CartContents() {
     <Link href="/shop" className="mt-6 inline-flex min-h-12 items-center rounded-xl bg-brand-600 px-6 font-bold text-white">Shop cars &amp; parts →</Link>
   </section>;
   return <>
-    <p className="mt-3 text-zinc-500">{items.length} {items.length === 1 ? "listing" : "listings"} · One of each item · Cart clears on refresh during testing.</p>
+    <p className="mt-3 text-zinc-500">{items.length} {items.length === 1 ? "listing" : "listings"} · One of each item · Your cart is saved in this browser tab.</p>
     <div className="mt-7 grid gap-6 lg:grid-cols-[1fr_320px]">
       <section aria-label="Cart items" className="divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-white">
         {items.map((item) => <article key={item.key} className="flex items-start gap-4 p-5">
