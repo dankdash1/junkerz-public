@@ -27,9 +27,13 @@ export const metadata: Metadata = {
     "Junkerz buys junk, wrecked and non-running cars across Dallas–Fort Worth. Guaranteed offer in about a minute, free towing, cash at pickup. Call 817-420-9180.",
   applicationName: SITE.name,
   icons: {
-    icon: [{ url: "/junkerz-brand-icon-v2.png", type: "image/png", sizes: "790x212" }],
-    shortcut: "/junkerz-brand-icon-v2.png",
-    apple: [{ url: "/junkerz-brand-icon-v2.png" }],
+    icon: [
+      { url: "/junkerz-favicon-v3.ico", sizes: "32x32 256x256", type: "image/x-icon" },
+      { url: "/junkerz-icon-32-v3.png", sizes: "32x32", type: "image/png" },
+      { url: "/junkerz-icon-256-v3.png", sizes: "256x256", type: "image/png" },
+    ],
+    shortcut: "/junkerz-favicon-v3.ico",
+    apple: [{ url: "/apple-touch-icon.png?v=3", sizes: "180x180" }],
   },
   keywords: [
     "cash for junk cars",
