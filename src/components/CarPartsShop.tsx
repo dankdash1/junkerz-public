@@ -9,8 +9,8 @@ import type { ShopProduct } from "@/lib/shop-catalog";
 
 export const money = (cents: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 
-export default function CarPartsShop({ products, unavailable }: { products: ShopProduct[]; unavailable: boolean }) {
-  const [filter, setFilter] = useState("all");
+export default function CarPartsShop({ products, unavailable, initialCategory = "all" }: { products: ShopProduct[]; unavailable: boolean; initialCategory?: string }) {
+  const [filter, setFilter] = useState(initialCategory);
   const [search, setSearch] = useState("");
   const { items, add } = useShopCart();
   const shown = products.filter((p) => (filter === "all" || p.kind === filter) && `${p.name} ${p.detail}`.toLowerCase().includes(search.toLowerCase()));

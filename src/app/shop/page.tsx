@@ -6,7 +6,8 @@ import { getShopCatalog, type ShopProduct } from "@/lib/shop-catalog";
 export const metadata: Metadata = { title: "Cars & parts — sandbox shop", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
-export default async function ShopPage() {
+export default async function ShopPage({ searchParams }: { searchParams: { category?: string } }) {
+  const category = ["car", "part"].includes(searchParams.category || "") ? searchParams.category! : "all";
   let products: ShopProduct[] = [];
   let unavailable = false;
   try { products = await getShopCatalog(); } catch { unavailable = true; }
@@ -17,7 +18,7 @@ export default async function ShopPage() {
       <p className="text-xs font-bold uppercase tracking-widest text-brand-700">Junkerz shop</p>
       <h1 className="mt-3 text-4xl font-extrabold tracking-tight">Cars &amp; parts</h1>
       <p className="mb-8 mt-4 max-w-2xl text-zinc-600">Browse the catalog, add cars and parts to your cart, and try checkout. These listings are for testing; prices and availability are not confirmed for purchase.</p>
-      <CarPartsShop products={products} unavailable={unavailable} />
+      <CarPartsShop key={category} products={products} unavailable={unavailable} initialCategory={category} />
     </div>
   </main>;
 }
