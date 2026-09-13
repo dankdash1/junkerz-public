@@ -15,8 +15,8 @@ export function ShopCartProvider({ children }: { children: ReactNode }) {
       if (Array.isArray(saved)) {
         const seen = new Set<string>();
         setItems(saved.filter((p): p is ShopProduct => {
-          if (!p || !/^(car|part):[1-9]\d*$/.test(p.key) || seen.has(p.key) ||
-              !["car", "part"].includes(p.kind) || typeof p.name !== "string" ||
+          if (!p || !/^(car|parts-car|part):[1-9]\d*$/.test(p.key) || seen.has(p.key) ||
+              !["car", "parts-car", "part"].includes(p.kind) || typeof p.name !== "string" ||
               !Number.isSafeInteger(p.priceCents) || p.priceCents <= 0 ||
               typeof p.detail !== "string" ||
               !(p.image === null || (typeof p.image === "string" && p.image.startsWith("https://")))) return false;
