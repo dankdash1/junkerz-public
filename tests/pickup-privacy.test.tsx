@@ -12,6 +12,11 @@ test('capability pickup pages never mount analytics or chat',()=>{
  expect(screen.queryByText('Tracking scripts')).toBeNull();
  expect(screen.queryByText('Public chat')).toBeNull();
 });
+test.each(['/yard-request','/yard-reply'])('yard capability page %s never mounts analytics or chat',(path)=>{
+ route.path=path;render(<SiteExtras/>);
+ expect(screen.queryByText('Tracking scripts')).toBeNull();
+ expect(screen.queryByText('Public chat')).toBeNull();
+});
 test('buyer pages that issue pickup capabilities never mount trackers',()=>{
  route.path='/buyers/won-cars/42';render(<SiteExtras/>);
  expect(screen.queryByText('Tracking scripts')).toBeNull();

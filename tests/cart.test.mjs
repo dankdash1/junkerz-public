@@ -33,6 +33,20 @@ test("catalog preserves trusted prices and refuses missing or invalid prices", a
   } finally { globalThis.fetch = original; }
 });
 
+test("catalog listings retain canonical IDs and detail routes for request actions", async () => {
+  const products = await getShopCatalog(allLive, async (url) => {
+    if (url.includes('/cars?')) return Response.json({ items: [{ id: 7, vin: '1HGCM82633A004352', year: 2018, make: 'Honda', model: 'Accord' }], state: 'live' });
+    if (url.includes('/parts?')) return Response.json({ items: [{ id: 8, vin: '2HGCM82633A004353', year: 2017, make: 'Honda', model: 'Civic' }], state: 'live' });
+    return Response.json({ items: [{ id: 9, car_id: 8, part_name: 'Alternator' }], state: 'live' });
+  });
+
+  assert.deepEqual(products.map(({ id, carId, href }) => ({ id, carId, href })), [
+    { id: 7, carId: 7, href: '/cars/1HGCM82633A004352' },
+    { id: 8, carId: 8, href: '/parts/2HGCM82633A004353' },
+    { id: 9, carId: 8, href: '/parts-inventory/9' },
+  ]);
+});
+
 test("catalog settings accept only the exact public fail-closed contract", () => {
   const valid = {
     sections: { parts: "coming_soon", cars_for_parts: "off", cars_for_sale: "live" },
@@ -99,4 +113,17 @@ test("opening a coming-soon category still preloads live products for a client c
   assert.deepEqual(result.products.map(({ key, name }) => ({ key, name })), [
     { key: "part:901", name: "Preview alternator" },
   ]);
+});
+
+test("detail loading obeys the matching section gate and preserves stock identity", async () => {
+  const calls = [];
+  const settings = { ...allLive, sections: { ...allLive.sections, cars_for_sale: "off" } };
+  assert.equal(await catalog.getCatalogDetail(settings, "car", "1HGCM82633A004352", async () => { throw new Error('must not fetch'); }), null);
+  const detail = await catalog.getCatalogDetail(settings, "parts-car", "2HGCM82633A004353", async (url, options) => {
+    calls.push([url, options]);
+    return Response.json({ id: 8, vin: '2HGCM82633A004353', year: 2017, make: 'Honda', model: 'Civic', listing_kind: 'cars_for_parts' });
+  });
+  assert.deepEqual(calls.map(([url]) => url), ['https://api.dankdash.ai/api/junkyard-public/parts/2HGCM82633A004353']);
+  assert.equal(calls[0][1].cache, 'no-store');
+  assert.deepEqual({ id: detail.id, carId: detail.carId, kind: detail.kind, href: detail.href }, { id: 8, carId: 8, kind: 'parts-car', href: '/parts/2HGCM82633A004353' });
 });
