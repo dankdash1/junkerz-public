@@ -6,6 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { buyerApi } from "@/lib/buyer-api";
 import VehiclePicker, { VehicleSelection } from "@/components/VehiclePicker";
+import {
+  Chip,
+  VehicleTypesField,
+  WhereField,
+  YearRangeField,
+  parseZipList,
+  whereProblem,
+  yearRangeProblem,
+} from "@/components/buyers/RuleFields";
 
 const CONDITIONS = ["runs", "starts_no_drive", "dead", "wrecked"];
 const TITLES = ["clean", "salvage", "rebuilt", "no_title"];
@@ -64,6 +73,9 @@ interface BidRuleResponse {
   require_battery?: boolean | null;
   require_keys?: boolean | null;
   has_catalytic?: boolean | null;
+  area_codes?: string[] | null;
+  vehicle_category?: string | null;
+  vehicle_categories?: string[] | null;
   exclude_flood?: boolean;
   exclude_fire?: boolean;
   max_damage_zones?: number | null;
@@ -73,6 +85,7 @@ interface FormState {
   name: string;
   bid_dollars: string;
   active: boolean;
+  vehicle_categories: string[];
   year_min: string;
   year_max: string;
   makes: string;
@@ -81,6 +94,7 @@ interface FormState {
   zip_codes: string;
   zip_center: string;
   zip_radius_miles: string;
+  area_codes: string[];
   weekly_budget_dollars: string;
   max_per_day: string;
   max_per_week: string;
@@ -94,7 +108,6 @@ interface FormState {
   require_engine_state: string[];
   require_battery: boolean | null;
   require_keys: boolean | null;
-  require_catalytic: boolean | null;
   exclude_flood: boolean;
   exclude_fire: boolean;
   max_damage_zones: string;
@@ -156,6 +169,7 @@ export default function EditBidRule() {
     name: "",
     bid_dollars: "",
     active: true,
+    vehicle_categories: [],
     year_min: "",
     year_max: "",
     makes: "",
@@ -164,6 +178,7 @@ export default function EditBidRule() {
     zip_codes: "",
     zip_center: "",
     zip_radius_miles: "",
+    area_codes: [],
     weekly_budget_dollars: "",
     max_per_day: "",
     max_per_week: "",
@@ -177,7 +192,6 @@ export default function EditBidRule() {
     require_engine_state: [],
     require_battery: null,
     require_keys: null,
-    require_catalytic: null,
     exclude_flood: false,
     exclude_fire: false,
     max_damage_zones: "",
@@ -207,6 +221,10 @@ export default function EditBidRule() {
           name: r.name ?? "",
           bid_dollars: ((r.bid_cents ?? 0) / 100).toFixed(2),
           active: !!r.active,
+          // Older rules kept one type in vehicle_category; show it, then
+          // save it back as the list so the two can never disagree.
+          vehicle_categories:
+            r.vehicle_categories ?? (r.vehicle_category ? [r.vehicle_category] : []),
           year_min: r.year_min != null ? String(r.year_min) : "",
           year_max: r.year_max != null ? String(r.year_max) : "",
           makes: (r.makes ?? []).join(", "),
@@ -216,6 +234,7 @@ export default function EditBidRule() {
           zip_center: r.zip_center ?? "",
           zip_radius_miles:
             r.zip_radius_miles != null ? String(r.zip_radius_miles) : "",
+          area_codes: r.area_codes ?? [],
           max_per_day: r.max_per_day != null ? String(r.max_per_day) : "",
           max_per_week: r.max_per_week != null ? String(r.max_per_week) : "",
           max_per_month: r.max_per_month != null ? String(r.max_per_month) : "",
@@ -234,7 +253,6 @@ export default function EditBidRule() {
           require_engine_state: r.require_engine_state ?? [],
           require_battery: r.require_battery ?? null,
           require_keys: r.require_keys ?? null,
-          require_catalytic: r.has_catalytic ?? null,
           exclude_flood: !!r.exclude_flood,
           exclude_fire: !!r.exclude_fire,
           max_damage_zones:
@@ -284,10 +302,15 @@ export default function EditBidRule() {
       if (!Number.isFinite(bid_cents) || bid_cents <= 0) {
         throw new Error("Bid must be a positive dollar amount");
       }
+      const problem = yearRangeProblem(form.year_min, form.year_max) ?? whereProblem(form);
+      if (problem) throw new Error(problem);
+      const zips = parseZipList(form.zip_codes);
       const payload: Record<string, unknown> = {
         bid_cents,
         active: form.active,
         name: form.name || null,
+        vehicle_categories: form.vehicle_categories.length ? form.vehicle_categories : null,
+        vehicle_category: null,
         year_min: form.year_min ? parseInt(form.year_min, 10) : null,
         year_max: form.year_max ? parseInt(form.year_max, 10) : null,
         makes: form.makes
@@ -295,10 +318,9 @@ export default function EditBidRule() {
           : null,
         conditions: form.conditions,
         title_statuses: form.title_statuses,
-        zip_codes: form.zip_codes
-          ? form.zip_codes.split(",").map((s: string) => s.trim()).filter(Boolean)
-          : null,
+        zip_codes: zips.length ? zips : null,
         zip_center: form.zip_center.trim() || null,
+        area_codes: form.area_codes.length ? form.area_codes : null,
         zip_radius_miles: form.zip_radius_miles
           ? parseInt(form.zip_radius_miles, 10)
           : null,
@@ -322,7 +344,9 @@ export default function EditBidRule() {
         require_transmission_state: null,
         require_battery: form.require_battery,
         require_keys: form.require_keys,
-        has_catalytic: form.require_catalytic,
+        // Catalytic converter is hidden on the form for now; saving clears it
+        // so a filter the buyer cannot see never rejects cars.
+        has_catalytic: null,
         exclude_flood: form.exclude_flood,
         exclude_fire: form.exclude_fire,
         max_damage_zones: form.max_damage_zones ? parseInt(form.max_damage_zones, 10) : null,
@@ -450,37 +474,48 @@ export default function EditBidRule() {
             Pick where matches for this rule should ping you. Defaults to Telegram.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Year min</Label>
-            <Input
-              type="number"
-              value={form.year_min}
-              onChange={(e) => setForm({ ...form, year_min: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label>Year max</Label>
-            <Input
-              type="number"
-              value={form.year_max}
-              onChange={(e) => setForm({ ...form, year_max: e.target.value })}
-            />
-          </div>
-        </div>
+        <VehicleTypesField
+          value={form.vehicle_categories}
+          onChange={(v) => setForm((f) => ({ ...f, vehicle_categories: v }))}
+        />
+        <YearRangeField
+          yearMin={form.year_min}
+          yearMax={form.year_max}
+          onChange={(year_min, year_max) => setForm((f) => ({ ...f, year_min, year_max }))}
+        />
         <div>
-          <Label>Makes (comma separated, blank = any)</Label>
+          <div className="flex items-center gap-2">
+            <Label className="mb-0">Makes</Label>
+            <Chip
+              on={!form.makes.trim() && !pickedMakes.length && !pickedModels.length}
+              onClick={() => {
+                setForm((f) => ({ ...f, makes: "" }));
+                setPickedMakes([]);
+                setPickedModels([]);
+              }}
+            >
+              All makes
+            </Chip>
+          </div>
           <Input
+            className="mt-1"
             value={form.makes}
             onChange={(e) => setForm({ ...form, makes: e.target.value })}
-            placeholder="Honda, Toyota"
+            placeholder="Or type some: Honda, Toyota"
           />
         </div>
 
         {/* VehiclePicker section */}
         <div className="border rounded p-4 space-y-3 bg-slate-50">
           <Label className="font-semibold">Target specific makes / models</Label>
-          <VehiclePicker value={picker} onChange={setPicker} showTrim={false} />
+          <VehiclePicker
+            value={picker}
+            onChange={setPicker}
+            showTrim={false}
+            categories={form.vehicle_categories}
+            yearMin={form.year_min ? parseInt(form.year_min, 10) : null}
+            yearMax={form.year_max ? parseInt(form.year_max, 10) : null}
+          />
           <div className="flex gap-2">
             <Button
               type="button"
@@ -585,14 +620,10 @@ export default function EditBidRule() {
             ))}
           </div>
         </div>
-        <div>
-          <Label>Zip codes (comma separated, blank = any)</Label>
-          <Input
-            value={form.zip_codes}
-            onChange={(e) => setForm({ ...form, zip_codes: e.target.value })}
-            placeholder="75201, 75202"
-          />
-        </div>
+        <WhereField
+          value={form}
+          onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+        />
         <div>
           <Label>Weekly budget ($, blank = unlimited)</Label>
           <Input
@@ -604,33 +635,6 @@ export default function EditBidRule() {
             }
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label>Or a radius: centre ZIP</Label>
-            <Input
-              value={form.zip_center}
-              onChange={(e) => setForm({ ...form, zip_center: e.target.value })}
-              placeholder="75201"
-            />
-          </div>
-          <div>
-            <Label>Miles from that ZIP</Label>
-            <Input
-              type="number"
-              min="1"
-              value={form.zip_radius_miles}
-              onChange={(e) =>
-                setForm({ ...form, zip_radius_miles: e.target.value })
-              }
-              placeholder="Any"
-            />
-          </div>
-        </div>
-        <p className="text-xs text-slate-500 -mt-1">
-          Set either one. A car counts if its ZIP is on your list or it sits
-          inside the circle. Leave both blank to take cars anywhere.
-        </p>
-
         <div className="grid grid-cols-3 gap-3">
           <div>
             <Label>Max cars / day</Label>
@@ -753,11 +757,6 @@ export default function EditBidRule() {
             label="Keys present"
             value={form.require_keys}
             onChange={(v) => setForm({ ...form, require_keys: v })}
-          />
-          <YesAny
-            label="Catalytic converter"
-            value={form.require_catalytic}
-            onChange={(v) => setForm({ ...form, require_catalytic: v })}
           />
 
           <div className="flex items-center gap-3">
