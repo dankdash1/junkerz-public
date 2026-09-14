@@ -56,6 +56,8 @@ const T = {
     phoneReq: "Phone is required", phoneBad: "Enter a valid 10-digit phone number",
     emailReq: "Email is required", emailBad: "Enter a valid email address",
     contactHint: "We'll text your offer to your phone and email you the confirmation. Both are required.",
+    smsConsent: "By entering your phone number you agree to receive text messages from Junkerz about your quote, offer and pickup. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out or HELP for help. See our",
+    termsLink: "Terms", privacyLink: "Privacy Policy", and: "and",
     footer: "{t.footer}",
     yes: "Yes", no: "No",
     choice: { intact: "intact", partial: "partial", missing: "missing" },
@@ -87,6 +89,8 @@ const T = {
     phoneReq: "El teléfono es obligatorio", phoneBad: "Ponga un teléfono válido de 10 dígitos",
     emailReq: "El correo es obligatorio", emailBad: "Ponga un correo válido",
     contactHint: "Le mandamos la oferta por texto y la confirmación por correo. Los dos son obligatorios.",
+    smsConsent: "Al poner su teléfono acepta recibir mensajes de texto de Junkerz sobre su cotización, oferta y recogida. La frecuencia de los mensajes varía. Pueden aplicar tarifas de mensajes y datos. Responda STOP para cancelar o HELP para ayuda. Vea nuestros",
+    termsLink: "Términos", privacyLink: "Política de privacidad", and: "y",
     footer: "Grúa gratis · Sin cargos · Le pagamos al recoger",
     yes: "Sí", no: "No",
     choice: { intact: "completo", partial: "parcial", missing: "falta" },
@@ -563,6 +567,12 @@ function QuoteWizardInner() {
               </div>
               <p className="text-xs text-zinc-500">
                 {t.contactHint}
+              </p>
+              <p className="text-xs text-zinc-500">
+                {t.smsConsent}{" "}
+                <Link href="/terms" className="underline">{t.termsLink}</Link>{" "}
+                {t.and}{" "}
+                <Link href="/privacy-policy" className="underline">{t.privacyLink}</Link>.
               </p>
             </div>
           )}
