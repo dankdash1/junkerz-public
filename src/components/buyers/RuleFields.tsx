@@ -37,10 +37,10 @@ const SELECT = "h-8 rounded-lg border border-input bg-white px-2 text-sm";
 // ---- vehicle types -------------------------------------------------------
 
 const VEHICLE_CATEGORIES: Array<{ value: string; label: string }> = [
-  { value: "car", label: "Cars" },
-  { value: "truck", label: "Trucks" },
-  { value: "suv", label: "SUVs" },
-  { value: "van", label: "Vans" },
+  { value: "car", label: "All cars" },
+  { value: "truck", label: "All trucks" },
+  { value: "suv", label: "All SUVs" },
+  { value: "van", label: "All vans" },
 ];
 
 export function VehicleTypesField({
@@ -67,7 +67,7 @@ export function VehicleTypesField({
                 onChange(on ? value.filter((v) => v !== cat.value) : [...value, cat.value])
               }
             >
-              All {cat.label.toLowerCase()}
+              {cat.label}
             </Chip>
           );
         })}
