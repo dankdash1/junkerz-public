@@ -31,6 +31,7 @@ export function createPickupAccessApi(token:string) {
     detail:()=>request('/detail').then(r=>r.json()) as Promise<PickupAccessDetail>,
     start:(driverName:string,etaMinutes:number)=>post('/start',{driver_name:driverName,eta_minutes:etaMinutes}),
     thirtyMinutes:(driverName:string)=>post('/thirty-minutes',{driver_name:driverName}),
+    arrive:(driverName:string)=>post('/arrive',{driver_name:driverName}),
     complete:(driverName:string)=>post('/complete',{driver_name:driverName}),
     signature:(driverName:string,signerName:string,signature:string)=>post('/signature',{driver_name:driverName,signer_name:signerName,signature}),
     upload:(driverName:string,kind:string,file:File)=>{
