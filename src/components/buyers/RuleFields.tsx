@@ -1,10 +1,10 @@
 "use client";
 // Fields shared by the new and edit bid-rule pages: vehicle types, the year
-// range, and where the car is (area codes, a circle of miles, ZIP codes).
-import { useEffect, useState } from "react";
+// range, and where the car is (a circle around a town, area codes, ZIP codes).
+import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { buyerApi, type AreaCodeGroup } from "@/lib/buyer-api";
+import { buyerApi, type AreaCodeGroup, type Place } from "@/lib/buyer-api";
 
 export function Chip({
   on,
@@ -31,8 +31,6 @@ export function Chip({
     </button>
   );
 }
-
-const SELECT = "h-8 rounded-lg border border-input bg-white px-2 text-sm";
 
 // ---- vehicle types -------------------------------------------------------
 
@@ -81,50 +79,18 @@ export function VehicleTypesField({
 
 // ---- years ---------------------------------------------------------------
 
-const THIS_YEAR = new Date().getFullYear();
-const YEARS = Array.from({ length: THIS_YEAR + 2 - 1950 }, (_, i) => String(THIS_YEAR + 1 - i));
-const YEAR_PRESETS = [
-  { label: "Any year", min: "", max: "" },
-  { label: "1999 & older", min: "", max: "1999" },
-  { label: "2000–2009", min: "2000", max: "2009" },
-  { label: "2010–2014", min: "2010", max: "2014" },
-  { label: "2015–2020", min: "2015", max: "2020" },
-  { label: "2021 & newer", min: "2021", max: "" },
-];
+const NEWEST_YEAR = new Date().getFullYear() + 1;
 
 export function yearRangeProblem(min: string, max: string): string | null {
+  for (const [label, v] of [["From year", min], ["To year", max]] as const) {
+    if (v && !(/^\d{4}$/.test(v) && Number(v) >= 1900 && Number(v) <= NEWEST_YEAR)) {
+      return `${label} must be a 4-digit year between 1900 and ${NEWEST_YEAR}.`;
+    }
+  }
   if (min && max && Number(min) > Number(max)) {
-    return "The first year must be before the second year.";
+    return "From year must be the same as or before To year.";
   }
   return null;
-}
-
-function YearSelect({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  // Keep an old saved year selectable even if it is outside the list.
-  const years = value && !YEARS.includes(value) ? [value, ...YEARS] : YEARS;
-  return (
-    <select
-      aria-label={label}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className={SELECT}
-    >
-      <option value="">Any</option>
-      {years.map((y) => (
-        <option key={y} value={y}>
-          {y}
-        </option>
-      ))}
-    </select>
-  );
 }
 
 export function YearRangeField({
@@ -140,28 +106,35 @@ export function YearRangeField({
   return (
     <div>
       <Label>Years</Label>
-      <div className="flex flex-wrap gap-2 mt-1">
-        {YEAR_PRESETS.map((p) => (
-          <Chip
-            key={p.label}
-            on={yearMin === p.min && yearMax === p.max}
-            onClick={() => onChange(p.min, p.max)}
-          >
-            {p.label}
-          </Chip>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-slate-700">
-        <span>From</span>
-        <YearSelect label="From year" value={yearMin} onChange={(v) => onChange(v, yearMax)} />
-        <span>to</span>
-        <YearSelect label="To year" value={yearMax} onChange={(v) => onChange(yearMin, v)} />
+      <div className="grid grid-cols-2 gap-3 mt-1">
+        <label className="text-sm text-slate-700">
+          From year:
+          <Input
+            className="mt-1"
+            inputMode="numeric"
+            maxLength={4}
+            value={yearMin}
+            onChange={(e) => onChange(e.target.value.replace(/\D/g, ""), yearMax)}
+            placeholder="Any"
+          />
+        </label>
+        <label className="text-sm text-slate-700">
+          To year:
+          <Input
+            className="mt-1"
+            inputMode="numeric"
+            maxLength={4}
+            value={yearMax}
+            onChange={(e) => onChange(yearMin, e.target.value.replace(/\D/g, ""))}
+            placeholder="Any"
+          />
+        </label>
       </div>
       {problem ? (
         <p className="text-xs text-red-600 mt-1">{problem}</p>
       ) : (
         <p className="text-xs text-slate-500 mt-1">
-          Tap a range, or set your own, like 2015 to 2020.
+          Type any years, like 2015 to 2020. Leave a box empty for no limit.
         </p>
       )}
     </div>
@@ -194,14 +167,144 @@ export function whereProblem(v: WhereValue): string | null {
   const bad = parseZipList(v.zip_codes).filter((z) => !isZipEntry(z));
   if (bad.length) return `Not a ZIP code, prefix or range: ${bad.join(", ")}`;
   const center = v.zip_center.trim();
-  if (center && !/^\d{5}$/.test(center)) return "The circle's ZIP code must be 5 digits.";
-  if (Boolean(center) !== Boolean(v.zip_radius_miles)) {
-    return "Set both the ZIP code and the miles for the circle, or clear both.";
-  }
+  if (center && !/^\d{5}$/.test(center)) return "Pick the town for the circle from the list.";
+  if (v.zip_radius_miles && !center) return "Pick the town for the circle from the list.";
+  if (center && !v.zip_radius_miles) return "Type how many miles the circle reaches.";
   return null;
 }
 
-const MILES = [10, 25, 50, 75, 100, 150];
+// A circle: "Take cars within [50] miles of [Fort Worth, TX]".
+// Stored as a centre ZIP — the ZIP nearest the middle of the town picked.
+function TownCircle({
+  zipCenter,
+  miles,
+  onChange,
+}: {
+  zipCenter: string;
+  miles: string;
+  onChange: (patch: Partial<WhereValue>) => void;
+}) {
+  const [text, setText] = useState("");
+  const [townName, setTownName] = useState<string | null>(null);
+  const [unknownZip, setUnknownZip] = useState(false);
+  const [results, setResults] = useState<Place[]>([]);
+  const typed = useRef(false);
+
+  // Name the saved centre, and fill the box with it when the page opens.
+  useEffect(() => {
+    const z = zipCenter.trim();
+    setUnknownZip(false);
+    if (!/^\d{5}$/.test(z)) {
+      setTownName(null);
+      return;
+    }
+    let live = true;
+    buyerApi
+      .zipLookup(z)
+      .then((r) => {
+        if (!live) return;
+        const name = `${r.city}, ${r.state}`;
+        setTownName(name);
+        if (!typed.current) setText(name);
+      })
+      .catch((e: Error) => {
+        if (live && e.message === "unknown_zip") setUnknownZip(true);
+      });
+    return () => {
+      live = false;
+    };
+  }, [zipCenter]);
+
+  // Search towns as the buyer types.
+  useEffect(() => {
+    const q = text.trim();
+    if (!typed.current || q.length < 2 || /^\d+$/.test(q)) {
+      setResults([]);
+      return;
+    }
+    let live = true;
+    const t = setTimeout(() => {
+      buyerApi
+        .places(q)
+        .then((r) => live && setResults(r.places ?? []))
+        .catch(() => live && setResults([]));
+    }, 250);
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+  }, [text]);
+
+  function type(v: string) {
+    typed.current = true;
+    setText(v);
+    const s = v.trim();
+    // A 5-digit ZIP works straight away; a town must be picked from the list.
+    onChange({ zip_center: /^\d{5}$/.test(s) ? s : "" });
+  }
+
+  function pick(p: Place) {
+    typed.current = false;
+    setText(`${p.city}, ${p.state}`);
+    setResults([]);
+    onChange({ zip_center: p.zip });
+  }
+
+  return (
+    <div>
+      <Label>Circle around a town or city</Label>
+      <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-slate-700">
+        <span>Take cars within</span>
+        <Input
+          className="w-20"
+          inputMode="numeric"
+          value={miles}
+          onChange={(e) => onChange({ zip_radius_miles: e.target.value.replace(/\D/g, "") })}
+          placeholder="50"
+          aria-label="Miles"
+        />
+        <span>miles of</span>
+      </div>
+      <div className="relative mt-2">
+        <Input
+          value={text}
+          onChange={(e) => type(e.target.value)}
+          placeholder="Type a town or city, like Fort Worth"
+          aria-label="Town or city"
+          autoComplete="off"
+        />
+        {results.length > 0 && (
+          <ul className="absolute z-10 mt-1 w-full rounded border bg-white shadow">
+            {results.map((p) => (
+              <li key={`${p.city}-${p.state}`}>
+                <button
+                  type="button"
+                  onClick={() => pick(p)}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
+                >
+                  {p.city}, {p.state}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      {townName && miles && (
+        <p className="text-xs text-slate-600 mt-1">
+          Cars within {miles} miles of {townName} count.
+        </p>
+      )}
+      {unknownZip && (
+        <p className="text-xs text-red-600 mt-1">
+          We can&apos;t find ZIP {zipCenter.trim()}. This circle would match no cars.
+        </p>
+      )}
+      {typed.current && text.trim() && !zipCenter && results.length === 0 && text.trim().length >= 2 && (
+        <p className="text-xs text-slate-500 mt-1">Keep typing, then pick the town from the list.</p>
+      )}
+    </div>
+  );
+}
 
 export function WhereField({
   value,
@@ -218,26 +321,7 @@ export function WhereField({
       .then((r) => setGroups(r.area_codes ?? []))
       .catch(() => setGroups(null));
   }, []);
-
-  const [centerName, setCenterName] = useState<{ ok: boolean; text: string } | null>(null);
-  useEffect(() => {
-    const z = value.zip_center.trim();
-    setCenterName(null);
-    if (!/^\d{5}$/.test(z)) return;
-    let live = true;
-    const t = setTimeout(() => {
-      buyerApi
-        .zipLookup(z)
-        .then((r) => live && setCenterName({ ok: true, text: `${r.city}, ${r.state}` }))
-        .catch((e: Error) => {
-          if (live && e.message === "unknown_zip") setCenterName({ ok: false, text: "" });
-        });
-    }, 300);
-    return () => {
-      live = false;
-      clearTimeout(t);
-    };
-  }, [value.zip_center]);
+  const [showZips, setShowZips] = useState(Boolean(value.zip_codes.trim()));
 
   const picked = (groups ?? []).filter((g) => value.area_codes.includes(g.key));
   const problem = whereProblem(value);
@@ -254,6 +338,12 @@ export function WhereField({
           A car counts if it matches any one of these.
         </p>
       </div>
+
+      <TownCircle
+        zipCenter={value.zip_center}
+        miles={value.zip_radius_miles}
+        onChange={onChange}
+      />
 
       {groups && groups.length > 0 && (
         <div>
@@ -290,63 +380,28 @@ export function WhereField({
       )}
 
       <div>
-        <Label>Miles around a ZIP code</Label>
-        <div className="grid grid-cols-2 gap-3 mt-1">
-          <Input
-            value={value.zip_center}
-            onChange={(e) => onChange({ zip_center: e.target.value })}
-            placeholder="Your yard ZIP, e.g. 75201"
-            inputMode="numeric"
-            maxLength={5}
-            aria-label="Circle centre ZIP code"
-          />
-          <Input
-            type="number"
-            min="1"
-            value={value.zip_radius_miles}
-            onChange={(e) => onChange({ zip_radius_miles: e.target.value })}
-            placeholder="Miles"
-            aria-label="Miles"
-          />
-        </div>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {MILES.map((m) => (
-            <Chip
-              key={m}
-              on={value.zip_radius_miles === String(m)}
-              onClick={() => onChange({ zip_radius_miles: String(m) })}
-            >
-              {m} mi
-            </Chip>
-          ))}
-        </div>
-        {centerName?.ok && (
-          <p className="text-xs text-slate-600 mt-1">
-            {value.zip_center.trim()} is {centerName.text}
-            {value.zip_radius_miles
-              ? `. Cars within ${value.zip_radius_miles} miles of it count.`
-              : "."}
-          </p>
+        <button
+          type="button"
+          onClick={() => setShowZips(!showZips)}
+          className="text-sm text-slate-700 underline"
+          aria-expanded={showZips}
+        >
+          {showZips ? "Hide exact ZIP codes" : "Add exact ZIP codes (optional)"}
+        </button>
+        {showZips && (
+          <div className="mt-2">
+            <Input
+              value={value.zip_codes}
+              onChange={(e) => onChange({ zip_codes: e.target.value })}
+              placeholder="75201, 752, 76001-76099"
+              aria-label="ZIP codes"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              A full ZIP (75201), the first 3 digits for a whole area (752 = all of
+              Dallas), or a range (76001-76099). Separate them with commas.
+            </p>
+          </div>
         )}
-        {centerName && !centerName.ok && (
-          <p className="text-xs text-red-600 mt-1">
-            We can&apos;t find ZIP {value.zip_center.trim()}. This circle would match no cars.
-          </p>
-        )}
-      </div>
-
-      <div>
-        <Label>ZIP codes</Label>
-        <Input
-          value={value.zip_codes}
-          onChange={(e) => onChange({ zip_codes: e.target.value })}
-          placeholder="75201, 752, 76001-76099"
-          className="mt-1"
-        />
-        <p className="text-xs text-slate-500 mt-1">
-          A full ZIP (75201), the first 3 digits for a whole area (752 = all of
-          Dallas), or a range (76001-76099). Separate them with commas.
-        </p>
       </div>
 
       {problem && <p className="text-sm text-red-600">{problem}</p>}
@@ -376,8 +431,8 @@ export function ruleSummary(r: {
     r.year_min || r.year_max ? `${r.year_min ?? "any"}–${r.year_max ?? "newest"}` : "any year";
   const makes = r.makes?.length ? r.makes.join(", ") : "any make";
   const where: string[] = [];
-  if (r.area_codes?.length) where.push(`area ${r.area_codes.join(", ")}`);
   if (r.zip_center && r.zip_radius_miles) where.push(`${r.zip_radius_miles} mi of ${r.zip_center}`);
+  if (r.area_codes?.length) where.push(`area ${r.area_codes.join(", ")}`);
   if (r.zip_codes?.length) {
     where.push(`ZIPs ${r.zip_codes.slice(0, 3).join(", ")}${r.zip_codes.length > 3 ? "…" : ""}`);
   }

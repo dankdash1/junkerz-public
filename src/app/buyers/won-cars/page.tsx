@@ -123,8 +123,27 @@ export default function WonCars() {
                       {r.year} {r.make} {r.model}
                     </Link>
                     <div className="text-xs text-slate-500">
-                      {r.condition} · {r.title_status} · {r.zip_code}
+                      {r.condition} · {r.title_status} ·{" "}
+                      {r.car_city ? `${r.car_city}, ${r.car_state} ${r.zip_code}` : r.zip_code}
+                      {r.miles_from_rule_center != null && r.rule_center_city
+                        ? ` · ${Math.round(r.miles_from_rule_center)} mi from ${r.rule_center_city}`
+                        : ""}
                     </div>
+                    {r.rule_name && (
+                      <div className="text-xs text-slate-600">
+                        Won by your rule:{" "}
+                        {r.matched_rule_id ? (
+                          <Link
+                            href={`/buyers/bid-rules/${r.matched_rule_id}`}
+                            className="text-brand-700 hover:underline"
+                          >
+                            {r.rule_name}
+                          </Link>
+                        ) : (
+                          r.rule_name
+                        )}
+                      </div>
+                    )}
                   </td>
                   <td className="p-3">${(r.bid_cents / 100).toFixed(0)}</td>
                   <td className="p-3 whitespace-nowrap">
