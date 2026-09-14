@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Bell, CarFront, Package, Plus, ShoppingCart, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useShopCart } from "@/components/ShopCart";
+import YardRequestForm from "@/components/YardRequestForm";
+import { submitYardRequest, type YardRequestAttempt, type YardRequestReceipt } from "@/lib/yard-requests";
 import {
   categoryMode,
   sectionForProductKind,
@@ -48,12 +50,16 @@ export default function CarPartsShop({
   settings,
   settingsUnavailable,
   unavailable,
+  requestIntakeEnabled = false,
+  submitRequest = submitYardRequest,
   initialCategory = "all",
 }: {
   products: ShopProduct[];
   settings: CatalogSettings;
   settingsUnavailable: boolean;
   unavailable: boolean;
+  requestIntakeEnabled?: boolean;
+  submitRequest?: (attempt: YardRequestAttempt) => Promise<YardRequestReceipt>;
   initialCategory?: ShopCategory;
 }) {
   const [filter, setFilter] = useState<ShopCategory>(initialCategory);
@@ -105,6 +111,16 @@ export default function CarPartsShop({
                 <h2 className="mt-2 text-lg font-bold">{product.name}</h2>
                 <p className="mt-2 text-sm text-zinc-500">{product.detail}</p>
                 <p className="mb-4 mt-5 text-2xl font-extrabold">{product.priceCents === null ? "Price needed" : money(product.priceCents)}</p>
+                <Link href={product.href} className="mb-2 inline-flex min-h-11 items-center justify-center rounded-lg border border-zinc-300 px-4 text-sm font-bold text-zinc-800 hover:bg-zinc-50">View details</Link>
+                {requestIntakeEnabled && <div className="mb-2"><YardRequestForm
+                  target={{
+                    kind: product.kind === "parts-car" ? "donor_part" : product.kind === "car" ? "whole_car" : "part",
+                    carId: product.carId,
+                    partId: product.kind === "part" ? product.id : undefined,
+                    label: product.name,
+                  }}
+                  submitRequest={submitRequest}
+                /></div>}
                 <Button className="mt-auto h-11 w-full gap-2" disabled={added || product.priceCents === null || items.length >= 30} onClick={() => add(product)}>
                   {added ? <><ShoppingCart className="h-4 w-4" /> In cart</> : <><Plus className="h-4 w-4" /> Add to sandbox cart</>}
                 </Button>

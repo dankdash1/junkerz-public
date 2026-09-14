@@ -11,6 +11,9 @@ export type CatalogSettings = {
 
 export type ShopProduct = {
   key: string;
+  id: number;
+  carId: number | null;
+  href: string;
   name: string;
   kind: ShopProductKind;
   section: CatalogSection;
@@ -134,6 +137,11 @@ export async function getShopCatalog(settings: CatalogSettings, fetchImpl: typeo
     const photo = photos?.side_fl || photos?.front;
     return {
       key: `${source.kind}:${row.id}`,
+      id: Number(row.id),
+      carId: Number(isIndividualPart ? row.car_id : row.id) || null,
+      href: isIndividualPart
+        ? `/parts-inventory/${row.id}`
+        : `/${source.kind === "car" ? "cars" : "parts"}/${encodeURIComponent(String(row.vin || ""))}`,
       kind: source.kind,
       section: source.section,
       mileage: !isIndividualPart && typeof row.mileage === "number" && Number.isFinite(row.mileage) && row.mileage >= 0 ? row.mileage : null,
@@ -156,6 +164,44 @@ export async function loadShopPageCatalog(
 ): Promise<{ notFound: boolean; products: ShopProduct[] }> {
   if (categoryMode(settings, category) === "off") return { notFound: true, products: [] };
   return { notFound: false, products: await getShopCatalog(settings, fetchImpl) };
+}
+
+export async function getCatalogDetail(
+  settings: CatalogSettings,
+  kind: ShopProductKind,
+  identifier: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<ShopProduct | null> {
+  if (settings.sections[sectionForProductKind(kind)] !== "live") return null;
+  const source = kind === "car" ? "cars" : kind === "parts-car" ? "parts" : "parts-inventory";
+  const response = await fetchImpl(`${catalogBase}/${source}/${encodeURIComponent(identifier)}`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(10000),
+  });
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error("Catalog detail unavailable");
+  const row: unknown = await response.json();
+  if (!isRecord(row) || !Number.isInteger(Number(row.id)) || Number(row.id) <= 0) throw new Error("Invalid catalog detail response");
+  const isPart = kind === "part";
+  const photos = (isPart ? row.photos : row.listing_photos) as Record<string, unknown> | null;
+  const photo = photos?.side_fl || photos?.front;
+  const cents = isPart ? row.price_cents : row.asking_price_cents;
+  const vin = String(row.vin || "");
+  return {
+    key: `${kind}:${row.id}`,
+    id: Number(row.id),
+    carId: Number(isPart ? row.car_id : row.id) || null,
+    href: isPart ? `/parts-inventory/${row.id}` : `/${kind === "car" ? "cars" : "parts"}/${encodeURIComponent(vin)}`,
+    kind,
+    section: sectionForProductKind(kind),
+    mileage: !isPart && typeof row.mileage === "number" && row.mileage >= 0 ? row.mileage : null,
+    condition: isPart && typeof row.condition === "string" ? row.condition.replace(/_/g, " ") : null,
+    name: isPart ? String(row.part_name || "Auto part") : [row.year, row.make, row.model].filter(Boolean).join(" ") || "Vehicle",
+    priceCents: typeof cents === "number" && Number.isSafeInteger(cents) && cents > 0 ? cents : null,
+    image: typeof photo === "string" && photo.startsWith("https://") ? photo : null,
+    detail: isPart ? [row.compatible_makes, row.compatible_models, row.compatible_years].filter(Boolean).join(" · ") : kind === "car" ? "Vehicle listing" : "Vehicle available for parts",
+    maxQuantity: 1,
+  };
 }
 
 export function validateCart(input: unknown): { key: string; quantity: number }[] {

@@ -9,6 +9,7 @@ import {
   type ShopCategory,
   type ShopProduct,
 } from "@/lib/shop-catalog";
+import { getYardRequestSettings } from "@/lib/yard-requests";
 
 export const metadata: Metadata = { title: "Cars & parts", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -25,8 +26,10 @@ export default async function ShopPage({ searchParams }: { searchParams: { categ
   catch { settingsUnavailable = true; }
 
   let products: ShopProduct[] = [];
+  let requestIntakeEnabled = false;
   let catalogUnavailable = false;
   if (!settingsUnavailable) {
+    try { requestIntakeEnabled = (await getYardRequestSettings()).enabled; } catch {}
     let pageCatalog;
     try {
       pageCatalog = await loadShopPageCatalog(settings, category);
@@ -52,6 +55,7 @@ export default async function ShopPage({ searchParams }: { searchParams: { categ
         settings={settings}
         settingsUnavailable={settingsUnavailable}
         unavailable={catalogUnavailable}
+        requestIntakeEnabled={requestIntakeEnabled}
         initialCategory={category}
       />
     </div>
