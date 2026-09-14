@@ -54,6 +54,15 @@ export type SignupConfig = {
 
 export type DocumentType = "w9" | "license" | "insurance" | "id";
 
+// One chip on the bid-rule form: "817 · 682" and the towns it covers.
+export type AreaCodeGroup = {
+  key: string;
+  codes: string[];
+  label: string;
+  state: string;
+  towns: string[];
+};
+
 export const buyerApi = {
   signup: (b: BuyerSignupBody) =>
     _fetch("/api/buyers/auth/signup", { method: "POST", body: JSON.stringify(b) }).then(_json),
@@ -96,6 +105,12 @@ export const buyerApi = {
     });
     return _json(r);
   },
+  areaCodes: () =>
+    _fetch("/api/buyers/area-codes").then(_json) as Promise<{ area_codes: AreaCodeGroup[] }>,
+  zipLookup: (zip: string) =>
+    _fetch(`/api/buyers/zip-lookup?zip=${encodeURIComponent(zip)}`).then(_json) as Promise<{
+      zip: string; city: string; state: string;
+    }>,
   listRules: () => _fetch("/api/buyers/bid-rules").then(_json),
   getRule: (id: number) => _fetch(`/api/buyers/bid-rules/${id}`).then(_json),
   createRule: (rule: Record<string, unknown>) =>

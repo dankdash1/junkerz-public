@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { buyerApi } from "@/lib/buyer-api";
+import { ruleSummary } from "@/components/buyers/RuleFields";
 
 interface BidRule {
   id: number;
@@ -13,9 +14,14 @@ interface BidRule {
   notification_preference?: string[] | null;
   weekly_count_used?: number;
   max_per_week?: number;
-  year_min?: number;
-  year_max?: number;
-  makes?: string[];
+  year_min?: number | null;
+  year_max?: number | null;
+  makes?: string[] | null;
+  vehicle_categories?: string[] | null;
+  area_codes?: string[] | null;
+  zip_codes?: string[] | null;
+  zip_center?: string | null;
+  zip_radius_miles?: number | null;
 }
 
 const PRIORITY_LABEL: Record<number, string> = {
@@ -136,8 +142,7 @@ export default function BidRulesList() {
                     {r.max_per_week ? ` / ${r.max_per_week}` : " / ∞"}
                   </td>
                   <td className="p-3 text-slate-600 text-xs">
-                    {r.year_min || "any"}–{r.year_max || "any"} ·{" "}
-                    {(r.makes ?? []).join(", ") || "any make"}
+                    {ruleSummary(r)}
                   </td>
                   <td className="p-3 space-x-2 whitespace-nowrap">
                     <Link href={`/buyers/bid-rules/${r.id}`} className="text-blue-600 hover:underline">

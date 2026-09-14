@@ -6,17 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { buyerApi } from "@/lib/buyer-api";
 import VehiclePicker, { VehicleSelection } from "@/components/VehiclePicker";
+import {
+  Chip,
+  VehicleTypesField,
+  WhereField,
+  YearRangeField,
+  parseZipList,
+  whereProblem,
+  yearRangeProblem,
+} from "@/components/buyers/RuleFields";
 
 const CONDITIONS = ["runs", "starts_no_drive", "dead", "wrecked"];
 const TITLES = ["clean", "salvage", "rebuilt", "no_title"];
 const PICKUP_PAYORS = ["buyer", "junkerz", "split"];
 const ENGINE_STATES = ["intact", "partial", "missing"];
-const VEHICLE_CATEGORIES: Array<{ value: string; label: string }> = [
-  { value: "car", label: "Cars" },
-  { value: "truck", label: "Trucks" },
-  { value: "suv", label: "SUVs" },
-  { value: "van", label: "Vans" },
-];
 
 const EMPTY_VEHICLE: VehicleSelection = {
   year: null,
@@ -49,6 +52,7 @@ interface FormState {
   zip_codes: string;
   zip_center: string;
   zip_radius_miles: string;
+  area_codes: string[];
   weekly_budget_dollars: string;
   max_per_day: string;
   max_per_week: string;
@@ -62,7 +66,6 @@ interface FormState {
   require_engine_state: string[];
   require_battery: boolean | null;
   require_keys: boolean | null;
-  require_catalytic: boolean | null;
   exclude_flood: boolean;
   exclude_fire: boolean;
   max_damage_zones: string;
@@ -82,6 +85,7 @@ export default function NewBidRule() {
     zip_codes: "",
     zip_center: "",
     zip_radius_miles: "",
+    area_codes: [],
     weekly_budget_dollars: "",
     max_per_day: "",
     max_per_week: "",
@@ -94,7 +98,6 @@ export default function NewBidRule() {
     require_engine_state: [],
     require_battery: null,
     require_keys: null,
-    require_catalytic: null,
     exclude_flood: false,
     exclude_fire: false,
     max_damage_zones: "",
@@ -129,6 +132,9 @@ export default function NewBidRule() {
       if (!Number.isFinite(bid_cents) || bid_cents <= 0) {
         throw new Error("Bid must be a positive dollar amount");
       }
+      const problem = yearRangeProblem(form.year_min, form.year_max) ?? whereProblem(form);
+      if (problem) throw new Error(problem);
+      const zips = parseZipList(form.zip_codes);
       const payload: Record<string, unknown> = {
         name: form.name || null,
         bid_cents,
@@ -142,10 +148,9 @@ export default function NewBidRule() {
           : null,
         conditions: form.conditions,
         title_statuses: form.title_statuses,
-        zip_codes: form.zip_codes
-          ? form.zip_codes.split(",").map((s: string) => s.trim()).filter(Boolean)
-          : null,
+        zip_codes: zips.length ? zips : null,
         zip_center: form.zip_center.trim() || null,
+        area_codes: form.area_codes.length ? form.area_codes : null,
         zip_radius_miles: form.zip_radius_miles
           ? parseInt(form.zip_radius_miles, 10)
           : null,
@@ -168,7 +173,9 @@ export default function NewBidRule() {
         require_transmission_state: null,
         require_battery: form.require_battery,
         require_keys: form.require_keys,
-        has_catalytic: form.require_catalytic,
+        // Catalytic converter is hidden on the form for now, so it is never
+        // saved as a filter the buyer cannot see.
+        has_catalytic: null,
         exclude_flood: form.exclude_flood,
         exclude_fire: form.exclude_fire,
         max_damage_zones: form.max_damage_zones ? parseInt(form.max_damage_zones, 10) : null,
@@ -256,63 +263,34 @@ export default function NewBidRule() {
             required
           />
         </div>
+        <VehicleTypesField
+          value={form.vehicle_categories}
+          onChange={(v) => setForm((f) => ({ ...f, vehicle_categories: v }))}
+        />
+        <YearRangeField
+          yearMin={form.year_min}
+          yearMax={form.year_max}
+          onChange={(year_min, year_max) => setForm((f) => ({ ...f, year_min, year_max }))}
+        />
         <div>
-          <Label>Vehicle types</Label>
-          <div className="flex flex-wrap gap-2 mt-1">
-            {VEHICLE_CATEGORIES.map((cat) => {
-              const checked = form.vehicle_categories.includes(cat.value);
-              return (
-                <button
-                  type="button"
-                  key={cat.value}
-                  role="checkbox"
-                  aria-checked={checked}
-                  onClick={() => {
-                    const next = checked
-                      ? form.vehicle_categories.filter((v) => v !== cat.value)
-                      : [...form.vehicle_categories, cat.value];
-                    setForm({ ...form, vehicle_categories: next });
-                  }}
-                  className={`px-3 py-1 rounded border text-sm flex items-center gap-1 ${
-                    checked
-                      ? "bg-brand-600 text-white border-brand-700"
-                      : "bg-white text-slate-700"
-                  }`}
-                >
-                  <span aria-hidden>{checked ? "☑" : "☐"}</span>
-                  {cat.label}
-                </button>
-              );
-            })}
+          <div className="flex items-center gap-2">
+            <Label className="mb-0">Makes</Label>
+            <Chip
+              on={!form.makes.trim() && !pickedMakes.length && !pickedModels.length}
+              onClick={() => {
+                setForm((f) => ({ ...f, makes: "" }));
+                setPickedMakes([]);
+                setPickedModels([]);
+              }}
+            >
+              All makes
+            </Chip>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Pick any combination. Leave all unchecked to bid on every vehicle type.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Year min</Label>
-            <Input
-              type="number"
-              value={form.year_min}
-              onChange={(e) => setForm({ ...form, year_min: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label>Year max</Label>
-            <Input
-              type="number"
-              value={form.year_max}
-              onChange={(e) => setForm({ ...form, year_max: e.target.value })}
-            />
-          </div>
-        </div>
-        <div>
-          <Label>Makes (comma separated, blank = any)</Label>
           <Input
+            className="mt-1"
             value={form.makes}
             onChange={(e) => setForm({ ...form, makes: e.target.value })}
-            placeholder="Honda, Toyota"
+            placeholder="Or type some: Honda, Toyota"
           />
         </div>
 
@@ -431,14 +409,10 @@ export default function NewBidRule() {
             ))}
           </div>
         </div>
-        <div>
-          <Label>Zip codes (comma separated, blank = any)</Label>
-          <Input
-            value={form.zip_codes}
-            onChange={(e) => setForm({ ...form, zip_codes: e.target.value })}
-            placeholder="75201, 75202"
-          />
-        </div>
+        <WhereField
+          value={form}
+          onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+        />
         <div>
           <Label>Weekly budget ($, blank = unlimited)</Label>
           <Input
@@ -450,33 +424,6 @@ export default function NewBidRule() {
             }
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label>Or a radius: centre ZIP</Label>
-            <Input
-              value={form.zip_center}
-              onChange={(e) => setForm({ ...form, zip_center: e.target.value })}
-              placeholder="75201"
-            />
-          </div>
-          <div>
-            <Label>Miles from that ZIP</Label>
-            <Input
-              type="number"
-              min="1"
-              value={form.zip_radius_miles}
-              onChange={(e) =>
-                setForm({ ...form, zip_radius_miles: e.target.value })
-              }
-              placeholder="Any"
-            />
-          </div>
-        </div>
-        <p className="text-xs text-slate-500 -mt-1">
-          Set either one. A car counts if its ZIP is on your list or it sits
-          inside the circle. Leave both blank to take cars anywhere.
-        </p>
-
         <div className="grid grid-cols-3 gap-3">
           <div>
             <Label>Max cars / day</Label>
@@ -599,11 +546,6 @@ export default function NewBidRule() {
             label="Keys present"
             value={form.require_keys}
             onChange={(v) => setForm({ ...form, require_keys: v })}
-          />
-          <YesAny
-            label="Catalytic converter"
-            value={form.require_catalytic}
-            onChange={(v) => setForm({ ...form, require_catalytic: v })}
           />
 
           <div className="flex items-center gap-3">
