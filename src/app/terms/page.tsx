@@ -54,7 +54,7 @@ const SECTIONS: [string, string[]][] = [
   ["Contacting you", [
     "When you give us your phone number or email address, you agree that we may contact you about your quote, your offer and your pickup, including by text message and automated messages.",
     "This is service contact about a transaction you started; it is not a condition of selling us a vehicle. You can tell us to stop at any time by replying STOP to a text or by telling us directly, and we will.",
-    "Standard message and data rates from your carrier may apply.",
+    "Message frequency varies. Standard message and data rates from your carrier may apply. Reply HELP to any text for help.",
   ]],
   ["Using this website", [
     "You may use this site to get a quote and to manage your own sale. You may not scrape it, copy its content for a competing service, attempt to break into it, or use it to submit information about vehicles you have no connection to.",

@@ -24,6 +24,10 @@ const SECTIONS: [string, string[]][] = [
     "We do not sell your personal information to advertisers or lead brokers.",
     "We may disclose information where the law requires it, for example to law enforcement, to a state motor vehicle authority, or where we must prove the lawful transfer of a vehicle.",
   ]],
+  ["Text messages", [
+    "If you give us your mobile number, Junkerz texts you about your quote, your offer and your pickup. Message frequency varies. Message and data rates may apply. Reply STOP to stop receiving texts, or HELP for help.",
+    "No mobile information will be shared with third parties or affiliates for marketing or promotional purposes. Text messaging opt-in data and consent are not shared with any third party.",
+  ]],
   ["Tracking user behaviour", [
     "This website uses analytics to understand which pages people visit and where visitors come from. That information is aggregated and is not used to identify you personally.",
   ]],
