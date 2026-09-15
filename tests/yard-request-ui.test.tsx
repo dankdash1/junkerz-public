@@ -7,6 +7,8 @@ import { ShopCartProvider } from '@/components/ShopCart';
 import { CustomerRequestStatus, SupplierReplyPanel } from '@/components/YardTokenViews';
 import { createYardRequestAttempt, submitYardRequest, tokenFromFragment } from '@/lib/yard-requests';
 
+// Conversation transport has its own behavioral suite; these tests isolate status/availability forms.
+vi.mock('@/components/YardRequestConversation', () => ({default: () => null}));
 afterEach(cleanup);
 
 const settings = {
@@ -39,7 +41,7 @@ test('request dialog takes focus, closes with Escape, and returns focus to its t
     settingsUnavailable={false}
     unavailable={false}
   />);
-  const trigger = screen.getByRole('button', { name: 'Request this part / arrange pickup' });
+  const trigger = screen.getByRole('button', { name: 'Request this part' });
   await userEvent.click(trigger);
   expect(document.activeElement).toBe(screen.getByLabelText('Your name'));
   await userEvent.keyboard('{Escape}');
@@ -60,7 +62,7 @@ test('request intake failure stays visible and the same pending submission can b
     unavailable={false}
   />);
 
-  await userEvent.click(screen.getByRole('button', { name: 'Request this part / arrange pickup' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Request this part' }));
   await userEvent.type(screen.getByLabelText('Your name'), 'Sam Rivera');
   await userEvent.type(screen.getByLabelText('Email'), 'sam@example.com');
   await userEvent.click(screen.getByRole('button', { name: 'Send request' }));
@@ -81,7 +83,7 @@ test('an individual part request sends only its canonical part ID', async () => 
     settingsUnavailable={false}
     unavailable={false}
   />);
-  await userEvent.click(screen.getByRole('button', { name: 'Request this part / arrange pickup' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Request this part' }));
   await userEvent.type(screen.getByLabelText('Your name'), 'Sam Rivera');
   await userEvent.type(screen.getByLabelText('Email'), 'sam@example.com');
   await userEvent.click(screen.getByRole('button', { name: 'Send request' }));
@@ -105,7 +107,7 @@ test('two submit events before the response create only one request attempt', as
   let release!: (value: unknown) => void;
   const submitRequest = vi.fn(() => new Promise((resolve) => { release = resolve; }));
   renderShop(<CarPartsShop products={[{ key: 'part:9', id: 9, carId: 8, href: '/parts-inventory/9', name: 'Alternator', kind: 'part', section: 'parts', priceCents: null, image: null, detail: 'Good', maxQuantity: 1 }]} settings={settings} requestIntakeEnabled submitRequest={submitRequest as never} settingsUnavailable={false} unavailable={false} />);
-  await userEvent.click(screen.getByRole('button', { name: 'Request this part / arrange pickup' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Request this part' }));
   await userEvent.type(screen.getByLabelText('Your name'), 'Sam Rivera');
   await userEvent.type(screen.getByLabelText('Email'), 'sam@example.com');
   const form = screen.getByRole('button', { name: 'Send request' }).closest('form')!;

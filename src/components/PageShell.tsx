@@ -13,10 +13,12 @@ export async function SiteHeader({
   ctaLabel = "Get my offer",
   phone = SITE.phone,
   catalogSettings,
+  showCart = true,
 }: {
   ctaLabel?: string;
   phone?: string;
   catalogSettings?: CatalogSettings | null;
+  showCart?: boolean;
 }) {
   let settings = catalogSettings;
   if (settings === undefined) {
@@ -36,11 +38,12 @@ export async function SiteHeader({
           {showShop && <Link href="/shop" className="font-bold text-brand-700">Cars &amp; Parts{!hasLive && <span className="font-medium text-zinc-500"> · Coming soon</span>}</Link>}
           <Link href="/junk-cars" className="hover:text-zinc-900">Wrecked cars</Link>
           <Link href="/not-running" className="hover:text-zinc-900">Not running</Link>
+          <Link href="/account" className="hover:text-zinc-900">My Junkerz</Link>
           <Link href="/about-us" className="hover:text-zinc-900">About</Link>
           <Link href="/carro-viejos" className="hover:text-zinc-900">Español</Link>
         </nav>
         <div className="flex items-center gap-1 sm:gap-3">
-          {hasLive && <CartLink />}
+          {hasLive && showCart && <CartLink />}
           <a href={phoneHref}
              className={`hidden items-center gap-1.5 text-sm font-bold text-zinc-800 hover:text-brand-700 sm:flex ${mono}`}>
             <Phone className="h-4 w-4" /> {phone}
@@ -50,7 +53,7 @@ export async function SiteHeader({
           </Link>
         </div>
       </div>
-      {showShop && <nav aria-label="Mobile shop navigation" className="border-t border-zinc-100 px-5 py-2 text-sm font-bold text-brand-700 lg:hidden"><Link href="/shop" className="inline-flex min-h-9 items-center">{hasLive ? "Shop cars & parts" : "Cars & parts coming soon"} →</Link></nav>}
+      {<nav aria-label="Mobile shop navigation" className="border-t border-zinc-100 px-5 py-2 text-sm font-bold text-brand-700 lg:hidden">{showShop && <Link href="/shop" className="mr-5 inline-flex min-h-9 items-center">{hasLive ? "Shop cars & parts" : "Cars & parts coming soon"} →</Link>}<Link href="/account" className="inline-flex min-h-9 items-center">My Junkerz</Link></nav>}
     </header>
   );
 }

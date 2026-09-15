@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { buyerApi, BuyerSignupBody } from "@/lib/buyer-api";
+import OnboardingChecklist from "@/components/buyers/OnboardingChecklist";
+import { buyerApi, BuyerSignupBody, OnboardingStatus } from "@/lib/buyer-api";
 
 type FieldKey =
   | "business_name" | "login_email" | "password"
@@ -36,6 +37,7 @@ export default function BuyerSignup() {
     license_number: "",
     notification_email: "",
   });
+  const [checklist, setChecklist] = useState<OnboardingStatus | null>(null);
   const [requiredFields, setRequiredFields] = useState<FieldKey[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -43,8 +45,8 @@ export default function BuyerSignup() {
   useEffect(() => {
     buyerApi
       .signupConfig()
-      .then((cfg) => setRequiredFields((cfg.required_fields || []) as FieldKey[]))
-      .catch(() => {/* default to nothing required */});
+      .then((cfg) => { setRequiredFields((cfg.required_fields || []) as FieldKey[]); setChecklist(cfg.onboarding); })
+      .catch(() => setErr("Unable to load onboarding requirements. Please reload before signing up."));
   }, []);
 
   const isRequired = (k: FieldKey) =>
@@ -101,9 +103,10 @@ export default function BuyerSignup() {
       <h1 className="text-2xl font-bold mb-2">Create Junkerz Buyer Account</h1>
       <p className="text-sm text-slate-600 mb-6">
         Fill in your business profile. After creating your account you&apos;ll be asked to
-        upload your W-9, business license, insurance certificate, and a photo ID.
+        complete the checklist below. Documents marked optional are requested for review.
       </p>
 
+      {checklist && <div className="mb-6"><OnboardingChecklist status={checklist} preview /></div>}
       <form onSubmit={submit} className="space-y-6">
         <section>
           <h2 className="text-sm font-semibold text-slate-700 mb-3">Login credentials</h2>

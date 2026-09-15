@@ -1,0 +1,2 @@
+'use client';
+export default function CustomerAccountState({error,retry,showSignIn=true}:{error:string;retry:()=>void;showSignIn?:boolean}) {return <div role="alert" className="rounded-xl border bg-white p-6"><p>{error}</p><div className="mt-4 flex gap-5">{showSignIn&&<a className="underline" href="/account/sign-in">Sign in to My Junkerz</a>}<button className="underline" onClick={retry}>Try again</button></div></div>;}

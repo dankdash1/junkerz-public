@@ -41,13 +41,13 @@ export default async function ShopPage({ searchParams }: { searchParams: { categ
   const hasLive = !settingsUnavailable && Object.values(settings.sections).some((mode) => mode === "live");
 
   return <main className="min-h-screen bg-zinc-50 text-zinc-900">
-    <SiteHeader catalogSettings={settingsUnavailable ? null : settings} />
-    {hasLive && <div className="bg-amber-100 px-5 py-3 text-center text-sm font-semibold text-amber-950">CATALOG PREVIEW · Sandbox cart only · No real orders or charges</div>}
+    <SiteHeader catalogSettings={settingsUnavailable ? null : settings} showCart={!requestIntakeEnabled} />
+    {hasLive && <div className="bg-amber-100 px-5 py-3 text-center text-sm font-semibold text-amber-950">{requestIntakeEnabled ? "Request availability · Review your quote · Track delivery" : "CATALOG PREVIEW · Sandbox cart only · No real orders or charges"}</div>}
     <div className="mx-auto max-w-6xl px-5 py-10">
       <p className="text-xs font-bold uppercase tracking-widest text-brand-700">Junkerz shop</p>
       <h1 className="mt-3 text-4xl font-extrabold tracking-tight">Cars &amp; parts</h1>
       <p className="mb-8 mt-4 max-w-2xl text-zinc-600">
-        Junkerz buys junk, wrecked and non-running cars today. Online vehicle and parts listings are being introduced section by section; future parts orders will be delivery only.
+        {requestIntakeEnabled ? "Request the car or part you need. Junkerz confirms stock and fitment, sends a quote for your approval, then provides payment and delivery updates. Parts are delivery only." : "Junkerz buys junk, wrecked and non-running cars today. Online vehicle and parts listings are being introduced section by section; future parts orders will be delivery only."}
       </p>
       <CarPartsShop
         key={category}

@@ -46,6 +46,7 @@ export default function BuyerLogin() {
           {busy ? "Signing in…" : "Sign in"}
         </Button>
       </form>
+      <p className="text-sm mt-4 text-center"><a className="underline" href="/buyers/recover">Forgot password?</a></p>
       <p className="text-sm mt-6 text-center">
         New buyer?{" "}
         <a className="underline" href="/buyers/signup">
