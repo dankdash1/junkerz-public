@@ -24,6 +24,9 @@ type Props = {
   categories?: string[];
   yearMin?: number | null;
   yearMax?: number | null;
+  // Buyer bid rules: pick a make on its own, add a year only to list models.
+  // The seller quote form keeps year first.
+  makeFirst?: boolean;
 };
 
 export default function VehiclePicker({
@@ -33,6 +36,7 @@ export default function VehiclePicker({
   categories,
   yearMin,
   yearMax,
+  makeFirst = false,
 }: Props) {
   const [years, setYears] = useState<number[]>([]);
   const [makes, setMakes] = useState<{ id: number; name: string }[]>([]);
@@ -68,59 +72,89 @@ export default function VehiclePicker({
       .catch(() => setModels([]));
   }, [value.year, value.make_id]);
 
+  const yearBlock = (
+    <div>
+      <Label>Year{makeFirst ? " (optional, to list models)" : ""}</Label>
+      <select
+        className="w-full border rounded h-10 px-2"
+        value={value.year ?? ""}
+        onChange={(e) => {
+          const year = e.target.value ? parseInt(e.target.value, 10) : null;
+          onChange(
+            makeFirst
+              ? { ...value, year, model_id: null, model_name: null }
+              : { ...value, year, make_id: null, make_name: null, model_id: null, model_name: null },
+          );
+        }}
+      >
+        <option value="">{makeFirst ? "Any year" : "Select year"}</option>
+        {years.map((y) => <option key={y} value={y}>{y}</option>)}
+      </select>
+    </div>
+  );
+
+  const makeBlock = (
+    <div>
+      <Label>Make</Label>
+      <select
+        className="w-full border rounded h-10 px-2"
+        value={value.make_id ?? ""}
+        disabled={!makeFirst && !value.year}
+        onChange={(e) => {
+          const id = e.target.value ? parseInt(e.target.value, 10) : null;
+          const name = makes.find((m) => m.id === id)?.name ?? null;
+          onChange({ ...value, make_id: id, make_name: name,
+                     model_id: null, model_name: null });
+        }}
+      >
+        <option value="">
+          {makeFirst || value.year ? "Select make" : "Pick a year first"}
+        </option>
+        {makes.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+      </select>
+    </div>
+  );
+
+  const modelHint = !value.make_id
+    ? "Pick a make first"
+    : !value.year
+      ? "Pick a year to list models"
+      : "Select model";
+
+  const modelBlock = (
+    <div>
+      <Label>Model</Label>
+      <select
+        className="w-full border rounded h-10 px-2"
+        value={value.model_id ?? ""}
+        disabled={!value.make_id || !value.year}
+        onChange={(e) => {
+          const id = e.target.value ? parseInt(e.target.value, 10) : null;
+          const name = models.find((m) => m.id === id)?.name ?? null;
+          onChange({ ...value, model_id: id, model_name: name });
+        }}
+      >
+        <option value="">{modelHint}</option>
+        {models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+      </select>
+    </div>
+  );
+
   return (
     <div className="space-y-3">
-      <div>
-        <Label>Year</Label>
-        <select
-          className="w-full border rounded h-10 px-2"
-          value={value.year ?? ""}
-          onChange={(e) => onChange({
-            ...value,
-            year: e.target.value ? parseInt(e.target.value, 10) : null,
-            make_id: null, make_name: null,
-            model_id: null, model_name: null,
-          })}
-        >
-          <option value="">Select year</option>
-          {years.map((y) => <option key={y} value={y}>{y}</option>)}
-        </select>
-      </div>
-
-      <div>
-        <Label>Make</Label>
-        <select
-          className="w-full border rounded h-10 px-2"
-          value={value.make_id ?? ""}
-          disabled={!value.year}
-          onChange={(e) => {
-            const id = e.target.value ? parseInt(e.target.value, 10) : null;
-            const name = makes.find((m) => m.id === id)?.name ?? null;
-            onChange({ ...value, make_id: id, make_name: name,
-                       model_id: null, model_name: null });
-          }}
-        >
-          <option value="">{value.year ? "Select make" : "Pick a year first"}</option>
-          {makes.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
-      </div>
-
-      <div>
-        <Label>Model</Label>
-        <select
-          className="w-full border rounded h-10 px-2"
-          value={value.model_id ?? ""}
-          disabled={!value.make_id}
-          onChange={(e) => {
-            const id = e.target.value ? parseInt(e.target.value, 10) : null;
-            const name = models.find((m) => m.id === id)?.name ?? null;
-            onChange({ ...value, model_id: id, model_name: name });
-          }}
-        >
-          <option value="">{value.make_id ? "Select model" : "Pick a make first"}</option>
-          {models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
-      </div>
+      {makeFirst ? (
+        <>
+          {makeBlock}
+          {yearBlock}
+          {modelBlock}
+        </>
+      ) : (
+        <>
+          {yearBlock}
+          {makeBlock}
+          {modelBlock}
+        </>
+      )}
 
       {showTrim && (
         <div>

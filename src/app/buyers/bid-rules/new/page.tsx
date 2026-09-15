@@ -297,10 +297,16 @@ export default function NewBidRule() {
         {/* VehiclePicker section */}
         <div className="border rounded p-4 space-y-3 bg-slate-50">
           <Label className="font-semibold">Target specific makes / models</Label>
+          <p className="text-xs text-slate-500">
+            Pick a make and press + Add make. Add a year to list that make&apos;s
+            models, then + Add model. Add as many as you like. The Years above
+            still limit every car this rule takes.
+          </p>
           <VehiclePicker
             value={picker}
             onChange={setPicker}
             showTrim={false}
+            makeFirst
             categories={form.vehicle_categories}
             yearMin={form.year_min ? parseInt(form.year_min, 10) : null}
             yearMax={form.year_max ? parseInt(form.year_max, 10) : null}
