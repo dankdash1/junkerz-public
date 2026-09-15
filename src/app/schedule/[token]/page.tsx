@@ -468,7 +468,7 @@ export default function SellerSchedulePage() {
           of your chosen time. {arrivalChannels ? `We'll ${arrivalChannels} you when the driver is on the way and about 30 minutes before arrival.` : "Contact Junkerz for driver arrival updates."}
         </p>
         <p>
-          Link good for 72 hours. If you don&apos;t pick one we&apos;ll text you to schedule.
+          Link good for 72 hours. If you don&apos;t pick one we&apos;ll contact you to schedule.
         </p>
       </div>
     </main>

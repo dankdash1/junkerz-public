@@ -16,6 +16,8 @@ export async function submitQuote(payload: {
   has_catalytic?: boolean; has_battery?: boolean; has_keys?: boolean;
   damage_zones?: Record<string, "none" | "some">;
   contact_phone: string; contact_email: string;
+  // Seller ticked the optional, unchecked-by-default "text me" box.
+  sms_consent?: boolean;
   pickup_address?: string;
 }) {
   // Attach where this seller came from, so the offer row can say

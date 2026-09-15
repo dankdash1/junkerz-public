@@ -52,7 +52,8 @@ const SECTIONS: [string, string[]][] = [
     "We do not pay deposits in advance of collection, and we will never ask you to send us money, gift cards or payment details in order to receive an offer. If anyone claiming to be from Junkerz asks you for money, it is not us.",
   ]],
   ["Contacting you", [
-    "When you give us your phone number or email address, you agree that we may contact you about your quote, your offer and your pickup, including by text message and automated messages.",
+    "When you give us your phone number or email address, we may call or email you about your quote, your offer and your pickup.",
+    "We only send text messages to sellers who tick the optional text-message box on our quote form. Those texts are about your quote, your offer and your pickup, and may be automated. We will not share mobile information with third parties for promotional or marketing purposes.",
     "This is service contact about a transaction you started; it is not a condition of selling us a vehicle. You can tell us to stop at any time by replying STOP to a text or by telling us directly, and we will.",
     "Message frequency varies. Standard message and data rates from your carrier may apply. Reply HELP to any text for help.",
   ]],
