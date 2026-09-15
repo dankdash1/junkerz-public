@@ -1,10 +1,10 @@
 "use client";
 // Fields shared by the new and edit bid-rule pages: vehicle types, the year
-// range, and where the car is (a circle around a town, area codes, ZIP codes).
+// range, and where the car is (a circle around a town, or exact ZIP codes).
 import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { buyerApi, type AreaCodeGroup, type Place } from "@/lib/buyer-api";
+import { buyerApi, type Place } from "@/lib/buyer-api";
 
 export function Chip({
   on,
@@ -93,6 +93,43 @@ export function yearRangeProblem(min: string, max: string): string | null {
   return null;
 }
 
+const OLDEST_YEAR = 1960;
+const YEAR_OPTIONS: string[] = [];
+for (let y = NEWEST_YEAR; y >= OLDEST_YEAR; y--) YEAR_OPTIONS.push(String(y));
+
+function YearSelect({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  // A saved year outside the list (an old rule) still shows, so it is never
+  // silently dropped when the buyer saves the page.
+  const options =
+    value && !YEAR_OPTIONS.includes(value) ? [value, ...YEAR_OPTIONS] : YEAR_OPTIONS;
+  return (
+    <label className="text-sm text-slate-700">
+      {label}
+      <select
+        className="mt-1 w-full border rounded h-10 px-2 bg-white"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={label}
+      >
+        <option value="">Any</option>
+        {options.map((y) => (
+          <option key={y} value={y}>
+            {y}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 export function YearRangeField({
   yearMin,
   yearMax,
@@ -107,34 +144,14 @@ export function YearRangeField({
     <div>
       <Label>Years</Label>
       <div className="grid grid-cols-2 gap-3 mt-1">
-        <label className="text-sm text-slate-700">
-          From year:
-          <Input
-            className="mt-1"
-            inputMode="numeric"
-            maxLength={4}
-            value={yearMin}
-            onChange={(e) => onChange(e.target.value.replace(/\D/g, ""), yearMax)}
-            placeholder="Any"
-          />
-        </label>
-        <label className="text-sm text-slate-700">
-          To year:
-          <Input
-            className="mt-1"
-            inputMode="numeric"
-            maxLength={4}
-            value={yearMax}
-            onChange={(e) => onChange(yearMin, e.target.value.replace(/\D/g, ""))}
-            placeholder="Any"
-          />
-        </label>
+        <YearSelect label="From year:" value={yearMin} onChange={(v) => onChange(v, yearMax)} />
+        <YearSelect label="To year:" value={yearMax} onChange={(v) => onChange(yearMin, v)} />
       </div>
       {problem ? (
         <p className="text-xs text-red-600 mt-1">{problem}</p>
       ) : (
         <p className="text-xs text-slate-500 mt-1">
-          Type any years, like 2015 to 2020. Leave a box empty for no limit.
+          Pick a range, like 2015 to 2020. Leave Any for no limit.
         </p>
       )}
     </div>
@@ -313,17 +330,8 @@ export function WhereField({
   value: WhereValue;
   onChange: (patch: Partial<WhereValue>) => void;
 }) {
-  // null = this API does not have area codes yet, so the chips stay hidden.
-  const [groups, setGroups] = useState<AreaCodeGroup[] | null>(null);
-  useEffect(() => {
-    buyerApi
-      .areaCodes()
-      .then((r) => setGroups(r.area_codes ?? []))
-      .catch(() => setGroups(null));
-  }, []);
   const [showZips, setShowZips] = useState(Boolean(value.zip_codes.trim()));
 
-  const picked = (groups ?? []).filter((g) => value.area_codes.includes(g.key));
   const problem = whereProblem(value);
   const anywhere =
     !value.area_codes.length &&
@@ -345,38 +353,20 @@ export function WhereField({
         onChange={onChange}
       />
 
-      {groups && groups.length > 0 && (
-        <div>
-          <Label>Area codes</Label>
-          <div className="flex flex-wrap gap-2 mt-1">
-            {groups.map((g) => {
-              const on = value.area_codes.includes(g.key);
-              return (
-                <Chip
-                  key={g.key}
-                  on={on}
-                  title={g.label}
-                  onClick={() =>
-                    onChange({
-                      area_codes: on
-                        ? value.area_codes.filter((k) => k !== g.key)
-                        : [...value.area_codes, g.key],
-                    })
-                  }
-                >
-                  <span className="font-semibold">{g.codes.join(" · ")}</span>{" "}
-                  <span className="text-xs opacity-80">{g.label}</span>
-                </Chip>
-              );
-            })}
-          </div>
-          {picked.map((g) => (
-            <p key={g.key} className="text-xs text-slate-600 mt-2">
-              <strong>{g.codes.join("/")}</strong> covers {g.towns.length} towns:{" "}
-              {g.towns.join(", ")}.
-            </p>
-          ))}
-        </div>
+      {value.area_codes.length > 0 && (
+        <p className="text-xs text-slate-600 bg-white border rounded p-2 flex flex-wrap items-center gap-2">
+          <span>
+            This rule also takes area codes <strong>{value.area_codes.join(", ")}</strong>{" "}
+            (an older setting).
+          </span>
+          <button
+            type="button"
+            onClick={() => onChange({ area_codes: [] })}
+            className="underline"
+          >
+            Remove area codes
+          </button>
+        </p>
       )}
 
       <div>
