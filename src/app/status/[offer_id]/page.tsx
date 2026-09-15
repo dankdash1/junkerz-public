@@ -37,7 +37,7 @@ export default function StatusPage() {
       <main className="p-12 text-center">
         <h1 className="text-2xl font-bold">Pickup Status</h1>
         <p className="mt-6 text-slate-700">
-          Still working on assigning a driver. We'll text you as soon as one is on the way.
+          Still working on assigning a driver. We'll let you know as soon as one is on the way.
         </p>
       </main>
     );
