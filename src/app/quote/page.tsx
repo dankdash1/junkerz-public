@@ -21,7 +21,7 @@ const STEP_META: { title: string; subtitle: string }[] = [
   { title: "What's still on it?", subtitle: "Engine, transmission and key parts drive the offer." },
   { title: "Any damage?", subtitle: "Tap any areas that are wrecked or missing." },
   { title: "Where is it?", subtitle: "We tow from your location — always free." },
-  { title: "Where do we send the offer?", subtitle: "We'll text and email your guaranteed number." },
+  { title: "Where do we send the offer?", subtitle: "We'll email your guaranteed number, and text it too if you want." },
 ];
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
@@ -37,7 +37,7 @@ const T = {
       { title: "What's still on it?", subtitle: "Engine, transmission and key parts drive the offer." },
       { title: "Any damage?", subtitle: "Tap any areas that are wrecked or missing." },
       { title: "Where is it?", subtitle: "We tow from your location — always free." },
-      { title: "Where do we send the offer?", subtitle: "We'll text and email your guaranteed number." },
+      { title: "Where do we send the offer?", subtitle: "We'll email your guaranteed number, and text it too if you want." },
     ],
     guaranteed: "Guaranteed offer", step: "Step", of: "of",
     back: "Back", cont: "Continue", submit: "Get my offer", submitting: "Getting your offer…",
@@ -55,10 +55,12 @@ const T = {
     phone: "Phone", email: "Email",
     phoneReq: "Phone is required", phoneBad: "Enter a valid 10-digit phone number",
     emailReq: "Email is required", emailBad: "Enter a valid email address",
-    contactHint: "We'll text your offer to your phone and email you the confirmation. Both are required.",
-    smsConsent: "By entering your phone number you agree to receive text messages from Junkerz about your quote, offer and pickup. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out or HELP for help. See our",
+    contactHint: "We need your phone and email. We'll email your confirmation. Tick the box below if you also want texts.",
+    smsBox: "Yes, text me about my quote, offer and pickup (optional).",
+    smsConsent: "By checking this box and providing your phone number, you agree to receive SMS quote, offer and pickup updates from Junkerz. Message frequency may vary. Standard Message and Data Rates may apply. Reply STOP to opt out. Reply HELP for help. We will not share mobile information with third parties for promotional or marketing purposes. See our",
     termsLink: "Terms", privacyLink: "Privacy Policy", and: "and",
-    footer: "{t.footer}",
+    footer: "Free towing · No fees · Paid at pickup",
+    change: "Change",
     yes: "Yes", no: "No",
     choice: { intact: "intact", partial: "partial", missing: "missing" },
   },
@@ -70,7 +72,7 @@ const T = {
       { title: "¿Qué le queda puesto?", subtitle: "El motor, la transmisión y las piezas mueven la oferta." },
       { title: "¿Tiene daño?", subtitle: "Toque las partes chocadas o que faltan." },
       { title: "¿Dónde está?", subtitle: "Lo recogemos donde esté — la grúa siempre es gratis." },
-      { title: "¿A dónde le mandamos la oferta?", subtitle: "Le mandamos su número garantizado por texto y correo." },
+      { title: "¿A dónde le mandamos la oferta?", subtitle: "Le mandamos su número garantizado por correo, y por texto si quiere." },
     ],
     guaranteed: "Oferta garantizada", step: "Paso", of: "de",
     back: "Atrás", cont: "Continuar", submit: "Ver mi oferta", submitting: "Buscando su oferta…",
@@ -88,10 +90,12 @@ const T = {
     phone: "Teléfono", email: "Correo electrónico",
     phoneReq: "El teléfono es obligatorio", phoneBad: "Ponga un teléfono válido de 10 dígitos",
     emailReq: "El correo es obligatorio", emailBad: "Ponga un correo válido",
-    contactHint: "Le mandamos la oferta por texto y la confirmación por correo. Los dos son obligatorios.",
-    smsConsent: "Al poner su teléfono acepta recibir mensajes de texto de Junkerz sobre su cotización, oferta y recogida. La frecuencia de los mensajes varía. Pueden aplicar tarifas de mensajes y datos. Responda STOP para cancelar o HELP para ayuda. Vea nuestros",
-    termsLink: "Términos", privacyLink: "Política de privacidad", and: "y",
+    contactHint: "Necesitamos su teléfono y su correo. Le mandamos la confirmación por correo. Marque la casilla de abajo si también quiere mensajes de texto.",
+    smsBox: "Sí, mándenme mensajes de texto sobre mi cotización, oferta y recogida (opcional).",
+    smsConsent: "Al marcar esta casilla y darnos su teléfono, acepta recibir mensajes SMS de Junkerz sobre su cotización, oferta y recogida. La frecuencia de los mensajes puede variar. Pueden aplicar tarifas estándar de mensajes y datos. Responda STOP para cancelar. Responda HELP para recibir ayuda. No compartiremos su información móvil con terceros para fines promocionales o de marketing. Vea nuestros",
+    termsLink: "Términos", privacyLink: "Política de privacidad", and: "y nuestra",
     footer: "Grúa gratis · Sin cargos · Le pagamos al recoger",
+    change: "Cambiar",
     yes: "Sí", no: "No",
     choice: { intact: "completo", partial: "parcial", missing: "falta" },
   },
@@ -117,6 +121,7 @@ type Form = {
   zip_code: string;
   pickup_address: string;
   phone: string;
+  sms_consent: boolean;
   email: string;
 };
 
@@ -208,6 +213,7 @@ function QuoteWizardInner() {
     has_catalytic: null, has_battery: null, has_keys: null,
     damage_zones: EMPTY_DAMAGE,
     zip_code: "", pickup_address: "", phone: "", email: "",
+    sms_consent: false,
   });
   const [touched, setTouched] = useState<{ phone: boolean; email: boolean }>({
     phone: false,
@@ -281,6 +287,7 @@ function QuoteWizardInner() {
         damage_zones: form.damage_zones,
         contact_phone: form.phone,
         contact_email: form.email,
+        sms_consent: form.sms_consent,
       });
       trackLeadSubmission(result.offer_id);
       const q = new URLSearchParams({
@@ -365,7 +372,7 @@ function QuoteWizardInner() {
             </span>
             <button type="button" onClick={() => setStep(0)}
               className="text-xs font-semibold text-brand-700 underline">
-              Change
+              {t.change}
             </button>
           </div>
         )}
@@ -568,6 +575,16 @@ function QuoteWizardInner() {
               <p className="text-xs text-zinc-500">
                 {t.contactHint}
               </p>
+              <label htmlFor="sms_consent" className="flex items-start gap-2 text-sm text-zinc-800">
+                <input
+                  id="sms_consent"
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-600"
+                  checked={form.sms_consent}
+                  onChange={(e) => setForm({ ...form, sms_consent: e.target.checked })}
+                />
+                <span>{t.smsBox}</span>
+              </label>
               <p className="text-xs text-zinc-500">
                 {t.smsConsent}{" "}
                 <Link href="/terms" className="underline">{t.termsLink}</Link>{" "}
