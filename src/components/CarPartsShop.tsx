@@ -104,7 +104,7 @@ export default function CarPartsShop({
             return <article key={product.key} className="flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white">
               <div className="relative flex aspect-[4/3] items-center justify-center bg-zinc-100">
                 {product.image ? <img src={product.image} alt={product.name} className="h-full w-full object-cover" loading="lazy" /> : <VehicleIcon className="h-16 w-16 text-zinc-300" aria-hidden="true" />}
-                <span className="absolute left-3 top-3 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-950">{requestIntakeEnabled ? "Availability to confirm" : "SANDBOX LISTING"}</span>
+                {requestIntakeEnabled && <span className="absolute left-3 top-3 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-950">Availability to confirm</span>}
               </div>
               <div className="flex flex-1 flex-col p-5">
                 <p className="text-xs font-bold uppercase tracking-widest text-brand-700">{labels[product.kind]}</p>
@@ -123,7 +123,7 @@ export default function CarPartsShop({
                   submitRequest={submitRequest}
                 /></div>}
                 {!requestIntakeEnabled && <Button className="mt-auto h-11 w-full gap-2" disabled={added || product.priceCents === null || items.length >= 30} onClick={() => add(product)}>
-                  {added ? <><ShoppingCart className="h-4 w-4" /> In cart</> : <><Plus className="h-4 w-4" /> Add to sandbox cart</>}
+                  {added ? <><ShoppingCart className="h-4 w-4" /> In cart</> : <><Plus className="h-4 w-4" /> Add to cart</>}
                 </Button>}
               </div>
             </article>;
@@ -133,7 +133,7 @@ export default function CarPartsShop({
     </>}
 
     {!requestIntakeEnabled && activeCartItems.length > 0 && <div className="sticky bottom-5 mt-6 flex items-center justify-between gap-4 rounded-xl bg-zinc-900 px-5 py-4 text-white shadow-xl" role="status">
-      <span>{activeCartItems.length} {activeCartItems.length === 1 ? "item" : "items"} in your sandbox cart</span>
+      <span>{activeCartItems.length} {activeCartItems.length === 1 ? "item" : "items"} in your cart</span>
       <Link href="/cart" className="rounded-lg bg-white px-4 py-2 font-bold text-zinc-900">View cart →</Link>
     </div>}
 

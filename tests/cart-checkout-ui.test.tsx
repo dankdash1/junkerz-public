@@ -1,0 +1,42 @@
+import React from 'react';
+import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+import {cleanup,render,screen,waitFor} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import {ShopCartProvider} from '@/components/ShopCart';
+import CartContents from '@/app/cart/CartContents';
+const settings={sections:{parts:'live',cars_for_parts:'live',cars_for_sale:'live'} as const,parts_fulfillment:'delivery_only' as const,checkout_enabled:false as const};
+const product={key:'part:9',id:9,carId:8,href:'/parts-inventory/9',name:'Alternator',kind:'part' as const,section:'parts' as const,priceCents:12500,image:null,detail:'Good',maxQuantity:1};
+const fetchMock=vi.fn();
+vi.stubGlobal('fetch',fetchMock);
+beforeEach(()=>{sessionStorage.setItem('junkerz-sandbox-cart-v1',JSON.stringify([product]));});
+afterEach(()=>{cleanup();sessionStorage.clear();fetchMock.mockReset();});
+it('a 503 checkout_disabled from the proxy reads as "Checkout is not open yet", not as an error',async()=>{
+ fetchMock.mockResolvedValue(Response.json({error:'Checkout is not open yet. Your cart is saved, and you can call us to buy today.',code:'checkout_disabled'},{status:503}));
+ const navigate=vi.fn();
+ const {container}=render(<ShopCartProvider><CartContents settings={settings} settingsUnavailable={false} navigate={navigate}/></ShopCartProvider>);
+ await userEvent.click(await screen.findByRole('button',{name:'Checkout'}));
+ const notice=await screen.findByRole('status');
+ expect(notice.textContent).toMatch(/^Checkout is not open yet\./);
+ expect(notice.textContent).toMatch(/Your cart is saved/);
+ expect(screen.queryByRole('alert')).toBeNull();
+ expect(navigate).not.toHaveBeenCalled();
+ expect(screen.getByText('Alternator')).toBeTruthy();
+ expect(container.textContent).not.toMatch(/sandbox|test listing|test checkout/i);
+});
+it('a 200 from the proxy sends the browser to Stripe checkout with the listing key it resolved',async()=>{
+ fetchMock.mockResolvedValue(Response.json({url:'https://checkout.stripe.com/c/pay/cs_test_abc',session_id:'cs_test_abc',order_id:'91'}));
+ const navigate=vi.fn();
+ render(<ShopCartProvider><CartContents settings={settings} settingsUnavailable={false} navigate={navigate}/></ShopCartProvider>);
+ await userEvent.click(await screen.findByRole('button',{name:'Checkout'}));
+ await waitFor(()=>expect(navigate).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/cs_test_abc'));
+ expect(fetchMock.mock.calls[0][0]).toBe('/api/cart/checkout');
+ expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({items:[{key:'part:9',quantity:1}]});
+});
+it('a non-Stripe address from the proxy is refused and shown as an error',async()=>{
+ fetchMock.mockResolvedValue(Response.json({url:'http://checkout.stripe.com.evil.example/'}));
+ const navigate=vi.fn();
+ render(<ShopCartProvider><CartContents settings={settings} settingsUnavailable={false} navigate={navigate}/></ShopCartProvider>);
+ await userEvent.click(await screen.findByRole('button',{name:'Checkout'}));
+ expect((await screen.findByRole('alert')).textContent).toMatch(/unexpected address/);
+ expect(navigate).not.toHaveBeenCalled();
+});
