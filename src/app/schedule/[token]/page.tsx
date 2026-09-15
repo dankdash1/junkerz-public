@@ -25,8 +25,9 @@ type Offer = {
   seller_schedule_token_expires_at: string | null;
 };
 
+// George 2026-09-15: seven two-hour windows, the same list the admin uses.
 const TIME_WINDOWS = [
-  "9am-11am", "11am-1pm", "1pm-3pm", "3pm-5pm", "5pm-7pm", "All day",
+  "7am-9am", "9am-11am", "11am-1pm", "1pm-3pm", "3pm-5pm", "5pm-7pm", "7pm-9pm",
 ];
 
 // Map the human-readable window to the START hour (24h) so we can build
@@ -34,12 +35,13 @@ const TIME_WINDOWS = [
 // the backend stored NULL eta_at and the calendar bucketed the pickup
 // to today instead of the chosen date (George 2026-05-18 bug report).
 const WINDOW_START_HOUR: Record<string, number> = {
+  "7am-9am": 7,
   "9am-11am": 9,
   "11am-1pm": 11,
   "1pm-3pm": 13,
   "3pm-5pm": 15,
   "5pm-7pm": 17,
-  "All day": 10,  // default to morning if seller picks "All day"
+  "7pm-9pm": 19,
 };
 
 const US_STATES = [
