@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 
-const PUBLIC_PATHS = ["/buyers/login", "/buyers/signup"];
+const PUBLIC_PATHS = ["/buyers/login", "/buyers/signup", "/buyers/recover"];
 
 export default function BuyersLayout({
   children,

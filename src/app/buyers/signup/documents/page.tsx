@@ -2,150 +2,55 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { buyerApi, DocumentType } from "@/lib/buyer-api";
-
-type DocSlot = {
-  kind: DocumentType;
-  label: string;
-  description: string;
-};
-
-const SLOTS: DocSlot[] = [
-  { kind: "w9", label: "W-9", description: "IRS Form W-9 (required for any buyer)." },
-  { kind: "license", label: "Business license", description: "State dealer / dismantler / scrap license." },
-  { kind: "insurance", label: "Insurance certificate", description: "Proof of liability coverage." },
-  { kind: "id", label: "Photo ID", description: "Driver's license or state ID for the contact name." },
-];
-
-type UploadState = {
-  uploading: boolean;
-  uploadedId?: number;
-  error?: string;
-  fileName?: string;
-};
+import OnboardingChecklist from "@/components/buyers/OnboardingChecklist";
+import { buyerApi, DocumentType, OnboardingStatus } from "@/lib/buyer-api";
 
 export default function BuyerSignupDocuments() {
   const router = useRouter();
-  const [state, setState] = useState<Record<DocumentType, UploadState>>({
-    w9: { uploading: false },
-    license: { uploading: false },
-    insurance: { uploading: false },
-    id: { uploading: false },
-  });
-  const [skipBusy, setSkipBusy] = useState(false);
-
-  // If they hit this page without a token (rare — auto-login failed),
-  // bounce to login.
+  const [status, setStatus] = useState<OnboardingStatus | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  async function reload() { setStatus(await buyerApi.onboardingStatus()); }
   useEffect(() => {
-    if (typeof window !== "undefined" && !window.localStorage.getItem("buyer_token")) {
-      router.replace("/buyers/login?signed_up=1");
-    }
+    if (!window.localStorage.getItem("buyer_token")) { router.replace("/buyers/login?signed_up=1"); return; }
+    // The server checklist reads persisted documents on every visit.
+    buyerApi.onboardingStatus().then(setStatus).catch(e => setError(e.message));
   }, [router]);
-
-  async function uploadOne(kind: DocumentType, file: File) {
-    setState((s) => ({ ...s, [kind]: { uploading: true, fileName: file.name } }));
-    try {
-      const r = await buyerApi.uploadDocument(kind, file);
-      setState((s) => ({
-        ...s,
-        [kind]: {
-          uploading: false,
-          uploadedId: r.document_id,
-          fileName: file.name,
-        },
-      }));
-    } catch (e: unknown) {
-      setState((s) => ({
-        ...s,
-        [kind]: {
-          uploading: false,
-          error: (e as Error)?.message ?? "Upload failed",
-          fileName: file.name,
-        },
-      }));
-    }
+  async function upload(kind: DocumentType, file?: File) {
+    if (!file) return;
+    setBusy(kind); setError("");
+    try { await buyerApi.uploadDocument(kind, file); await reload(); }
+    catch (e) { setError((e as Error).message || "Upload failed"); }
+    finally { setBusy(null); }
   }
-
-  function onPick(kind: DocumentType, ev: React.ChangeEvent<HTMLInputElement>) {
-    const f = ev.target.files?.[0];
-    if (!f) return;
-    void uploadOne(kind, f);
+  async function sign() {
+    setBusy("terms"); setError("");
+    try { await buyerApi.signTerms(); await reload(); }
+    catch (e) { setError((e as Error).message || "Could not save acceptance"); }
+    finally { setBusy(null); }
   }
-
-  const allUploaded = SLOTS.every((s) => state[s.kind].uploadedId);
-
-  function done() {
-    router.replace("/buyers/dashboard");
-  }
-  async function skip() {
-    setSkipBusy(true);
-    // No backend call needed — admin can chase missing docs later
-    router.replace("/buyers/dashboard");
-  }
-
-  return (
-    <main className="max-w-xl mx-auto pt-12 px-6 pb-16">
-      <h1 className="text-2xl font-bold mb-2">Upload your documents</h1>
-      <p className="text-sm text-slate-600 mb-6">
-        We need these on file before your account can be approved. Each file
-        accepts PDF, PNG, JPG up to 10 MB.
-      </p>
-
-      <div className="space-y-4">
-        {SLOTS.map((slot) => {
-          const s = state[slot.kind];
-          return (
-            <div key={slot.kind} className="border rounded p-4 bg-white">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <Label className="text-base">{slot.label}</Label>
-                  <p className="text-xs text-slate-500 mt-1">{slot.description}</p>
-                </div>
-                <div className="text-xs flex-shrink-0">
-                  {s.uploadedId ? (
-                    <span className="text-brand-700 font-medium">✓ uploaded</span>
-                  ) : s.uploading ? (
-                    <span className="text-slate-500">Uploading…</span>
-                  ) : s.error ? (
-                    <span className="text-red-600">{s.error}</span>
-                  ) : null}
-                </div>
-              </div>
-              <div className="mt-3 flex items-center gap-2">
-                <input
-                  type="file"
-                  accept=".pdf,.png,.jpg,.jpeg"
-                  disabled={s.uploading}
-                  onChange={(e) => onPick(slot.kind, e)}
-                  className="text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded file:border
-                             file:text-xs file:font-medium file:bg-slate-50 hover:file:bg-slate-100"
-                />
-                {s.fileName && !s.error && (
-                  <span className="text-xs text-slate-500 truncate">{s.fileName}</span>
-                )}
-              </div>
-            </div>
-          );
-        })}
+  return <main className="max-w-xl mx-auto pt-12 px-6 pb-16">
+    <h1 className="text-2xl font-bold mb-2">Upload your documents</h1>
+    <p className="text-sm text-slate-600 mb-6">Complete required items for staff approval. PDF, PNG or JPG files up to 10 MB.</p>
+    {error && <p role="alert" className="text-red-700 mb-4">{error}</p>}
+    {status ? <>
+      <OnboardingChecklist status={status}/>
+      <div className="space-y-4 mt-6">
+        {status.items.filter(i => i.kind === "document" && (i.requested || i.required)).map(item => <div id={item.key} key={item.key} className="border rounded p-4 bg-white">
+          <label htmlFor={`upload-${item.key}`} className="block font-medium mb-2">{item.completed ? 'Replace' : 'Upload'} {item.label}</label>
+          <input id={`upload-${item.key}`} type="file" accept=".pdf,.png,.jpg,.jpeg" disabled={!!busy} className="text-sm max-w-full" onChange={e => { void upload(item.key as DocumentType, e.target.files?.[0]); }}/>
+          {busy === item.key && <p role="status">Uploading…</p>}
+        </div>)}
+        {!status.items.find(i => i.key === "terms")?.completed && <div id="terms" className="border rounded p-4 bg-white space-y-3">
+          <p>Read the <a className="underline" href="/terms" target="_blank" rel="noreferrer">Terms of Service</a> before accepting.</p>
+          <Button disabled={!!busy} onClick={sign}>I accept the Terms of Service</Button>
+        </div>}
       </div>
-
-      <div className="mt-8 flex items-center gap-3">
-        <Button onClick={done} disabled={!allUploaded} className="flex-1">
-          {allUploaded ? "Continue to dashboard" : "Upload all 4 to continue"}
-        </Button>
-        <Button
-          variant="outline"
-          onClick={skip}
-          disabled={skipBusy}
-          className="text-xs"
-        >
-          Skip for now
-        </Button>
-      </div>
-      <p className="text-xs text-slate-500 mt-3 text-center">
-        Skipping is fine, but you can&apos;t place bids until everything is on file.
-      </p>
-    </main>
-  );
+    </> : !error && <p>Loading saved checklist…</p>}
+    <div className="mt-8 flex flex-wrap gap-3">
+      <Button onClick={() => router.replace("/buyers/dashboard")} disabled={!!busy}>Continue to dashboard</Button>
+      <Button variant="outline" onClick={() => router.replace("/buyers/dashboard")} disabled={!!busy}>Skip for now</Button>
+    </div>
+    <p className="text-xs text-slate-500 mt-3">Your saved progress stays on your dashboard. Return to any incomplete item there.</p>
+  </main>;
 }
