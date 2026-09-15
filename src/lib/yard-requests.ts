@@ -90,3 +90,21 @@ export async function replyToSupplierRequest(token: string, reply: Record<string
     method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store", body: JSON.stringify({ token, ...reply }),
   }));
 }
+
+export type YardQuote = {
+  id: string; request_id: string; version: number; status: string; part_id?: number|null; car_id?: number|null; quantity: number;
+  item_price_cents: number; delivery_cents: number; tax_cents: number; fees_cents: number; total_cents: number; currency: string;
+  condition: string; fitment: string; delivery_address: Record<string,string>; delivery_terms: string; return_terms: string; core_terms: string; expires_at: string; order_id?: string|null;
+};
+export type QuoteResult = {quote: YardQuote|null; order_id?: string|null};
+export async function loadCustomerQuote(token:string):Promise<QuoteResult> {
+  return readResponse(await fetch(`${YARD_BASE}/yard-requests/quote`,{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store',body:JSON.stringify({token})}));
+}
+export async function respondCustomerQuote(token:string,quote:YardQuote,decision:'accept'|'decline',idempotency_key:string):Promise<QuoteResult> {
+  return readResponse(await fetch(`${YARD_BASE}/yard-requests/quote/respond`,{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store',body:JSON.stringify({token,quote_id:quote.id,version:quote.version,decision,idempotency_key})}));
+}
+
+export type Preparation={id:string;order_id:string;revision:number;status:string;snapshot:Record<string,string|number>;collected_at?:string};
+export async function updatePreparation(token:string,item:Preparation,action:string,details:Record<string,unknown>){
+ return readResponse(await fetch(`${YARD_BASE}/yard-requests/preparation`,{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store',body:JSON.stringify({token,preparation_id:item.id,expected_revision:item.revision,action,details})}));
+}

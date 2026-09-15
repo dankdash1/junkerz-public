@@ -1,0 +1,9 @@
+'use client';
+import { useState } from 'react';
+import { sendCustomerLink } from '@/lib/customer-api';
+export default function SignIn() {
+ const [email,setEmail]=useState('');const [busy,setBusy]=useState(false);const [sent,setSent]=useState(false);const [error,setError]=useState('');
+ async function submit(event:React.FormEvent){event.preventDefault();if(busy)return;setBusy(true);setError('');
+ try{const capability=new URLSearchParams(window.location.hash.slice(1)).get('claim') || undefined;await sendCustomerLink(email,capability?{capability}:undefined);setSent(true);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+ return <section className="mx-auto max-w-lg rounded-2xl border bg-white p-7"><p className="font-semibold text-brand-700">My Junkerz</p><h1 className="mt-2 text-3xl font-bold">Create account or sign in</h1><p className="mt-4 text-zinc-600">Use your email to follow requests, talk with Junkerz, and view your orders.</p><form onSubmit={submit} className="mt-6 space-y-4"><label className="block font-medium">Email<input className="mt-2 min-h-12 w-full rounded-lg border px-3" type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)}/></label>{sent&&<p role="status">If email delivery is available, your link is on its way. Check your inbox and junk folder. Links expire after 15 minutes; wait one minute before resending.</p>}{error&&<p role="alert" className="text-red-700">{error}</p>}<button disabled={busy} className="min-h-12 w-full rounded-lg bg-brand-700 px-4 font-bold text-white disabled:opacity-50">{busy?'Requesting link…':sent?'Resend sign-in link':'Email me a sign-in link'}</button></form><p className="mt-5 text-sm">Need help? <a href="tel:8174209180" className="underline">Call Junkerz at 817-420-9180</a>.</p></section>;
+}

@@ -9,7 +9,7 @@ export default function CatalogDetail({ product, settings, requestIntakeEnabled 
   const Icon = product.kind === "part" ? Package : CarFront;
   const requestKind = product.kind === "parts-car" ? "donor_part" : product.kind === "car" ? "whole_car" : "part";
   return <main className="min-h-screen bg-zinc-50 text-zinc-900">
-    <SiteHeader catalogSettings={settings} />
+    <SiteHeader catalogSettings={settings} showCart={!requestIntakeEnabled} />
     <div className="mx-auto max-w-6xl px-5 py-8 sm:py-12">
       <Link href="/shop" className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-zinc-600 hover:text-brand-700"><ChevronLeft className="h-4 w-4" /> Back to cars &amp; parts</Link>
       <div className="mt-5 grid overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm lg:grid-cols-[1.1fr_0.9fr]">

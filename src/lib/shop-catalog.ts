@@ -13,7 +13,7 @@ export type ShopProduct = {
   key: string;
   id: number;
   carId: number | null;
-  href: string;
+  href: string | null;
   name: string;
   kind: ShopProductKind;
   section: CatalogSection;
@@ -35,7 +35,7 @@ export const CLOSED_CATALOG_SETTINGS: CatalogSettings = {
   checkout_enabled: false,
 };
 
-const catalogBase = "https://api.dankdash.ai/api/junkyard-public";
+const catalogBase = `${process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai"}/api/junkyard-public`;
 const sectionKeys: CatalogSection[] = ["parts", "cars_for_parts", "cars_for_sale"];
 const modes: CatalogMode[] = ["off", "coming_soon", "live"];
 
@@ -141,7 +141,7 @@ export async function getShopCatalog(settings: CatalogSettings, fetchImpl: typeo
       carId: Number(isIndividualPart ? row.car_id : row.id) || null,
       href: isIndividualPart
         ? `/parts-inventory/${row.id}`
-        : `/${source.kind === "car" ? "cars" : "parts"}/${encodeURIComponent(String(row.vin || ""))}`,
+        : typeof row.vin === "string" && row.vin.trim() ? `/${source.kind === "car" ? "cars" : "parts"}/${encodeURIComponent(row.vin.trim())}` : null,
       kind: source.kind,
       section: source.section,
       mileage: !isIndividualPart && typeof row.mileage === "number" && Number.isFinite(row.mileage) && row.mileage >= 0 ? row.mileage : null,
@@ -191,7 +191,7 @@ export async function getCatalogDetail(
     key: `${kind}:${row.id}`,
     id: Number(row.id),
     carId: Number(isPart ? row.car_id : row.id) || null,
-    href: isPart ? `/parts-inventory/${row.id}` : `/${kind === "car" ? "cars" : "parts"}/${encodeURIComponent(vin)}`,
+    href: isPart ? `/parts-inventory/${row.id}` : vin.trim() ? `/${kind === "car" ? "cars" : "parts"}/${encodeURIComponent(vin.trim())}` : null,
     kind,
     section: sectionForProductKind(kind),
     mileage: !isPart && typeof row.mileage === "number" && row.mileage >= 0 ? row.mileage : null,

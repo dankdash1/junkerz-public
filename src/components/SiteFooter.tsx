@@ -51,6 +51,7 @@ export async function SiteFooter({ phone, catalogSettings }: { phone?: string; c
               <li><Link href="/assistants" className="hover:text-brand-700">AI assistants</Link></li>
               <li><Link href="/privacy-policy" className="hover:text-brand-700">Privacy policy</Link></li>
               <li><Link href="/terms" className="hover:text-brand-700">Terms of service</Link></li>
+              <li><Link href="/account" className="hover:text-brand-700">My Junkerz</Link></li>
               <li><a href="/buyers/login" className="hover:text-brand-700">Salvage yard login</a></li>
             </ul>
           </div>

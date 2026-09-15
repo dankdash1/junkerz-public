@@ -95,7 +95,7 @@ export default function CarPartsShop({
         <input aria-label="Search cars and parts" type="search" placeholder="Search cars, parts, make or model" value={search} onChange={(event) => setSearch(event.target.value)} className="min-h-11 w-full rounded-lg border border-zinc-300 px-4 sm:w-80" />
       </div>
       {unavailable ? <p role="alert" className="mt-8 rounded-xl bg-amber-50 p-6">The live catalog is temporarily unavailable. Please refresh to try again.</p> : <>
-        <p className="my-5 text-sm text-zinc-500">{shown.length} listings · Availability must be confirmed before any future sale.</p>
+        <p className="my-5 text-sm text-zinc-500">{shown.length} listings · {requestIntakeEnabled ? "Request availability; approve the confirmed quote before payment." : "Availability must be confirmed before any future sale."}</p>
         {shown.length === 0 && <p className="rounded-xl border p-8">No matching live listings. Try another search or category.</p>}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {shown.map((product) => {
@@ -104,14 +104,15 @@ export default function CarPartsShop({
             return <article key={product.key} className="flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white">
               <div className="relative flex aspect-[4/3] items-center justify-center bg-zinc-100">
                 {product.image ? <img src={product.image} alt={product.name} className="h-full w-full object-cover" loading="lazy" /> : <VehicleIcon className="h-16 w-16 text-zinc-300" aria-hidden="true" />}
-                <span className="absolute left-3 top-3 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-950">SANDBOX LISTING</span>
+                <span className="absolute left-3 top-3 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-950">{requestIntakeEnabled ? "Availability to confirm" : "SANDBOX LISTING"}</span>
               </div>
               <div className="flex flex-1 flex-col p-5">
                 <p className="text-xs font-bold uppercase tracking-widest text-brand-700">{labels[product.kind]}</p>
                 <h2 className="mt-2 text-lg font-bold">{product.name}</h2>
                 <p className="mt-2 text-sm text-zinc-500">{product.detail}</p>
-                <p className="mb-4 mt-5 text-2xl font-extrabold">{product.priceCents === null ? "Price needed" : money(product.priceCents)}</p>
-                <Link href={product.href} className="mb-2 inline-flex min-h-11 items-center justify-center rounded-lg border border-zinc-300 px-4 text-sm font-bold text-zinc-800 hover:bg-zinc-50">View details</Link>
+                <p className="mb-4 mt-5 text-2xl font-extrabold">{product.priceCents === null ? (requestIntakeEnabled ? "Quote after confirmation" : "Price needed") : money(product.priceCents)}</p>
+                {requestIntakeEnabled && product.priceCents !== null && <p className="-mt-2 mb-4 text-xs text-zinc-500">Listed price · final quote requires confirmation</p>}
+                {product.href && <Link href={product.href} className="mb-2 inline-flex min-h-11 items-center justify-center rounded-lg border border-zinc-300 px-4 text-sm font-bold text-zinc-800 hover:bg-zinc-50">View details</Link>}
                 {requestIntakeEnabled && <div className="mb-2"><YardRequestForm
                   target={{
                     kind: product.kind === "parts-car" ? "donor_part" : product.kind === "car" ? "whole_car" : "part",
@@ -121,9 +122,9 @@ export default function CarPartsShop({
                   }}
                   submitRequest={submitRequest}
                 /></div>}
-                <Button className="mt-auto h-11 w-full gap-2" disabled={added || product.priceCents === null || items.length >= 30} onClick={() => add(product)}>
+                {!requestIntakeEnabled && <Button className="mt-auto h-11 w-full gap-2" disabled={added || product.priceCents === null || items.length >= 30} onClick={() => add(product)}>
                   {added ? <><ShoppingCart className="h-4 w-4" /> In cart</> : <><Plus className="h-4 w-4" /> Add to sandbox cart</>}
-                </Button>
+                </Button>}
               </div>
             </article>;
           })}
@@ -131,7 +132,7 @@ export default function CarPartsShop({
       </>}
     </>}
 
-    {activeCartItems.length > 0 && <div className="sticky bottom-5 mt-6 flex items-center justify-between gap-4 rounded-xl bg-zinc-900 px-5 py-4 text-white shadow-xl" role="status">
+    {!requestIntakeEnabled && activeCartItems.length > 0 && <div className="sticky bottom-5 mt-6 flex items-center justify-between gap-4 rounded-xl bg-zinc-900 px-5 py-4 text-white shadow-xl" role="status">
       <span>{activeCartItems.length} {activeCartItems.length === 1 ? "item" : "items"} in your sandbox cart</span>
       <Link href="/cart" className="rounded-lg bg-white px-4 py-2 font-bold text-zinc-900">View cart →</Link>
     </div>}

@@ -127,3 +127,8 @@ test("detail loading obeys the matching section gate and preserves stock identit
   assert.equal(calls[0][1].cache, 'no-store');
   assert.deepEqual({ id: detail.id, carId: detail.carId, kind: detail.kind, href: detail.href }, { id: 8, carId: 8, kind: 'parts-car', href: '/parts/2HGCM82633A004353' });
 });
+
+test('missing donor VIN never produces a generic or invented detail route',async()=>{
+ const products=await getShopCatalog({...allLive,sections:{parts:'off',cars_for_parts:'live',cars_for_sale:'off'}},async()=>Response.json({items:[{id:8,vin:null,year:2017,make:'Honda',model:'Civic'},{id:9,vin:'   ',year:2018,make:'Honda',model:'Civic'}],state:'live'}));
+ assert.deepEqual(products.map(p=>({id:p.id,carId:p.carId,href:p.href})),[{id:8,carId:8,href:null},{id:9,carId:9,href:null}]);
+});
