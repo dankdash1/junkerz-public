@@ -1,9 +1,10 @@
 "use client";
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { OPEN_EMAIL_LINK_MESSAGE, OTP_REJECTED_MESSAGE, readAcceptOtp } from "@/lib/pickup-accept";
 
 const SLOTS = [
   "Tomorrow 10AM-12PM",
@@ -16,7 +17,18 @@ const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
 export default function PickupPage() {
   const params = useParams();
   const router = useRouter();
+  const search = useSearchParams();
   const offerId = Number(params.offer_id);
+
+  // The emailed accept link is /pickup/<id>?otp=<token>; the backend refuses
+  // an accept without it (401 otp_required). Read the query first, then the
+  // fragment (#otp=) in case a mail client or redirect moved it there.
+  const [otp, setOtp] = useState<string | null>(() => readAcceptOtp(search));
+  useEffect(() => {
+    if (otp) return;
+    const found = readAcceptOtp(search, typeof window === "undefined" ? "" : window.location.hash);
+    if (found) setOtp(found);
+  }, [search, otp]);
 
   const [slot, setSlot] = useState<string | null>(null);
   const [address, setAddress] = useState("");
@@ -26,14 +38,19 @@ export default function PickupPage() {
   const [error, setError] = useState<string | null>(null);
 
   async function schedule() {
+    if (!otp) {
+      setError(OPEN_EMAIL_LINK_MESSAGE);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
-      // Mark accepted
+      // Mark accepted — the one-time code from the email proves it is the seller.
       const acceptRes = await fetch(
         `${BASE}/api/public/junkerz/offer/${offerId}/accept`,
-        { method: "POST" },
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ otp }) },
       );
+      if (acceptRes.status === 401) throw new Error(OTP_REJECTED_MESSAGE);
       if (!acceptRes.ok && acceptRes.status !== 404) {
         // 404 could mean already accepted — keep going
         throw new Error("Could not accept offer");
@@ -60,12 +77,18 @@ export default function PickupPage() {
     }
   }
 
-  const canSubmit = !!slot && !!address && !!phone;
+  const canSubmit = !!slot && !!address && !!phone && !!otp;
 
   return (
     <main className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-md mx-auto pt-12 space-y-6">
         <h1 className="text-2xl font-bold">Schedule Pickup</h1>
+
+        {!otp && (
+          <p role="alert" className="rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+            {OPEN_EMAIL_LINK_MESSAGE}
+          </p>
+        )}
 
         <div className="space-y-2">
           <Label>Pickup window</Label>

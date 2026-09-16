@@ -14,6 +14,7 @@ import {
   type ShopProductKind,
 } from "@/lib/shop-catalog";
 import { SITE } from "@/lib/site";
+import { isStripeCheckoutUrl } from "@/lib/cart-checkout";
 
 const categoryLinks: Record<ShopProductKind, string> = {
   car: "/shop?category=car",
@@ -35,10 +36,11 @@ function ItemPhoto({ item }: { item: ShopProduct }) {
   </div>;
 }
 
-export default function CartContents({ settings, settingsUnavailable }: { settings: CatalogSettings; settingsUnavailable: boolean }) {
+export default function CartContents({ settings, settingsUnavailable, navigate = (url) => window.location.assign(url) }: { settings: CatalogSettings; settingsUnavailable: boolean; navigate?: (url: string) => void }) {
   const { items, remove, clear } = useShopCart();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [closed, setClosed] = useState("");
   const modeFor = (item: ShopProduct): CatalogMode => settings.sections[sectionForProductKind(item.kind)];
   const activeItems = settingsUnavailable ? [] : items.filter((item) => modeFor(item) === "live");
   const blockedItems = items.filter((item) => settingsUnavailable || modeFor(item) !== "live");
@@ -49,17 +51,25 @@ export default function CartContents({ settings, settingsUnavailable }: { settin
   async function checkout() {
     setPending(true);
     setError("");
+    setClosed("");
     try {
+      // The key carries the catalog kind and the listing's database id; the
+      // server route resolves it against the live catalog before the backend
+      // opens checkout.
       const response = await fetch("/api/cart/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: activeItems.map((item) => ({ key: item.key, quantity: 1 })) }),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
+      if (response.status === 503 && data.code === "checkout_disabled") {
+        setClosed(data.error || "Checkout is not open yet.");
+        setPending(false);
+        return;
+      }
       if (!response.ok || !data.url) throw new Error(data.error || "Checkout is unavailable. Please try again.");
-      const url = new URL(data.url);
-      if (url.protocol !== "https:" || url.hostname !== "checkout.stripe.com") throw new Error("Checkout returned an unexpected address.");
-      window.location.assign(url.href);
+      if (!isStripeCheckoutUrl(data.url)) throw new Error("Checkout returned an unexpected address.");
+      navigate(data.url);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Checkout is unavailable.");
       setPending(false);
@@ -70,7 +80,7 @@ export default function CartContents({ settings, settingsUnavailable }: { settin
     const visibleKinds = (["car", "parts-car", "part"] as const).filter((kind) => settings.sections[sectionForProductKind(kind)] !== "off");
     return <section className="mt-8 rounded-2xl border border-zinc-200 bg-white px-6 py-14 text-center">
       <ShoppingCart className="mx-auto h-12 w-12 text-brand-600" aria-hidden="true" />
-      <h2 className="mt-5 text-2xl font-bold">{hasLiveSection ? "Your sandbox cart is empty." : "Online shopping is coming soon."}</h2>
+      <h2 className="mt-5 text-2xl font-bold">{hasLiveSection ? "Your cart is empty." : "Online shopping is coming soon."}</h2>
       <p className="mx-auto mt-3 max-w-xl text-zinc-600">
         {settingsUnavailable
           ? "Shop availability cannot be confirmed right now, so cart actions remain closed."
@@ -88,11 +98,11 @@ export default function CartContents({ settings, settingsUnavailable }: { settin
   }
 
   return <>
-    <p className="mt-3 text-zinc-500">Review your {items.length === 1 ? "saved item" : `${items.length} saved items`}. Current shop settings are checked before any sandbox checkout.</p>
+    <p className="mt-3 text-zinc-500">Review your {items.length === 1 ? "saved item" : `${items.length} saved items`}. Availability and prices are checked again before checkout.</p>
     {(settingsUnavailable || blockedItems.length > 0) && <p role="alert" className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
       {settingsUnavailable
         ? "Shop availability cannot be confirmed right now. Checkout remains closed."
-        : `${blockedItems.length} saved ${blockedItems.length === 1 ? "item is" : "items are"} off or coming soon. Remove ${blockedItems.length === 1 ? "it" : "them"} before using the sandbox checkout.`}
+        : `${blockedItems.length} saved ${blockedItems.length === 1 ? "item is" : "items are"} off or coming soon. Remove ${blockedItems.length === 1 ? "it" : "them"} before checkout.`}
     </p>}
     <div className="mt-8 grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0 space-y-6">
@@ -122,7 +132,7 @@ export default function CartContents({ settings, settingsUnavailable }: { settin
                     </dl>
                     {kind === "part" && <p className="mt-3 text-sm text-zinc-500"><span className="font-medium text-zinc-700">Listed fitment: </span>{item.detail || "Not provided — confirm fit before purchase."}</p>}
                     <div className="mt-5 flex items-center justify-between gap-3">
-                      <span className={`rounded-md px-2 py-1 text-[11px] font-semibold ${itemMode === "live" ? "bg-amber-50 text-amber-800" : "bg-zinc-100 text-zinc-700"}`}>{itemMode === "live" ? "Test listing" : itemMode === "off" ? "Section closed" : "Coming soon"}</span>
+                      <span className={`rounded-md px-2 py-1 text-[11px] font-semibold ${itemMode === "live" ? "bg-emerald-50 text-emerald-800" : "bg-zinc-100 text-zinc-700"}`}>{itemMode === "live" ? "Available" : itemMode === "off" ? "Section closed" : "Coming soon"}</span>
                       <p className="text-xl font-extrabold">{money(item.priceCents || 0)}</p>
                     </div>
                   </div>
@@ -136,7 +146,7 @@ export default function CartContents({ settings, settingsUnavailable }: { settin
           <button disabled={pending} onClick={clear} className="px-2 py-2 text-sm text-zinc-500 underline">Empty cart</button>
         </div>
         <section className="rounded-2xl border border-zinc-200 bg-white p-5">
-          <h2 className="font-bold">Before any future purchase</h2>
+          <h2 className="font-bold">Before you buy</h2>
           <div className="mt-4 grid gap-5 sm:grid-cols-2">
             <div><h3 className="text-sm font-semibold">Check the item</h3><p className="mt-1 text-sm leading-relaxed text-zinc-500">Confirm condition and availability. For parts, fitment must be verified for your vehicle.</p></div>
             <div><h3 className="flex items-center gap-2 text-sm font-semibold"><Truck className="h-4 w-4 text-brand-600" /> Parts delivery</h3><p className="mt-1 text-sm leading-relaxed text-zinc-500">Parts orders will be delivery only. Delivery details will be confirmed when parts sales open.</p></div>
@@ -146,15 +156,15 @@ export default function CartContents({ settings, settingsUnavailable }: { settin
       <aside className="overflow-hidden rounded-2xl border border-zinc-200 bg-white lg:sticky lg:top-24">
         <div className="bg-zinc-900 px-6 py-5 text-white"><p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">Review</p><h2 className="mt-1 text-xl font-bold">Cart summary</h2></div>
         <div className="p-6">
-          <div className="flex justify-between text-sm"><span className="text-zinc-500">Live test items ({activeItems.length})</span><strong>{money(subtotal)}</strong></div>
+          <div className="flex justify-between text-sm"><span className="text-zinc-500">Items ({activeItems.length})</span><strong>{money(subtotal)}</strong></div>
           {activeItems.length > 0 && blockedItems.length === 0 && !settingsUnavailable ? <>
-            <div className="mt-5 flex items-center justify-between border-t border-zinc-200 pt-5"><span className="font-semibold">Test subtotal</span><strong className="text-2xl">{money(subtotal)}</strong></div>
-            <Button className="mt-6 h-12 w-full gap-2" disabled={pending} onClick={checkout}>{pending ? "Opening Stripe…" : <>Test checkout <ArrowRight className="h-4 w-4" /></>}</Button>
+            <div className="mt-5 flex items-center justify-between border-t border-zinc-200 pt-5"><span className="font-semibold">Subtotal</span><strong className="text-2xl">{money(subtotal)}</strong></div>
+            <Button className="mt-6 h-12 w-full gap-2" disabled={pending} onClick={checkout}>{pending ? "Opening checkout…" : <>Checkout <ArrowRight className="h-4 w-4" /></>}</Button>
+            {closed && <p role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-950"><span className="font-semibold">Checkout is not open yet.</span> {closed.replace(/^Checkout is not open yet\.\s*/, "")}</p>}
             {error && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}
-            <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-zinc-500"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />Stripe sandbox only. No real charge or reservation. Prices and section settings are checked again.</p>
-            <Link href="/payments/test" className="mt-4 block text-center text-sm font-semibold text-brand-700 underline">Test-card instructions</Link>
+            <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-zinc-500"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />Secure card payment through Stripe. Prices and availability are checked again before you pay. Tax and delivery are shown at checkout.</p>
           </> : <p className="mt-5 border-t border-zinc-200 pt-5 text-sm leading-relaxed text-zinc-600">
-            {activeItems.length === 0 ? "These shop sections are closed or coming soon, so checkout is unavailable." : "Remove closed or coming-soon items before sandbox checkout."}
+            {activeItems.length === 0 ? "These shop sections are closed or coming soon, so checkout is unavailable." : "Remove closed or coming-soon items before checkout."}
           </p>}
         </div>
         <a href={phoneHref} className="flex items-center gap-3 border-t border-zinc-100 bg-zinc-50 px-6 py-5 hover:bg-zinc-100"><Phone className="h-5 w-5 text-brand-600" /><div><p className="text-xs text-zinc-500">Questions about an item?</p><p className="mt-1 font-bold">{SITE.phone}</p></div></a>

@@ -42,7 +42,7 @@ export default async function ShopPage({ searchParams }: { searchParams: { categ
 
   return <main className="min-h-screen bg-zinc-50 text-zinc-900">
     <SiteHeader catalogSettings={settingsUnavailable ? null : settings} showCart={!requestIntakeEnabled} />
-    {hasLive && <div className="bg-amber-100 px-5 py-3 text-center text-sm font-semibold text-amber-950">{requestIntakeEnabled ? "Request availability · Review your quote · Track delivery" : "CATALOG PREVIEW · Sandbox cart only · No real orders or charges"}</div>}
+    {hasLive && <div className="bg-amber-100 px-5 py-3 text-center text-sm font-semibold text-amber-950">{requestIntakeEnabled ? "Request availability · Review your quote · Track delivery" : "Add to cart · Secure checkout · Parts are delivery only"}</div>}
     <div className="mx-auto max-w-6xl px-5 py-10">
       <p className="text-xs font-bold uppercase tracking-widest text-brand-700">Junkerz shop</p>
       <h1 className="mt-3 text-4xl font-extrabold tracking-tight">Cars &amp; parts</h1>

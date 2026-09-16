@@ -1,5 +1,5 @@
 "use client";
-import { schedulePayload, quickPickDate } from "@/lib/seller-schedule";
+import { TIME_WINDOWS, WINDOW_START_HOUR, formatCentral, isTimeWindow, quickPickDate, schedulePayload, windowForQuickPick, type TimeWindow } from "@/lib/seller-schedule";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -25,24 +25,10 @@ type Offer = {
   seller_schedule_token_expires_at: string | null;
 };
 
-// George 2026-09-15: seven two-hour windows, the same list the admin uses.
-const TIME_WINDOWS = [
-  "7am-9am", "9am-11am", "11am-1pm", "1pm-3pm", "3pm-5pm", "5pm-7pm", "7pm-9pm",
-];
-
-// Map the human-readable window to the START hour (24h) so we can build
-// a real ISO timestamp for the backend's eta_at column. Without this,
-// the backend stored NULL eta_at and the calendar bucketed the pickup
-// to today instead of the chosen date (George 2026-05-18 bug report).
-const WINDOW_START_HOUR: Record<string, number> = {
-  "7am-9am": 7,
-  "9am-11am": 9,
-  "11am-1pm": 11,
-  "1pm-3pm": 13,
-  "3pm-5pm": 15,
-  "5pm-7pm": 17,
-  "7pm-9pm": 19,
-};
+// The seven two-hour windows (George 2026-09-15) live in @/lib/seller-schedule
+// so the tests and this page read the same list. Every window is Central time;
+// the backend derives the real pickup instant from pickup_date + window in
+// America/Chicago, so this page never does timezone math of its own.
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -72,11 +58,11 @@ export default function SellerSchedulePage() {
   const [loading, setLoading] = useState(true);
 
   const [date, setDate] = useState<string>(ymd(new Date()));
-  const [windowSlot, setWindowSlot] = useState("9am-11am");
+  const [windowSlot, setWindowSlot] = useState<TimeWindow>("9am-11am");
   const [address, setAddress] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [submitErr, setSubmitErr] = useState<string | null>(null);
-  const [done, setDone] = useState<{ slot: string; eta_at: string | null } | null>(null);
+  const [done, setDone] = useState<{ slot: string; eta_at: string | null; window: TimeWindow | null } | null>(null);
   const [showCustom, setShowCustom] = useState(false);
 
   const loadOffer = useCallback(async () => {
@@ -118,6 +104,7 @@ export default function SellerSchedulePage() {
       }
       setBusy(true);
       setSubmitErr(null);
+      const window = windowForQuickPick(qp.key, qp.label);
       try {
         const r = await fetch(`${BASE}/api/public/junkerz/seller/schedule/${token}`, {
           method: "POST",
@@ -125,13 +112,13 @@ export default function SellerSchedulePage() {
           body: JSON.stringify({
             slot: qp.label,
             quick_pick: qp.key,
-            ...schedulePayload(quickPickDate(qp.key)),
+            ...schedulePayload(quickPickDate(qp.key), window),
             pickup_address: address.trim(),
           }),
         });
         const data = await r.json();
         if (!r.ok) throw new Error((data as { error?: string }).error || "submit failed");
-        setDone({ slot: data.slot, eta_at: data.eta_at });
+        setDone({ slot: data.slot, eta_at: data.eta_at, window: isTimeWindow(data.window) ? data.window : window ?? null });
       } catch (e) {
         setSubmitErr((e as Error)?.message ?? "submit failed");
       } finally {
@@ -161,12 +148,13 @@ export default function SellerSchedulePage() {
     }
     // George 2026-05-18 bug: previously sent only `slot` (display string) and
     // omitted `eta_at`. Backend then stored NULL eta_at -> calendar bucketed
-    // every custom pickup to today regardless of date picked. Fix: build a
-    // real ISO timestamp from the chosen date + window start hour and
-    // include it in the POST body.
+    // every custom pickup to today regardless of date picked.
+    // George 2026-09-15: the seller's phone may not be on Central time, so the
+    // body now names the chosen `window` label next to `pickup_date`; the
+    // backend derives the real instant from date + window in America/Chicago.
+    // `eta_at` (window start on the browser clock) is still sent for older
+    // backends and is ignored once `window` is understood.
     const startHour = WINDOW_START_HOUR[windowSlot] ?? 10;
-    // Build a local Date at the window start, then ISO it. The seller's
-    // browser timezone is the source of truth for what "1pm-3pm" means.
     const d = new Date(date + "T00:00:00");
     d.setHours(startHour, 0, 0, 0);
     const slot = `${fmtDate(d)} — ${windowSlot}`;
@@ -175,11 +163,11 @@ export default function SellerSchedulePage() {
       const r = await fetch(`${BASE}/api/public/junkerz/seller/schedule/${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slot, ...schedulePayload(d), pickup_address: address.trim() }),
+        body: JSON.stringify({ slot, ...schedulePayload(d, windowSlot), pickup_address: address.trim() }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error((data as { error?: string }).error || "submit failed");
-      setDone({ slot: data.slot, eta_at: data.eta_at });
+      setDone({ slot: data.slot, eta_at: data.eta_at, window: windowSlot });
     } catch (e) {
       setSubmitErr((e as Error)?.message ?? "submit failed");
     } finally {
@@ -245,11 +233,18 @@ export default function SellerSchedulePage() {
             {offer.year} {offer.make} {offer.model}
           </p>
           <p className="text-lg font-semibold text-brand-700">{done.slot}</p>
-          {done.eta_at && (
+          {/* Times are Central (America/Chicago) — the yard's clock, not the
+              seller's phone. The instant comes back from the backend; this
+              page only formats it. */}
+          {done.window && (
+            <p className="text-base font-semibold text-slate-800">
+              Pickup window: {done.window} CT
+            </p>
+          )}
+          {done.eta_at && formatCentral(done.eta_at) && (
             <p className="text-sm text-slate-500">
-              Driver arrives around {new Date(done.eta_at).toLocaleString(undefined,
-                { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-              {" "}— within a 1-3 hour window.
+              Driver arrives around {formatCentral(done.eta_at)} CT
+              {" "}— within a 1-3 hour window. All times are Central.
             </p>
           )}
           <p className="text-sm text-slate-600">
@@ -439,8 +434,9 @@ export default function SellerSchedulePage() {
           <h2 className="text-sm font-semibold text-slate-700 mb-2">Custom time</h2>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs">Date</Label>
+              <Label htmlFor="pickup-date" className="text-xs">Date</Label>
               <Input
+                id="pickup-date"
                 type="date"
                 value={date}
                 min={ymd(new Date())}
@@ -448,10 +444,11 @@ export default function SellerSchedulePage() {
               />
             </div>
             <div>
-              <Label className="text-xs">Time window</Label>
+              <Label htmlFor="pickup-window" className="text-xs">Time window (Central)</Label>
               <select
+                id="pickup-window"
                 value={windowSlot}
-                onChange={(e) => setWindowSlot(e.target.value)}
+                onChange={(e) => { if (isTimeWindow(e.target.value)) setWindowSlot(e.target.value); }}
                 className="w-full h-10 border rounded px-2 text-sm"
               >
                 {TIME_WINDOWS.map((w) => <option key={w} value={w}>{w}</option>)}
