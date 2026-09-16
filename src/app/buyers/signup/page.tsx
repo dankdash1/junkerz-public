@@ -36,6 +36,7 @@ export default function BuyerSignup() {
     website: "",
     license_number: "",
     notification_email: "",
+    sms_consent: false,
   });
   const [checklist, setChecklist] = useState<OnboardingStatus | null>(null);
   const [requiredFields, setRequiredFields] = useState<FieldKey[]>([]);
@@ -73,6 +74,8 @@ export default function BuyerSignup() {
         const v = form[k as keyof typeof form];
         if (v) (body as Record<string, unknown>)[k] = v;
       }
+      // Sent only as a real tick. Unchecked means we never text this buyer.
+      if (form.sms_consent === true) body.sms_consent = true;
       await buyerApi.signup(body);
 
       // 2. Auto-login so the buyer can upload documents on the next step
@@ -162,6 +165,26 @@ export default function BuyerSignup() {
                 required={isRequired("phone")}
                 placeholder="(555) 555-0100"
               />
+            </div>
+            <div className="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <label htmlFor="sms_consent" className="flex items-start gap-2 text-sm text-slate-800">
+                <input
+                  id="sms_consent"
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-600"
+                  checked={form.sms_consent}
+                  onChange={(e) => setForm({ ...form, sms_consent: e.target.checked })}
+                />
+                <span>Yes, text me when I win a car, when a pickup is scheduled or rescheduled, and pickup reminders (optional).</span>
+              </label>
+              <p className="mt-2 text-xs text-slate-500">
+                By checking this box and providing your phone number, you agree to receive SMS car-assignment,
+                pickup and reminder messages from Junkerz. Message frequency may vary. Standard Message and Data
+                Rates may apply. Reply STOP to opt out. Reply HELP for help. We will not share mobile information
+                with third parties for promotional or marketing purposes. Leave the box unchecked and we contact you
+                by email only. See our <a href="/terms" className="underline">Terms</a> and{" "}
+                <a href="/privacy-policy" className="underline">Privacy Policy</a>.
+              </p>
             </div>
             <div className="md:col-span-2">
               <Label>{lbl("address")}</Label>
