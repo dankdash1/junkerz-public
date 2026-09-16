@@ -13,6 +13,11 @@ const BACKEND = `${backendOrigin()}/api/junkyard-public/customer`;
 const COOKIE = '__Host-junkerz_customer';
 const BROWSER = '__Host-junkerz_browser';
 const uuid = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
+// The live site answers on BOTH the apex and the www host, so a browser sitting
+// on either one has to be able to post. This is an exact-membership list on
+// purpose: never a suffix test, never a pattern, so `junkerz.com.evil.example`
+// and friends cannot slip through.
+const ALLOWED_ORIGINS = ['https://www.junkerz.com', 'https://junkerz.com'];
 const rules: Record<string, RegExp[]> = {
  GET: [/^settings$/, /^me$/, /^requests$/, /^orders$/, new RegExp(`^requests/${uuid}$`), new RegExp(`^requests/${uuid}/(messages|quote)$`), new RegExp(`^requests/${uuid}/attachments/${uuid}$`), /^orders\/[A-Za-z0-9_-]{1,80}(\/receipt)?$/],
  POST: [/^sign-in-link$/, /^verify$/, /^logout$/, /^claim-request$/, /^requests$/, new RegExp(`^requests/${uuid}/(messages|attachments|quote/respond|payment-session)$`)],
@@ -24,8 +29,8 @@ async function proxy(request:NextRequest,context:{params:{path:string[]}}) {
  if (!rules[request.method]?.some(rule=>rule.test(path))) return json({error:'Not found'},404);
  if (request.method!=='GET') {
    const origin=request.headers.get('origin');
-   const expected=process.env.NODE_ENV==='development' ? request.nextUrl.origin : 'https://www.junkerz.com';
-   if (origin!==expected || request.headers.get('sec-fetch-site')==='cross-site') return json({error:'Invalid request origin'},403);
+   const allowed=process.env.NODE_ENV==='development' ? [request.nextUrl.origin] : ALLOWED_ORIGINS;
+   if (!origin || !allowed.includes(origin) || request.headers.get('sec-fetch-site')==='cross-site') return json({error:'Invalid request origin'},403);
  }
  const browser=request.cookies.get(BROWSER)?.value || crypto.randomUUID();
  const session=request.cookies.get(COOKIE)?.value;
