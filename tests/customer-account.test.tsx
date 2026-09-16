@@ -28,6 +28,42 @@ it('proxy stores session only in secure host-only HttpOnly cookie and strips cli
  const cookie=result.headers.get('set-cookie')||'';expect(cookie).toContain('HttpOnly');expect(cookie).toContain('Secure');expect(cookie).toContain('SameSite=lax');expect(cookie).not.toContain('Domain=');
  expect(fetcher.mock.calls[0][0]).toBe('https://api.dankdash.ai/api/junkyard-public/customer/verify');
 });
+// The site is served on both junkerz.com and www.junkerz.com. A visitor who
+// landed on the apex (what the ads and cards print) must be able to sign in
+// and file a request, while everything else stays refused exactly as before.
+const signIn=(headers:Record<string,string>,url='https://www.junkerz.com/api/customer/sign-in-link')=>
+ POST(new NextRequest(url,{method:'POST',headers:{'content-type':'application/json',...headers},body:JSON.stringify({email:'seller@example.test'})}),{params:{path:['sign-in-link']}});
+it('proxy accepts a mutation from both the apex and the www host',async()=>{
+ // A fresh Response each call: a body can only be read once.
+ const fetcher=vi.fn(async()=>new Response(JSON.stringify({accepted:true}),{status:202}));vi.stubGlobal('fetch',fetcher);
+ const apex=await signIn({origin:'https://junkerz.com','sec-fetch-site':'same-origin'},'https://junkerz.com/api/customer/sign-in-link');
+ expect(apex.status).toBe(202);expect(await apex.json()).toEqual({accepted:true});
+ const www=await signIn({origin:'https://www.junkerz.com','sec-fetch-site':'same-origin'});
+ expect(www.status).toBe(202);expect(await www.json()).toEqual({accepted:true});
+ expect(fetcher).toHaveBeenCalledTimes(2);
+ expect(fetcher.mock.calls.every(call=>call[0]==='https://api.dankdash.ai/api/junkyard-public/customer/sign-in-link')).toBe(true);
+});
+it('proxy still refuses a foreign origin, a missing origin and a cross-site mutation',async()=>{
+ const fetcher=vi.fn();vi.stubGlobal('fetch',fetcher);
+ const foreign=await signIn({origin:'https://evil.example'});
+ expect(foreign.status).toBe(403);expect(await foreign.json()).toEqual({error:'Invalid request origin'});
+ const missing=await signIn({});
+ expect(missing.status).toBe(403);expect(await missing.json()).toEqual({error:'Invalid request origin'});
+ for(const origin of ['https://junkerz.com','https://www.junkerz.com']) {
+   const crossSite=await signIn({origin,'sec-fetch-site':'cross-site'});
+   expect(crossSite.status).toBe(403);expect(await crossSite.json()).toEqual({error:'Invalid request origin'});
+ }
+ // A lookalike host must not pass — the check is exact membership, not a suffix.
+ const lookalike=await signIn({origin:'https://junkerz.com.evil.example'});
+ expect(lookalike.status).toBe(403);
+ expect(fetcher).not.toHaveBeenCalled();
+});
+it('proxy leaves reads alone: a GET needs no origin header at all',async()=>{
+ const fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify({enabled:true}),{status:200}));vi.stubGlobal('fetch',fetcher);
+ const read=await GET(new NextRequest('https://junkerz.com/api/customer/settings'),{params:{path:['settings']}});
+ expect(read.status).toBe(200);expect(await read.json()).toEqual({enabled:true});
+ expect(fetcher.mock.calls[0][0]).toBe('https://api.dankdash.ai/api/junkyard-public/customer/settings');
+});
 
 import YardRequestForm from '@/components/YardRequestForm';
 it('first request waits for email verification and retains a durable draft instead of routing to the yard',async()=>{
