@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { SITE } from "@/lib/site";
 import SiteExtras from "@/components/SiteExtras";
+import { Analytics } from "@vercel/analytics/react";
 import { ShopCartProvider } from "@/components/ShopCart";
 
 const geistSans = localFont({
@@ -83,6 +84,7 @@ export default function RootLayout({
       >
         <ShopCartProvider>{children}</ShopCartProvider>
         <SiteExtras />
+        <Analytics />
       </body>
     </html>
   );
