@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { NotLiveNotice } from "@/components/NotLive";
+import { PICKUPS_LIVE } from "@/lib/site";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OPEN_EMAIL_LINK_MESSAGE, OTP_REJECTED_MESSAGE, readAcceptOtp } from "@/lib/pickup-accept";
@@ -15,6 +17,11 @@ const PAYMENT_METHODS = ["zelle", "cash", "check"];
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
 
 export default function PickupPage() {
+  if (!PICKUPS_LIVE) return <NotLiveNotice />;
+  return <PickupLive />;
+}
+
+function PickupLive() {
   const params = useParams();
   const router = useRouter();
   const search = useSearchParams();

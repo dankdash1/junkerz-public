@@ -20,6 +20,30 @@ export const SITE = {
   hours: "Mo-Sa 08:00-19:00",
 } as const;
 
+/**
+ * False while Junkerz is not picking up cars yet (George, 2026-10-11).
+ * Sellers still get a quote, but cannot accept or book a pickup: the site
+ * shows a banner and "Save my offer" instead. Flip to true when pickups start.
+ */
+export const PICKUPS_LIVE = false;
+
+export const NOT_LIVE_COPY = {
+  en: {
+    banner: "We're opening soon. We are not picking up cars yet — get your offer now and we'll contact you when we start.",
+    title: "We're not picking up cars yet",
+    body: "Junkerz is opening soon. Your offer is saved, but we are not scheduling pickups yet. We'll contact you before we pick anything up. Nobody will come to your address until you hear from us.",
+    save: "Save my offer",
+    saved: "Your offer is saved. We are not scheduling pickups yet — we'll contact you before we pick anything up.",
+  },
+  es: {
+    banner: "Abrimos pronto. Todavía no estamos recogiendo carros — reciba su oferta ahora y le contactamos cuando empecemos.",
+    title: "Todavía no estamos recogiendo carros",
+    body: "Junkerz abre pronto. Su oferta está guardada, pero todavía no programamos recogidas. Le contactaremos antes de recoger cualquier carro. Nadie irá a su dirección hasta que sepa de nosotros.",
+    save: "Guardar mi oferta",
+    saved: "Su oferta está guardada. Todavía no programamos recogidas — le contactaremos antes de recoger su carro.",
+  },
+} as const;
+
 /** Real customer quotes carried over from junkerz.com. Nothing invented. */
 export const TESTIMONIALS = [
   { name: "Anjuman D.", text: "Thanks for giving a very good price and quick services for our old car." },

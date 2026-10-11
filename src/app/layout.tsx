@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { SITE } from "@/lib/site";
 import SiteExtras from "@/components/SiteExtras";
+import { NotLiveBanner } from "@/components/NotLive";
 import { Analytics } from "@vercel/analytics/react";
 import { ShopCartProvider } from "@/components/ShopCart";
 
@@ -82,6 +83,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <NotLiveBanner />
         <ShopCartProvider>{children}</ShopCartProvider>
         <SiteExtras />
         <Analytics />

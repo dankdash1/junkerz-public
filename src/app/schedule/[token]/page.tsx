@@ -3,6 +3,8 @@ import { TIME_WINDOWS, WINDOW_START_HOUR, formatCentral, isTimeWindow, quickPick
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { NotLiveNotice } from "@/components/NotLive";
+import { PICKUPS_LIVE } from "@/lib/site";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -48,6 +50,16 @@ const ymd = (d: Date) => {
 };
 
 export default function SellerSchedulePage() {
+  if (!PICKUPS_LIVE) return <NotLiveNoticeFromUrl />;
+  return <SellerScheduleLive />;
+}
+
+function NotLiveNoticeFromUrl() {
+  const sp = useSearchParams();
+  return <NotLiveNotice es={sp.get("lang") === "es"} />;
+}
+
+function SellerScheduleLive() {
   const { token } = useParams<{ token: string }>();
   const search = useSearchParams();
   const router = useRouter();
