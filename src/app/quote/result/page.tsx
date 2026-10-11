@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Check, Phone, ArrowRight, Truck, Clock, BadgeDollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/Logo";
-import { SITE } from "@/lib/site";
+import { NOT_LIVE_COPY, PICKUPS_LIVE, SITE } from "@/lib/site";
 import { getOffer } from "@/lib/api";
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
@@ -31,6 +31,8 @@ function ResultContent() {
     centsFromUrl ? { offer_cents: centsFromUrl, status: sp.get("status") || "reviewing" } : null
   );
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const notLive = es ? NOT_LIVE_COPY.es : NOT_LIVE_COPY.en;
 
   useEffect(() => {
     if (!id) return;
@@ -110,7 +112,7 @@ function ResultContent() {
 
         <div className="my-6 border-t border-dashed border-zinc-200" />
         <div className="grid grid-cols-3 gap-3 text-center">
-          {[[Truck, t.free], [BadgeDollarSign, t.cash], [Clock, t.fast]].map(([Icon, label]) => {
+          {[[Truck, t.free], [BadgeDollarSign, t.cash], [Clock, PICKUPS_LIVE ? t.fast : (es ? "Recogidas pronto" : "Pickups start soon")]].map(([Icon, label]) => {
             const I = Icon as typeof Truck;
             return (
               <div key={label as string}>
@@ -122,7 +124,27 @@ function ResultContent() {
         </div>
       </div>
 
-      {token ? (
+      {!PICKUPS_LIVE ? (
+        saved ? (
+          <p className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-center text-sm font-semibold text-amber-950" role="status">
+            {notLive.saved}
+          </p>
+        ) : (
+          <>
+            <p className="mt-6 text-center text-sm text-zinc-600">{notLive.title}.</p>
+            <Button className="mt-3 h-14 w-full gap-2 text-base font-bold" onClick={() => setSaved(true)}>
+              <Check className="h-5 w-5" /> {notLive.save}
+            </Button>
+            {token && (
+              <Link href={`/decline/${token}`} className="mt-3 block text-center">
+                <span className="text-sm font-semibold text-zinc-500 underline hover:text-zinc-800">
+                  {t.decline}
+                </span>
+              </Link>
+            )}
+          </>
+        )
+      ) : token ? (
         <>
           <Link href={`/schedule/${token}`} className="mt-6 block">
             <Button className="h-14 w-full gap-2 text-base font-bold">
