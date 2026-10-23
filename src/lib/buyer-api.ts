@@ -48,6 +48,9 @@ export type BuyerSignupBody = {
   // Optional texting consent, unchecked by default. Carriers require a
   // reviewable consent control before Junkerz may text a buyer at all.
   sms_consent?: boolean;
+  // Robot check: milliseconds the form was open, and the hidden trap box.
+  form_fill_ms?: number;
+  confirm_site?: string;
 };
 
 export type SignupConfig = {

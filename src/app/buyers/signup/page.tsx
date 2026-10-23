@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ const FIELD_LABELS: Record<FieldKey, string> = {
 
 export default function BuyerSignup() {
   const router = useRouter();
-  const [form, setForm] = useState<Required<BuyerSignupBody>>({
+  const [form, setForm] = useState<Required<Omit<BuyerSignupBody, "form_fill_ms" | "confirm_site">>>({
     email: "",
     password: "",
     business_name: "",
@@ -42,6 +42,9 @@ export default function BuyerSignup() {
   const [requiredFields, setRequiredFields] = useState<FieldKey[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Robot check: when the page opened, and a box people never see.
+  const openedAt = useRef(Date.now());
+  const trap = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     buyerApi
@@ -64,6 +67,8 @@ export default function BuyerSignup() {
         email: form.email,
         password: form.password,
         business_name: form.business_name,
+        form_fill_ms: Date.now() - openedAt.current,
+        confirm_site: trap.current?.value ?? "",
       };
       // Only send the optional fields that have a value
       const optional: (keyof BuyerSignupBody)[] = [
@@ -111,6 +116,11 @@ export default function BuyerSignup() {
 
       {checklist && <div className="mb-6"><OnboardingChecklist status={checklist} preview /></div>}
       <form onSubmit={submit} className="space-y-6">
+        {/* Robot trap: hidden from people and screen readers; robots fill it. */}
+        <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+          <label htmlFor="confirm_site">Leave this empty</label>
+          <input id="confirm_site" name="confirm_site" type="text" tabIndex={-1} autoComplete="off" ref={trap} defaultValue="" />
+        </div>
         <section>
           <h2 className="text-sm font-semibold text-slate-700 mb-3">Login credentials</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
