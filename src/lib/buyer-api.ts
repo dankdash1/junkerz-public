@@ -48,12 +48,14 @@ export type BuyerSignupBody = {
   // Optional texting consent, unchecked by default. Carriers require a
   // reviewable consent control before Junkerz may text a buyer at all.
   sms_consent?: boolean;
-  // Robot check: milliseconds the form was open, and the hidden trap box.
-  form_fill_ms?: number;
+  // Robot check: the signed ticket signup-config gave this page, and the
+  // hidden trap box people never see.
+  form_ticket?: string;
   confirm_site?: string;
 };
 
 export type SignupConfig = {
+  form_ticket?: string;
   required_fields: string[];
   all_fields: string[];
   onboarding: OnboardingStatus;
