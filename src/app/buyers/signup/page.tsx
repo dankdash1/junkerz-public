@@ -26,7 +26,7 @@ const FIELD_LABELS: Record<FieldKey, string> = {
 
 export default function BuyerSignup() {
   const router = useRouter();
-  const [form, setForm] = useState<Required<Omit<BuyerSignupBody, "form_fill_ms" | "confirm_site">>>({
+  const [form, setForm] = useState<Required<Omit<BuyerSignupBody, "form_ticket" | "confirm_site">>>({
     email: "",
     password: "",
     business_name: "",
@@ -42,14 +42,14 @@ export default function BuyerSignup() {
   const [requiredFields, setRequiredFields] = useState<FieldKey[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  // Robot check: when the page opened, and a box people never see.
-  const openedAt = useRef(Date.now());
+  // Robot check: the server's signed ticket for this visit, and a box people never see.
+  const ticket = useRef<string>("");
   const trap = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     buyerApi
       .signupConfig()
-      .then((cfg) => { setRequiredFields((cfg.required_fields || []) as FieldKey[]); setChecklist(cfg.onboarding); })
+      .then((cfg) => { ticket.current = cfg.form_ticket ?? ""; setRequiredFields((cfg.required_fields || []) as FieldKey[]); setChecklist(cfg.onboarding); })
       .catch(() => setErr("Unable to load onboarding requirements. Please reload before signing up."));
   }, []);
 
@@ -67,7 +67,7 @@ export default function BuyerSignup() {
         email: form.email,
         password: form.password,
         business_name: form.business_name,
-        form_fill_ms: Date.now() - openedAt.current,
+        form_ticket: ticket.current,
         confirm_site: trap.current?.value ?? "",
       };
       // Only send the optional fields that have a value
@@ -81,7 +81,9 @@ export default function BuyerSignup() {
       }
       // Sent only as a real tick. Unchecked means we never text this buyer.
       if (form.sms_consent === true) body.sms_consent = true;
-      await buyerApi.signup(body);
+      const created = await buyerApi.signup(body);
+      // Only a real account number means something was saved.
+      if (!created?.buyer_id) throw new Error("check_form");
 
       // 2. Auto-login so the buyer can upload documents on the next step
       try {
@@ -97,7 +99,21 @@ export default function BuyerSignup() {
       // If auto-login failed (rare), still treat signup as done.
       router.replace("/buyers/login?signed_up=1");
     } catch (e: unknown) {
-      setErr((e as Error)?.message ?? "Signup failed");
+      const code = (e as Error)?.message;
+      // A failed press may have used up this visit's ticket; fetch a fresh one
+      // so pressing Create again works. "too_fast" leaves the ticket unused.
+      if (code !== "too_fast") {
+        buyerApi.signupConfig().then((cfg) => { ticket.current = cfg.form_ticket ?? ""; }).catch(() => {});
+      }
+      if (code === "form_expired") {
+        setErr("This form expired. Please check your details and press Create again in a few seconds.");
+      } else if (code === "check_form") {
+        setErr("We couldn't save your application. Please reload the page and try again. If it keeps happening, turn off autofill for this form.");
+      } else if (code === "too_fast") {
+        setErr("That was quick! Please check your details and press Create again.");
+      } else {
+        setErr(code ?? "Signup failed");
+      }
     } finally {
       setBusy(false);
     }
