@@ -105,6 +105,8 @@ export default function BuyerSignup() {
       }
       if (code === "form_expired") {
         setErr("This form expired. Please check your details and press Create again in a few seconds.");
+      } else if (code === "try_again") {
+        setErr("Something went wrong on our side and nothing was saved. Please press Create again in a minute.");
       } else if (code === "too_fast") {
         setErr("That was quick! Please check your details and press Create again.");
       } else {
