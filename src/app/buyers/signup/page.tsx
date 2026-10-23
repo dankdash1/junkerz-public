@@ -81,7 +81,9 @@ export default function BuyerSignup() {
       }
       // Sent only as a real tick. Unchecked means we never text this buyer.
       if (form.sms_consent === true) body.sms_consent = true;
-      await buyerApi.signup(body);
+      const created = await buyerApi.signup(body);
+      // Only a real account number means something was saved.
+      if (!created?.buyer_id) throw new Error("check_form");
 
       // 2. Auto-login so the buyer can upload documents on the next step
       try {
@@ -105,8 +107,8 @@ export default function BuyerSignup() {
       }
       if (code === "form_expired") {
         setErr("This form expired. Please check your details and press Create again in a few seconds.");
-      } else if (code === "try_again") {
-        setErr("Something went wrong on our side and nothing was saved. Please press Create again in a minute.");
+      } else if (code === "check_form") {
+        setErr("We couldn't save your application. Please reload the page and try again. If it keeps happening, turn off autofill for this form.");
       } else if (code === "too_fast") {
         setErr("That was quick! Please check your details and press Create again.");
       } else {
