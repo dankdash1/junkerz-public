@@ -13,6 +13,7 @@ const STATIC = [
   { path: "/contact-us", priority: 0.6 },
   { path: "/privacy-policy", priority: 0.2 },
   { path: "/terms", priority: 0.2 },
+  { path: "/returns", priority: 0.2 },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
