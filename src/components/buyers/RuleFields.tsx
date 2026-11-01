@@ -257,14 +257,17 @@ function TownCircle({
     setText(v);
     const s = v.trim();
     // A 5-digit ZIP works straight away; a town must be picked from the list.
-    onChange({ zip_center: /^\d{5}$/.test(s) ? s : "" });
+    const zip = /^\d{5}$/.test(s) ? s : "";
+    onChange(zip && !miles ? { zip_center: zip, zip_radius_miles: "50" } : { zip_center: zip });
   }
 
   function pick(p: Place) {
     typed.current = false;
     setText(`${p.city}, ${p.state}`);
     setResults([]);
-    onChange({ zip_center: p.zip });
+    // The box showed a grey "50" that was never saved, so Save refused the rule
+    // with "Type how many miles". Picking a town now fills a real 50.
+    onChange(miles ? { zip_center: p.zip } : { zip_center: p.zip, zip_radius_miles: "50" });
   }
 
   return (
