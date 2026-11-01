@@ -11,6 +11,7 @@ type Preview = {
   buyer_name: string;
   buyer_address?: string;
   seller_name?: string | null;
+  seller_email?: string | null;
   vehicle: { year: number; make: string; model: string;
              vin: string; condition?: string; title_status?: string;
              license_plate?: string | null; license_plate_state?: string | null };
@@ -26,13 +27,15 @@ export default function SellerSignPage() {
   const [submitted, setSubmitted] = useState(false);
   // Filled in from the quote so the seller only checks it (George 11-01).
   const [signerName, setSignerName] = useState("");
+  // Where the signed copy goes; pre-filled from the quote, the seller can change it.
+  const [copyEmail, setCopyEmail] = useState("");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingRef = useRef(false);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/junkerz/seller/sign/${token}`)
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
-      .then((p: Preview) => { setPreview(p); setSignerName(p.seller_name || ""); })
+      .then((p: Preview) => { setPreview(p); setSignerName(p.seller_name || ""); setCopyEmail(p.seller_email || ""); })
       .catch(e => setError(String(e)));
   }, [token]);
 
@@ -78,7 +81,8 @@ export default function SellerSignPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ signature_data_url: dataUrl,
-                               signer_name: signerName.trim() || undefined }),
+                               signer_name: signerName.trim() || undefined,
+                               seller_email: copyEmail.trim() || undefined }),
       }
     );
     if (r.ok) setSubmitted(true);
@@ -115,6 +119,12 @@ export default function SellerSignPage() {
           <input className="mt-1 w-full rounded border px-3 py-2 font-normal"
                  value={signerName} onChange={e => setSignerName(e.target.value)}
                  autoComplete="name" />
+        </label>
+        <label className="block text-sm font-semibold">
+          Email for your signed copy
+          <input className="mt-1 w-full rounded border px-3 py-2 font-normal" type="email"
+                 value={copyEmail} onChange={e => setCopyEmail(e.target.value)}
+                 autoComplete="email" inputMode="email" />
         </label>
         <p className="text-sm text-slate-600">Sign below to confirm.</p>
         <canvas ref={canvasRef} width={520} height={180}

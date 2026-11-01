@@ -7,7 +7,7 @@ import {createPickupAccessApi,PickupAccessError,type PickupAccessDetail} from "@
 
 const actionClass="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-base font-semibold text-white transition-colors hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-500";
 const inputClass="mt-2 min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-base text-slate-950 focus:border-slate-950 focus:outline-none focus:ring-1 focus:ring-slate-950";
-const kinds=[['exterior_front','Front'],['exterior_rear','Rear'],['exterior_left','Left side'],['exterior_right','Right side'],['interior','Interior'],['odometer','Odometer'],['vin_plate','VIN'],['title_document','Title'],['id_document','Seller ID · private'],['damage','Damage']] as const;
+const kinds=[['exterior_front','Front'],['exterior_rear','Rear'],['exterior_left','Left side'],['exterior_right','Right side'],['interior','Interior'],['odometer','Odometer'],['vin_plate','VIN'],['title_document','Title'],['plates_removed','Plates removed'],['id_document','Seller ID · private'],['damage','Damage']] as const;
 const dateTime=(value:string)=>new Date(value).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'});
 
 
@@ -28,6 +28,7 @@ export default function PickupMobile(){
   const [driver,setDriver]=useState('');
   const [eta,setEta]=useState('30');
   const [sellerName,setSellerName]=useState('');
+  const [sellerEmail,setSellerEmail]=useState('');
   const [signature,setSignature]=useState<string|null>(null);
   const [collected,setCollected]=useState(false);
   const api=useMemo(()=>token?createPickupAccessApi(token):null,[token]);
@@ -40,6 +41,7 @@ export default function PickupMobile(){
     if(!api)return;
     const next=await api.detail();setDetail(next);
     setSellerName(name=>name || next.seller.name || '');
+    setSellerEmail(mail=>mail || next.seller.email || '');
   },[api]);
   useEffect(()=>{
     if(!api)return;
@@ -92,7 +94,7 @@ export default function PickupMobile(){
           <div className="grid grid-cols-2 gap-3">{kinds.map(([kind,label])=><label key={kind} className={`flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm font-semibold ${!identified || busy?'opacity-50':''}`}><Camera size={20} className="shrink-0 text-slate-500"/><span>{busy===kind?'Uploading…':label}</span><input type="file" accept="image/*" capture="environment" className="sr-only" aria-label={`Upload ${label}`} disabled={!identified || !!busy} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void run(kind,()=>api.upload(driver.trim(),kind,file),`${label} photo saved.`);}}/></label>)}</div>
         </Step>
         <Step number="05" title="Seller signature">
-          {detail.seller_signature?<div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4"><p className="flex items-center gap-2 font-semibold text-emerald-900"><Check size={18}/>Signed by {detail.seller_signature.signer_name || 'seller'}</p><p className="mt-1 text-xs text-emerald-800">{dateTime(detail.seller_signature.signed_at)}</p></div>:<div className="space-y-4"><p className="text-sm leading-relaxed text-slate-600">Hand the phone to the seller to review the pickup details and sign the bill of sale.</p><label className="block text-sm font-medium">Seller’s printed name<input className={inputClass} value={sellerName} onChange={e=>setSellerName(e.target.value)} maxLength={120}/></label><div className="overflow-hidden rounded-xl border border-slate-300 bg-white"><SignaturePad onChange={setSignature} disabled={!identified || !!busy}/></div><button className={actionClass} disabled={!identified || !!busy || !signature || !sellerName.trim()} onClick={()=>void run('signature',()=>api.signature(driver.trim(),sellerName.trim(),signature!),'Seller signature saved.')}><ChevronRight size={20}/>{busy==='signature'?'Saving…':'Save seller signature'}</button></div>}
+          {detail.seller_signature?<div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4"><p className="flex items-center gap-2 font-semibold text-emerald-900"><Check size={18}/>Signed by {detail.seller_signature.signer_name || 'seller'}</p><p className="mt-1 text-xs text-emerald-800">{dateTime(detail.seller_signature.signed_at)}</p></div>:<div className="space-y-4"><p className="text-sm leading-relaxed text-slate-600">Hand the phone to the seller to review the pickup details and sign the bill of sale.</p><label className="block text-sm font-medium">Seller’s printed name<input className={inputClass} value={sellerName} onChange={e=>setSellerName(e.target.value)} maxLength={120}/></label><label className="block text-sm font-medium">Seller’s email for their signed copy<input className={inputClass} type="email" inputMode="email" value={sellerEmail} onChange={e=>setSellerEmail(e.target.value)} maxLength={254}/></label><div className="overflow-hidden rounded-xl border border-slate-300 bg-white"><SignaturePad onChange={setSignature} disabled={!identified || !!busy}/></div><button className={actionClass} disabled={!identified || !!busy || !signature || !sellerName.trim()} onClick={()=>void run('signature',()=>api.signature(driver.trim(),sellerName.trim(),signature!,sellerEmail.trim()||undefined),'Seller signature saved.')}><ChevronRight size={20}/>{busy==='signature'?'Saving…':'Save seller signature'}</button></div>}
         </Step>
         <Step number="06" title="Finish pickup">
           <p className="mb-4 text-sm leading-relaxed text-slate-600">Complete this step after collecting the vehicle. This records collection and processes the buyer’s finder fee under their account agreement.</p>
