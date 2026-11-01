@@ -25,7 +25,7 @@ export const SITE = {
  * Sellers still get a quote, but cannot accept or book a pickup: the site
  * shows a banner and "Save my offer" instead. Flip to true when pickups start.
  */
-export const PICKUPS_LIVE = true;
+export const PICKUPS_LIVE = false;
 
 export const NOT_LIVE_COPY = {
   en: {
