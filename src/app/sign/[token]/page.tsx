@@ -10,8 +10,10 @@ type Preview = {
   pickup_order_id: number;
   buyer_name: string;
   buyer_address?: string;
+  seller_name?: string | null;
   vehicle: { year: number; make: string; model: string;
-             vin: string; condition?: string; title_status?: string };
+             vin: string; condition?: string; title_status?: string;
+             license_plate?: string | null; license_plate_state?: string | null };
   sale_price_cents: number;
   expires_at?: string;
 };
@@ -22,13 +24,15 @@ export default function SellerSignPage() {
   const [preview, setPreview] = useState<Preview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  // Filled in from the quote so the seller only checks it (George 11-01).
+  const [signerName, setSignerName] = useState("");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingRef = useRef(false);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/junkerz/seller/sign/${token}`)
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
-      .then(setPreview)
+      .then((p: Preview) => { setPreview(p); setSignerName(p.seller_name || ""); })
       .catch(e => setError(String(e)));
   }, [token]);
 
@@ -73,7 +77,8 @@ export default function SellerSignPage() {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signature_data_url: dataUrl }),
+        body: JSON.stringify({ signature_data_url: dataUrl,
+                               signer_name: signerName.trim() || undefined }),
       }
     );
     if (r.ok) setSubmitted(true);
@@ -99,8 +104,18 @@ export default function SellerSignPage() {
           <p><b>Buyer address:</b> {preview.buyer_address}</p>
         )}
         <p><b>Vehicle:</b> {preview.vehicle.year} {preview.vehicle.make} {preview.vehicle.model}</p>
-        <p><b>VIN:</b> {preview.vehicle.vin}</p>
+        {preview.vehicle.vin && <p><b>VIN:</b> {preview.vehicle.vin}</p>}
+        {preview.vehicle.license_plate && (
+          <p><b>License plate:</b> {preview.vehicle.license_plate}
+            {preview.vehicle.license_plate_state ? ` (${preview.vehicle.license_plate_state})` : ""}</p>
+        )}
         <p><b>Sale price:</b> ${price}</p>
+        <label className="block text-sm font-semibold">
+          Seller name
+          <input className="mt-1 w-full rounded border px-3 py-2 font-normal"
+                 value={signerName} onChange={e => setSignerName(e.target.value)}
+                 autoComplete="name" />
+        </label>
         <p className="text-sm text-slate-600">Sign below to confirm.</p>
         <canvas ref={canvasRef} width={520} height={180}
                 className="border bg-slate-50 w-full touch-none"

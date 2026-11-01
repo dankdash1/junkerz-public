@@ -15,7 +15,7 @@ import ConditionGrid, { DamageZones } from "@/components/ConditionGrid";
 const STEPS = ["vehicle", "title", "drivability", "components", "damage", "zip", "contact"] as const;
 
 const STEP_META: { title: string; subtitle: string }[] = [
-  { title: "What are we buying?", subtitle: "Pick your vehicle — VIN and mileage are optional." },
+  { title: "What are we buying?", subtitle: "Pick your vehicle and give us the VIN or the license plate." },
   { title: "Do you have the title?", subtitle: "No title is often fine — just let us know." },
   { title: "Does it run?", subtitle: "Be honest — dead cars are still worth real cash." },
   { title: "What's still on it?", subtitle: "Engine, transmission and key parts drive the offer." },
@@ -31,7 +31,7 @@ type Lang = "en" | "es";
 const T = {
   en: {
     steps: [
-      { title: "What are we buying?", subtitle: "Pick your vehicle — VIN and mileage are optional." },
+      { title: "What are we buying?", subtitle: "Pick your vehicle and give us the VIN or the license plate." },
       { title: "Do you have the title?", subtitle: "No title is often fine — just let us know." },
       { title: "Does it run?", subtitle: "Be honest — dead cars are still worth real cash." },
       { title: "What's still on it?", subtitle: "Engine, transmission and key parts drive the offer." },
@@ -41,7 +41,9 @@ const T = {
     ],
     guaranteed: "Guaranteed offer", step: "Step", of: "of",
     back: "Back", cont: "Continue", submit: "Get my offer", submitting: "Getting your offer…",
-    vin: "VIN (optional)", mileage: "Mileage (optional)",
+    vin: "VIN", mileage: "Mileage (optional)",
+    plate: "License plate", plateState: "State", vinOrPlate: "Enter the VIN or the license plate — one is enough.",
+    name: "Your name", nameHint: "As it should read on the bill of sale.",
     titles: { clean: "Clean title", salvage: "Salvage title", rebuilt: "Rebuilt title", no_title: "No title" },
     runs: "Does it run/drive?", starts: "Does it start?",
     wheels: "All four wheels attached?", tires: "All tires inflated?",
@@ -66,7 +68,7 @@ const T = {
   },
   es: {
     steps: [
-      { title: "¿Qué carro vamos a comprar?", subtitle: "Elija su vehículo — el VIN y el millaje son opcionales." },
+      { title: "¿Qué carro vamos a comprar?", subtitle: "Elija su vehículo y denos el VIN o la placa." },
       { title: "¿Tiene el título?", subtitle: "Sin título casi siempre está bien — solo díganos." },
       { title: "¿Enciende?", subtitle: "Sea honesto — los carros muertos todavía valen dinero." },
       { title: "¿Qué le queda puesto?", subtitle: "El motor, la transmisión y las piezas mueven la oferta." },
@@ -76,7 +78,9 @@ const T = {
     ],
     guaranteed: "Oferta garantizada", step: "Paso", of: "de",
     back: "Atrás", cont: "Continuar", submit: "Ver mi oferta", submitting: "Buscando su oferta…",
-    vin: "VIN (opcional)", mileage: "Millaje (opcional)",
+    vin: "VIN", mileage: "Millaje (opcional)",
+    plate: "Placa", plateState: "Estado", vinOrPlate: "Ponga el VIN o la placa — con uno basta.",
+    name: "Su nombre", nameHint: "Como debe salir en el contrato de venta.",
     titles: { clean: "Título limpio", salvage: "Título de salvamento", rebuilt: "Título reconstruido", no_title: "Sin título" },
     runs: "¿Camina el carro?", starts: "¿Prende el motor?",
     wheels: "¿Tiene las cuatro llantas puestas?", tires: "¿Las llantas tienen aire?",
@@ -105,6 +109,9 @@ const T = {
 type Form = {
   vehicle: VehicleSelection;
   vin: string;
+  license_plate: string;
+  license_plate_state: string;
+  name: string;
   mileage: string;
   title_status: string;
   runs: boolean | null;
@@ -195,6 +202,12 @@ function isValidEmail(email: string) {
   return /\S+@\S+\.\S+/.test(email.trim());
 }
 
+// A VIN or a plate names the car on the bill of sale (George 11-01).
+function hasVinOrPlate(vin: string, plate: string) {
+  const clean = (v: string) => v.replace(/[^a-z0-9]/gi, "");
+  return clean(vin).length >= 11 || clean(plate).length >= 2;
+}
+
 function QuoteWizardInner() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -204,6 +217,7 @@ function QuoteWizardInner() {
   const [form, setForm] = useState<Form>({
     vehicle: EMPTY_VEHICLE,
     vin: "",
+    license_plate: "", license_plate_state: "TX", name: "",
     mileage: "",
     title_status: "",
     runs: null, starts: null,
@@ -240,7 +254,8 @@ function QuoteWizardInner() {
         trim: "",
       },
     }));
-    setStep((cur) => (cur === 0 ? 1 : cur));
+    // Stay on the first card: the car is filled in, but the VIN or plate
+    // still has to be asked there (George 11-01).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -287,6 +302,9 @@ function QuoteWizardInner() {
         damage_zones: form.damage_zones,
         contact_phone: form.phone,
         contact_email: form.email,
+        contact_name: form.name.trim(),
+        license_plate: form.license_plate.trim() || undefined,
+        license_plate_state: form.license_plate.trim() ? form.license_plate_state : undefined,
         sms_consent: form.sms_consent,
       });
       trackLeadSubmission(result.offer_id);
@@ -308,7 +326,8 @@ function QuoteWizardInner() {
   }
 
   const canAdvance = (() => {
-    if (step === 0) return !!(form.vehicle.year && form.vehicle.make_id && form.vehicle.model_id);
+    if (step === 0) return !!(form.vehicle.year && form.vehicle.make_id && form.vehicle.model_id)
+      && hasVinOrPlate(form.vin, form.license_plate);
     if (step === 1) return !!form.title_status;
     if (step === 2) return form.runs !== null && form.starts !== null
                            && form.all_wheels_attached !== null
@@ -319,7 +338,7 @@ function QuoteWizardInner() {
                            && form.has_battery !== null && form.has_keys !== null;
     if (step === 4) return true;
     if (step === 5) return form.zip_code.length >= 5;
-    if (step === 6) return isValidPhone(form.phone) && isValidEmail(form.email);
+    if (step === 6) return form.name.trim().length >= 2 && isValidPhone(form.phone) && isValidEmail(form.email);
     return false;
   })();
 
@@ -389,10 +408,23 @@ function QuoteWizardInner() {
                 value={form.vehicle}
                 onChange={(v) => setForm({ ...form, vehicle: v })}
               />
+              <p className="text-sm text-zinc-600">{t.vinOrPlate}</p>
               <div>
                 <Label>{t.vin}</Label>
-                <Input value={form.vin} onChange={(e) =>
+                <Input value={form.vin} autoCapitalize="characters" onChange={(e) =>
                   setForm({ ...form, vin: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-[1fr_5.5rem] gap-3">
+                <div>
+                  <Label htmlFor="plate">{t.plate}</Label>
+                  <Input id="plate" value={form.license_plate} autoCapitalize="characters" maxLength={10}
+                    onChange={(e) => setForm({ ...form, license_plate: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="plate_state">{t.plateState}</Label>
+                  <Input id="plate_state" value={form.license_plate_state} autoCapitalize="characters" maxLength={2}
+                    onChange={(e) => setForm({ ...form, license_plate_state: e.target.value.replace(/[^a-z]/gi, "").toUpperCase() })} />
+                </div>
               </div>
               <div>
                 <Label>{t.mileage}</Label>
@@ -530,6 +562,14 @@ function QuoteWizardInner() {
 
           {step === 6 && (
             <div className="space-y-4">
+              <div>
+                <Label htmlFor="name">
+                  {t.name} <span className="text-red-600">*</span>
+                </Label>
+                <Input id="name" autoComplete="name" required aria-required="true" value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                <p className="text-xs text-zinc-500 mt-1">{t.nameHint}</p>
+              </div>
               <div>
                 <Label htmlFor="phone">
                   {t.phone} <span className="text-red-600">*</span>
