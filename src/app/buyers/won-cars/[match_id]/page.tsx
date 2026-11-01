@@ -72,6 +72,7 @@ const PHOTO_KINDS = [
   { key: "odometer", label: "Odometer" },
   { key: "vin_plate", label: "VIN plate" },
   { key: "title_document", label: "Title document" },
+  { key: "plates_removed", label: "Plates removed" },
   { key: "id_document", label: "Seller ID (private)" },
   { key: "damage", label: "Damage" },
 ];
