@@ -43,7 +43,7 @@ export default function DeclinePage() {
   const [compAmt, setCompAmt] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState<{ message: string; callback: boolean } | null>(null);
+  const [done, setDone] = useState<{ message: string; callback: boolean; counterCents?: number } | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -71,7 +71,11 @@ export default function DeclinePage() {
         competitor_cents: toCents(compAmt),
         wants_callback: reason === "price",
       });
-      setDone({ message: r.message || "Thanks for telling us.", callback: !!r.wants_callback });
+      setDone({
+        message: r.message || "Thanks for telling us.",
+        callback: !!r.wants_callback,
+        counterCents: typeof r.counter_cents === "number" ? r.counter_cents : undefined,
+      });
     } catch {
       setErr("Couldn't send that. Give us a call and we'll handle it.");
     } finally {
@@ -103,7 +107,27 @@ export default function DeclinePage() {
           </div>
         )}
 
-        {done && (
+        {done?.counterCents && (
+          <div className="rounded-2xl border border-brand-200 bg-white p-8 text-center">
+            <p className="text-sm font-semibold uppercase tracking-wide text-brand-700">New offer</p>
+            <p className={`mt-2 text-4xl font-extrabold tracking-tight ${mono}`}>
+              {dollars(done.counterCents)}
+            </p>
+            <p className="mt-3 text-zinc-600">
+              We checked with our buyers and can pay more for your car.
+            </p>
+            <Link href={`/schedule/${token}`} className="mt-6 block">
+              <Button className="h-12 w-full gap-2 font-bold">
+                Accept &amp; pick a pickup time
+              </Button>
+            </Link>
+            <p className="mt-4 text-sm text-zinc-500">
+              Still not right? Call {SITE.phone}.
+            </p>
+          </div>
+        )}
+
+        {done && !done.counterCents && (
           <div className="rounded-2xl border border-zinc-200 bg-white p-8 text-center">
             <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-brand-50">
               <Check className="h-7 w-7 text-brand-600" />
