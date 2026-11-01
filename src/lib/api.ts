@@ -16,6 +16,9 @@ export async function submitQuote(payload: {
   has_catalytic?: boolean; has_battery?: boolean; has_keys?: boolean;
   damage_zones?: Record<string, "none" | "some">;
   contact_phone: string; contact_email: string;
+  // Seller's name for the bill of sale; plate is optional (VIN or plate).
+  contact_name?: string;
+  license_plate?: string; license_plate_state?: string;
   // Seller ticked the optional, unchecked-by-default "text me" box.
   sms_consent?: boolean;
   pickup_address?: string;

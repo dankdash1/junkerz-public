@@ -22,6 +22,8 @@ type Detail = {
   created_at: string;
   buyer_completed_at: string | null;
   vin: string | null;
+  license_plate?: string | null;
+  license_plate_state?: string | null;
   year: number | null;
   make: string | null;
   model: string | null;
@@ -106,6 +108,9 @@ export default function BuyerPickupDetail() {
       if (x?.signatures?.some((s: { signer_role: string }) => s.signer_role === "seller")) {
         const s = x.signatures.find((s: { signer_role: string }) => s.signer_role === "seller");
         if (s?.signer_name) setSellerName(s.signer_name);
+      } else if (x?.contact_name) {
+        // Name from the quote, so the seller only checks it (George 11-01).
+        setSellerName((cur) => cur || x.contact_name);
       }
     } catch (e: unknown) {
       setErr((e as Error)?.message ?? "Failed to load");
@@ -205,7 +210,7 @@ export default function BuyerPickupDetail() {
         <button onClick={() => router.push("/buyers/won-cars")}
                 className="text-brand-700 text-sm">← Won cars</button>
         <h1 className="text-2xl font-bold mt-1">{vehicleStr || "Won car"}</h1>
-        <p className="text-xs text-slate-500 mt-1 font-mono">VIN {d.vin || "—"} · match #{d.match_id}</p>
+        <p className="text-xs text-slate-500 mt-1 font-mono">VIN {d.vin || "—"}{d.license_plate ? ` · Plate ${d.license_plate}${d.license_plate_state ? ` (${d.license_plate_state})` : ""}` : ""} · match #{d.match_id}</p>
       </header>
 
       <section className="bg-white border rounded-lg p-4 space-y-3">

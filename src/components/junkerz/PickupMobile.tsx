@@ -66,7 +66,7 @@ export default function PickupMobile(){
       <div className="py-7">
         <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${completed?'bg-emerald-100 text-emerald-900':'bg-slate-950 text-white'}`}>{completed?<Check size={14}/>:<Truck size={14}/>} {completed?'Pickup completed':enRoute?'On the way':arrived?'Arrived':detail.status.replace(/_/g,' ')}</span>
         <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight">{vehicle}</h1>
-        <p className="mt-2 font-mono text-xs text-slate-500">VIN {detail.vehicle.vin || 'Not recorded'}</p>
+        <p className="mt-2 font-mono text-xs text-slate-500">VIN {detail.vehicle.vin || 'Not recorded'}{detail.vehicle.license_plate && ` · Plate ${detail.vehicle.license_plate}${detail.vehicle.license_plate_state?` (${detail.vehicle.license_plate_state})`:''}`}</p>
       </div>
       <section className="mb-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
         <div className="flex gap-3 border-b border-slate-100 p-5"><Clock size={20} className="mt-0.5 shrink-0 text-brand-600"/><div><p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Scheduled pickup</p><p className="mt-1 font-semibold">{detail.scheduled_for ? (/^\d{4}-\d{2}-\d{2}$/.test(detail.scheduled_for) ? new Date(`${detail.scheduled_for}T12:00:00`).toLocaleDateString(undefined,{dateStyle:'full'}) : dateTime(detail.scheduled_for)) : detail.slot || 'Contact the buyer for the pickup time'}</p>{detail.scheduled_for && detail.slot && <p className="mt-1 text-sm text-slate-600">{detail.slot}</p>}{enRoute && detail.eta_at && <p className="mt-2 text-sm">Arrival ETA: {dateTime(detail.eta_at)}</p>}</div></div>

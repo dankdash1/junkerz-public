@@ -1,7 +1,7 @@
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
 export type PickupAccessDetail = {
   pickup_order_id: number; status: string;
-  vehicle: {year: number|null;make:string|null;model:string|null;vin:string|null;condition:string|null};
+  vehicle: {year: number|null;make:string|null;model:string|null;vin:string|null;license_plate?:string|null;license_plate_state?:string|null;condition:string|null};
   seller: {name:string|null;phone:string|null;email:string|null};
   pickup_address:string|null; slot:string|null; scheduled_for?:string|null; eta_at:string|null;
   offer_cents:number|null; expires_at?:string|null; thirty_minutes_sent_at?:string|null;
