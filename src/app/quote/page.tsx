@@ -337,7 +337,7 @@ function QuoteWizardInner() {
                            && form.has_catalytic !== null
                            && form.has_battery !== null && form.has_keys !== null;
     if (step === 4) return true;
-    if (step === 5) return form.zip_code.length >= 5;
+    if (step === 5) return /^\d{5}$/.test(form.zip_code);
     if (step === 6) return form.name.trim().length >= 2 && isValidPhone(form.phone) && isValidEmail(form.email);
     return false;
   })();
@@ -541,8 +541,9 @@ function QuoteWizardInner() {
             <div className="space-y-4">
               <div>
                 <Label>{t.zip}</Label>
-                <Input value={form.zip_code} onChange={(e) =>
-                  setForm({ ...form, zip_code: e.target.value })} />
+                <Input value={form.zip_code} inputMode="numeric" maxLength={5}
+                  autoComplete="postal-code" onChange={(e) =>
+                  setForm({ ...form, zip_code: e.target.value.replace(/\D/g, "").slice(0, 5) })} />
               </div>
               <div>
                 <Label>{t.address}</Label>
