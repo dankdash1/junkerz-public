@@ -8,7 +8,7 @@ test('payment and departure requests carry buyer auth and only tokenized payment
  await buyerApi.savePaymentMethod('seti_verified');
  await buyerApi.startPickup(42,45);
  await buyerApi.retryPickupPayment(42);
- expect(requests.map(r=>({path:new URL(r.url).pathname,body:r.init.body ? JSON.parse(r.init.body as string) : null,auth:(r.init.headers as Record<string,string>).Authorization}))).toEqual([
+ expect(requests.map(r=>({path:new URL(r.url, "https://junkerz.com").pathname,body:r.init.body ? JSON.parse(r.init.body as string) : null,auth:(r.init.headers as Record<string,string>).Authorization}))).toEqual([
  {path:'/api/buyers/onboarding/payment-method',body:{setup_intent_id:'seti_verified'},auth:'Bearer test-buyer-token'},
  {path:'/api/buyers/pickup/42/start',body:{eta_minutes:45},auth:'Bearer test-buyer-token'},
  {path:'/api/buyers/pickup/42/retry-payment',body:null,auth:'Bearer test-buyer-token'},

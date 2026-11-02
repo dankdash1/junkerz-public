@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/lib/api-base";
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ const SLOTS = [
   "Tomorrow 4PM-6PM",
 ];
 const PAYMENT_METHODS = ["zelle", "cash", "check"];
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
+const BASE = API_BASE;
 
 export default function PickupPage() {
   if (!PICKUPS_LIVE) return <NotLiveNotice />;

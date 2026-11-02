@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE } from "@/lib/api-base";
 import { TIME_WINDOWS, WINDOW_START_HOUR, formatCentral, isTimeWindow, quickPickDate, schedulePayload, windowForQuickPick, type TimeWindow } from "@/lib/seller-schedule";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
@@ -8,7 +9,7 @@ import { PICKUPS_LIVE } from "@/lib/site";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
+const BASE = API_BASE;
 
 type QuickPick = { key: string; label: string };
 type Offer = {

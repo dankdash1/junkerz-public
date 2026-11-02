@@ -1,4 +1,5 @@
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
+import { API_BASE, API_DIRECT } from "@/lib/api-base";
+const BASE = API_BASE;
 
 function token(): string | null {
   if (typeof window === "undefined") return null;
@@ -97,7 +98,7 @@ export const buyerApi = {
     const fd = new FormData();
     fd.append("document_type", kind);
     fd.append("file", file);
-    const r = await fetch(`${BASE}/api/buyers/documents/upload`, {
+    const r = await fetch(`${API_DIRECT}/api/buyers/documents/upload`, {
       method: "POST",
       headers: t ? { Authorization: `Bearer ${t}` } : {},
       body: fd,
@@ -126,7 +127,7 @@ export const buyerApi = {
     const t = token();
     const fd = new FormData();
     fd.append("file", file);
-    const r = await fetch(`${BASE}/api/buyers/onboarding/w9`, {
+    const r = await fetch(`${API_DIRECT}/api/buyers/onboarding/w9`, {
       method: "POST",
       headers: t ? { Authorization: `Bearer ${t}` } : {},
       body: fd,
@@ -193,7 +194,7 @@ export const buyerApi = {
     fd.append("photo_kind", kind);
     fd.append("file", file);
     if (caption) fd.append("caption", caption);
-    const r = await fetch(`${BASE}/api/buyers/pickup/${matchId}/photo`, {
+    const r = await fetch(`${API_DIRECT}/api/buyers/pickup/${matchId}/photo`, {
       method: "POST",
       headers: t ? { Authorization: `Bearer ${t}` } : {},
       body: fd,

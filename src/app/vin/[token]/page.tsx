@@ -1,11 +1,12 @@
 "use client";
+import { API_BASE } from "@/lib/api-base";
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
+const BASE = API_BASE;
 
 type Offer = {
   id: number;

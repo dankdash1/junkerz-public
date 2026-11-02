@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api-base";
 export type CatalogMode = "off" | "coming_soon" | "live";
 export type CatalogSection = "parts" | "cars_for_parts" | "cars_for_sale";
 export type ShopProductKind = "part" | "parts-car" | "car";
@@ -35,7 +36,7 @@ export const CLOSED_CATALOG_SETTINGS: CatalogSettings = {
   checkout_enabled: false,
 };
 
-const catalogBase = `${process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai"}/api/junkyard-public`;
+const catalogBase = `${API_BASE}/api/junkyard-public`;
 const sectionKeys: CatalogSection[] = ["parts", "cars_for_parts", "cars_for_sale"];
 const modes: CatalogMode[] = ["off", "coming_soon", "live"];
 
