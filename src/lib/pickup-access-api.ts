@@ -1,4 +1,5 @@
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
+import { API_BASE, API_DIRECT } from "@/lib/api-base";
+const BASE = API_BASE;
 export type PickupAccessDetail = {
   pickup_order_id: number; status: string;
   vehicle: {year: number|null;make:string|null;model:string|null;vin:string|null;license_plate?:string|null;license_plate_state?:string|null;condition:string|null};
@@ -14,7 +15,8 @@ export class PickupAccessError extends Error {
 }
 export function createPickupAccessApi(token:string) {
   async function request(path:string,init:RequestInit={}) {
-    const response=await fetch(`${BASE}/api/pickup-access${path}`,{
+    // Photo uploads go straight to the backend (relay body-size limit unproven).
+    const response=await fetch(`${init.body instanceof FormData ? API_DIRECT : BASE}/api/pickup-access${path}`,{
       ...init,cache:"no-store",referrerPolicy:"no-referrer",credentials:"omit",
       headers:{...(init.body instanceof FormData ? {} : {"Content-Type":"application/json"}),...init.headers,Authorization:`Bearer ${token}`},
     });

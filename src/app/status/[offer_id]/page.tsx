@@ -1,8 +1,9 @@
 "use client";
+import { API_BASE } from "@/lib/api-base";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
+const BASE = API_BASE;
 
 export default function StatusPage() {
   const params = useParams();

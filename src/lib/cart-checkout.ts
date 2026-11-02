@@ -1,3 +1,4 @@
+import { API_BASE } from "@/lib/api-base";
 /**
  * The public cart talks to the backend cart endpoints; the site never holds a
  * Stripe secret. The backend creates the order and the Stripe Checkout session:
@@ -8,7 +9,7 @@
  *   GET  /api/junkyard-public/cart/session/<session_id>
  *     -> {status:'pending'|'paid'|'expired', order_id, order_number?, total_cents}
  */
-export const CART_BACKEND = `${process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai"}/api/junkyard-public/cart`;
+export const CART_BACKEND = `${API_BASE}/api/junkyard-public/cart`;
 export const CHECKOUT_SUCCESS_URL = "https://junkerz.com/cart/success?session_id={CHECKOUT_SESSION_ID}";
 export const CHECKOUT_CANCEL_URL = "https://junkerz.com/cart";
 export const CHECKOUT_CLOSED_MESSAGE = "Checkout is not open yet. Your cart is saved, and you can call us to buy today.";

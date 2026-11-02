@@ -1,9 +1,10 @@
+import { API_BASE, API_DIRECT } from "@/lib/api-base";
 export type ConversationAudience = 'customer' | 'supplier';
 export type RequestPhoto = { id: string; mime_type: string; size_bytes: number };
 export type RequestMessage = { id: number; thread_id: number; audience: string; actor_role: string; text: string; attachments: RequestPhoto[]; created_at: string };
 export type ConversationScope = { requestId?: string; token?: string; audience?: ConversationAudience };
 export type MessageAttempt = { text: string; attachment_ids: string[]; idempotency_key: string };
-const PUBLIC_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.dankdash.ai'}/api/junkyard-public/yard-requests`;
+const PUBLIC_BASE = `${API_BASE}/api/junkyard-public/yard-requests`;
 
 async function read(response: Response, binary = false) {
   if (!response.ok) {
@@ -34,7 +35,9 @@ export function conversationAPI(scope: ConversationScope) {
       if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 10*1024*1024) throw new Error('Choose a JPEG, PNG or WebP photo up to 10 MB.');
       const body = new FormData(); body.set('file',file); body.set('idempotency_key',idempotencyKey);
       if (!account) { body.set('token',scope.token || '');body.set('audience',scope.audience || 'customer'); }
-      const data=await read(await fetch(`${base}/attachments`, {method:'POST',body,cache:'no-store',credentials:'same-origin'}));
+      // Guest photo uploads go straight to the backend (relay body-size limit unproven).
+      const uploadBase = account ? base : `${API_DIRECT}/api/junkyard-public/yard-requests`;
+      const data=await read(await fetch(`${uploadBase}/attachments`, {method:'POST',body,cache:'no-store',credentials:'same-origin'}));
       if (!data.attachment?.id) throw new Error('Photo upload was not confirmed.');
       return data.attachment;
     },

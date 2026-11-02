@@ -1,5 +1,6 @@
+import { API_BASE } from "@/lib/api-base";
 import { getAttribution } from "@/lib/attribution";
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
+const BASE = API_BASE;
 
 export async function submitQuote(payload: {
   vin?: string; year: number; make: string; model: string;

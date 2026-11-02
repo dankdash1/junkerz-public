@@ -12,7 +12,7 @@ it('a paid session, confirmed by the backend, shows the order and clears the car
  fetchMock.mockResolvedValue(Response.json({status:'paid',order_id:91,order_number:'JZ-1091',total_cents:251200}));
  const {container}=render(await Success({searchParams:{session_id:SESSION}}));
  expect(fetchMock).toHaveBeenCalledOnce();
- expect(fetchMock.mock.calls[0][0]).toBe(`https://api.dankdash.ai/api/junkyard-public/cart/session/${SESSION}`);
+ expect(fetchMock.mock.calls[0][0]).toBe(`/api/junkyard-public/cart/session/${SESSION}`);
  expect(screen.getByRole('heading',{name:'Payment received'})).toBeTruthy();
  expect(screen.getByText('JZ-1091')).toBeTruthy();
  expect(screen.getByText('$2,512.00')).toBeTruthy();

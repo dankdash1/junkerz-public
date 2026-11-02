@@ -1,10 +1,9 @@
 "use client";
+import { API_BASE } from "@/lib/api-base";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ||
-                 "https://api.dankdash.ai";
 
 type Preview = {
   pickup_order_id: number;
