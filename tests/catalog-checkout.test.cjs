@@ -9,6 +9,8 @@ const transpile = (file) => ts.transpileModule(fs.readFileSync(file, "utf8"), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
 
+const rejectDependency = id => { throw new Error(`Unexpected dependency: ${id}`); };
+
 const catalog = [
   { key: "part:7", id: 7, kind: "part", priceCents: 1200, name: "Starter" },
   { key: "car:7", id: 7, kind: "car", priceCents: 250000, name: "2009 Ford Focus" },
@@ -19,8 +21,13 @@ const catalog = [
 function loadRoute(settings, backend = async () => Response.json({ url: "https://checkout.stripe.com/c/pay/cs_test_abc", session_id: "cs_test_abc123456", order_id: 91 })) {
   const backendCalls = [];
   const base = { process: { env: {} }, Request, Response, URL, URLSearchParams, AbortSignal, Intl, console };
+  const api = {};
+  vm.runInNewContext(transpile("src/lib/api-base.ts"), { ...base, exports: api, require: rejectDependency });
   const lib = {};
-  vm.runInNewContext(transpile("src/lib/cart-checkout.ts"), { ...base, exports: lib, require: () => { throw new Error("cart-checkout must not import anything"); } });
+  vm.runInNewContext(transpile("src/lib/cart-checkout.ts"), { ...base, exports: lib, require: id => {
+    if (id === "@/lib/api-base") return api;
+    return rejectDependency(id);
+  } });
   const exports = {};
   vm.runInNewContext(transpile("src/app/api/cart/checkout/route.ts"), {
     ...base,

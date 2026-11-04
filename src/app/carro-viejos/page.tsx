@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import HeroQuoteForm, { ES } from "@/components/HeroQuoteForm";
 import Logo from "@/components/Logo";
 import StickyMobileBar from "@/components/StickyMobileBar";
-import { SITE, TESTIMONIALS, CITIES } from "@/lib/site";
+import { SITE, TESTIMONIALS, CITIES, PICKUPS_LIVE } from "@/lib/site";
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
 
@@ -36,7 +36,9 @@ const FAQ_ES: [string, string][] = [
   ["Mi carro no enciende. ¿Todavía vale algo?",
    "Casi siempre sí. El valor está en el peso del metal, el convertidor catalítico y las piezas que aún sirven. Nada de eso necesita que el motor arranque. La mayoría de los carros que compramos no encienden."],
   ["¿Qué tan rápido lo pueden recoger?",
-   "Normalmente entre 24 y 48 horas, y muchas veces el mismo día si está cerca de nuestro patio en el norte de Dallas. Si tiene una fecha límite del apartamento o de la ciudad, díganos y trabajamos con esa fecha."],
+   PICKUPS_LIVE
+     ? "Normalmente entre 24 y 48 horas, y muchas veces el mismo día si está cerca de nuestro patio en el norte de Dallas. Si tiene una fecha límite del apartamento o de la ciudad, díganos y trabajamos con esa fecha."
+     : "Todavía no programamos recogidas. Reciba su oferta ahora y le contactaremos cuando empecemos. No podemos prometer una fecha de recogida mientras preparamos la apertura."],
   ["¿Cómo me pagan?",
    "En efectivo, en el momento de recoger el carro, antes de subirlo a la grúa. Nunca un cheque por correo que usted tenga que perseguir."],
   ["¿Hasta dónde llegan?",
@@ -112,7 +114,7 @@ export default function CarroViejos() {
               [Truck, "Grúa gratis, siempre"],
               [BadgeDollarSign, "Efectivo al recoger el carro"],
               [FileText, "Muchas veces sin título"],
-              [Clock, "Casi siempre en 24 a 48 horas"],
+              [Clock, PICKUPS_LIVE ? "Casi siempre en 24 a 48 horas" : "Abrimos pronto — aún no recogemos carros"],
             ].map(([Icon, t]) => {
               const I = Icon as typeof Truck;
               return (
@@ -151,8 +153,10 @@ export default function CarroViejos() {
                 b: "Año, marca, modelo y en qué condición está. Como un minuto. Sin crear cuenta y sin buscar el número de serie." },
               { icon: BadgeDollarSign, n: "02", t: "Reciba su número real",
                 b: "Una oferta garantizada, calculada con el precio del metal, el convertidor catalítico y las piezas que todavía se venden." },
-              { icon: Truck, n: "03", t: "Lo recogemos y le pagamos",
-                b: "Escoja la hora. Vamos a su casa en todo DFW, le entregamos el efectivo y nos llevamos el carro gratis." },
+              { icon: Truck, n: "03", t: PICKUPS_LIVE ? "Lo recogemos y le pagamos" : "Le contactamos cuando empecemos",
+                b: PICKUPS_LIVE
+                  ? "Escoja la hora. Vamos a su casa en todo DFW, le entregamos el efectivo y nos llevamos el carro gratis."
+                  : "Guarde su oferta ahora. Todavía no programamos recogidas. Le contactaremos antes de coordinar la recogida y el pago." },
             ].map(({ icon: Icon, n, t, b }) => (
               <div key={n} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">
                 <div className="flex items-center justify-between">

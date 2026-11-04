@@ -6,9 +6,15 @@ import PickupPage from '@/app/pickup/[offer_id]/page';
 import {readAcceptOtp} from '@/lib/pickup-accept';
 const nav=vi.hoisted(()=>({search:new URLSearchParams(),push:vi.fn()}));
 vi.mock('next/navigation',()=>({useParams:()=>({offer_id:'42'}),useSearchParams:()=>nav.search,useRouter:()=>({push:nav.push,replace:vi.fn()})}));
+// PR #57 deliberately paused production pickups; these flow fixtures opt in locally.
+const pickupState=vi.hoisted(()=>({live:true}));
+vi.mock('@/lib/site',async(importOriginal)=>({
+ ...await importOriginal<typeof import('@/lib/site')>(),
+ get PICKUPS_LIVE(){return pickupState.live;},
+}));
 const fetchMock=vi.fn();
 vi.stubGlobal('fetch',fetchMock);
-beforeEach(()=>{nav.search=new URLSearchParams();nav.push.mockReset();window.history.replaceState({},'','/pickup/42');fetchMock.mockResolvedValue(Response.json({ok:true}));});
+beforeEach(()=>{pickupState.live=true;nav.search=new URLSearchParams();nav.push.mockReset();window.history.replaceState({},'','/pickup/42');fetchMock.mockResolvedValue(Response.json({ok:true}));});
 afterEach(()=>{cleanup();fetchMock.mockReset();});
 async function fillForm(){
  await userEvent.click(await screen.findByRole('button',{name:'Tomorrow 1PM-3PM'}));
@@ -31,10 +37,10 @@ it('the emailed link ?otp= is sent in the accept body and the seller moves on to
  await userEvent.click(screen.getByRole('button',{name:'Confirm pickup'}));
  await waitFor(()=>expect(nav.push).toHaveBeenCalledWith('/status/42'));
  const [acceptUrl,acceptInit]=fetchMock.mock.calls[0];
- expect(acceptUrl).toBe('https://api.dankdash.ai/api/public/junkerz/offer/42/accept');
+ expect(acceptUrl).toBe('/api/public/junkerz/offer/42/accept');
  expect(acceptInit.method).toBe('POST');
  expect(JSON.parse(acceptInit.body)).toEqual({otp:'tok_ABC123'});
- expect(fetchMock.mock.calls[1][0]).toBe('https://api.dankdash.ai/api/public/junkerz/pickup/42/schedule');
+ expect(fetchMock.mock.calls[1][0]).toBe('/api/public/junkerz/pickup/42/schedule');
 });
 it('a code carried in the #otp= fragment works too',async()=>{
  window.history.replaceState({},'','/pickup/42#otp=frag_token');
@@ -61,4 +67,15 @@ it('a rejected or expired code is explained, and the pickup is not scheduled',as
  expect((await screen.findByText(/expired or was already used/)).textContent).toMatch(/newest email/);
  expect(fetchMock).toHaveBeenCalledTimes(1);
  expect(nav.push).not.toHaveBeenCalled();
+});
+
+it('paused pickups show the opening notice without loading or submitting a pickup',async()=>{
+ const productionSite=await vi.importActual<typeof import('@/lib/site')>('@/lib/site');
+ expect(productionSite.PICKUPS_LIVE).toBe(false);
+ pickupState.live=productionSite.PICKUPS_LIVE;
+ render(<PickupPage/>);
+ expect(await screen.findByRole('heading',{name: /not picking up cars yet/i})).toBeTruthy();
+ expect(screen.getByText(/we are not scheduling pickups yet/)).toBeTruthy();
+ expect(screen.queryByRole('button',{name:/Confirm pickup|Schedule this slot|Tomorrow morning/})).toBeNull();
+ expect(fetchMock).not.toHaveBeenCalled();
 });
