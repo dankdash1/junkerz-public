@@ -3,12 +3,14 @@ import Link from "next/link";
 import { Phone, Mail, MapPin, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageShell from "@/components/PageShell";
-import { SITE, CITIES } from "@/lib/site";
+import { SITE, CITIES, PICKUPS_LIVE } from "@/lib/site";
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
 
 export const metadata: Metadata = {
-  title: "Contact Junkerz | Sell Your Car for Cash Today in DFW",
+  title: PICKUPS_LIVE
+    ? "Contact Junkerz | Sell Your Car for Cash Today in DFW"
+    : "Contact Junkerz | Get a Car Offer in DFW — Opening Soon",
   description:
     "Call Junkerz on 817-420-9180 or start an online quote. We buy junk and wrecked cars across Dallas–Fort Worth with free towing and cash at pickup.",
   alternates: { canonical: `${SITE.url}/contact-us` },
@@ -18,7 +20,7 @@ export default function ContactUs() {
   return (
     <PageShell
       eyebrow="Contact us"
-      title="Sell your car with Junkerz today"
+      title={PICKUPS_LIVE ? "Sell your car with Junkerz today" : "Get your Junkerz offer while we prepare to open"}
       lede="Two ways to reach us, and both end the same way. A guaranteed cash number for your vehicle and a free tow anywhere in Dallas–Fort Worth."
     >
       <div className="grid gap-4 sm:grid-cols-2">
@@ -58,7 +60,9 @@ export default function ContactUs() {
           <h2 className="mt-3 font-bold text-zinc-900">Hours</h2>
           <p className="mt-1 text-zinc-700">Monday to Saturday, 8am to 7pm</p>
           <p className="mt-2 text-sm text-zinc-600">
-            Online quotes run around the clock. Pickups are scheduled during these hours.
+            {PICKUPS_LIVE
+              ? "Online quotes run around the clock. Pickups are scheduled during these hours."
+              : "Online quotes run around the clock. We are not scheduling pickups yet. We will contact you when pickups start."}
           </p>
         </div>
       </div>

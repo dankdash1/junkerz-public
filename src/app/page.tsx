@@ -9,7 +9,7 @@ import {
   ShieldCheck, MapPin, Quote, Wrench, FileText, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SITE, TESTIMONIALS, CITIES } from "@/lib/site";
+import { SITE, TESTIMONIALS, CITIES, PICKUPS_LIVE } from "@/lib/site";
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.ai";
@@ -61,7 +61,9 @@ const FAQ: [string, string][] = [
   ["My car does not run at all. Is it still worth something?",
    "Almost always. The value sits in the scrap weight, the catalytic converter and the reusable parts, none of which need the engine to start. Non-running cars are most of what we buy."],
   ["How fast can you pick it up?",
-   "Usually within 24 to 48 hours, and often the same day for pickups close to the yard in north Dallas. If you are on an apartment or city tow deadline, say so and we will work to it."],
+   PICKUPS_LIVE
+     ? "Usually within 24 to 48 hours, and often the same day for pickups close to the yard in north Dallas. If you are on an apartment or city tow deadline, say so and we will work to it."
+     : "We are not scheduling pickups yet. Get your offer now and we will contact you when pickups start. We cannot promise a pickup date while we are opening."],
   ["How do I get paid?",
    "On the spot, when we collect the car, before it goes on the truck. Never a cheque in the post that you have to chase."],
   ["What kinds of vehicles do you buy?",
@@ -170,7 +172,7 @@ export default async function Landing() {
               [Truck, "Free towing, every pickup"],
               [BadgeDollarSign, "Cash handed over at collection"],
               [FileText, "Often no title needed"],
-              [Clock, "Most pickups in 24 to 48 hours"],
+              [Clock, PICKUPS_LIVE ? "Most pickups in 24 to 48 hours" : "Opening soon — pickups have not started"],
             ].map(([Icon, t]) => {
               const I = Icon as typeof Truck;
               return (
@@ -209,8 +211,10 @@ export default async function Landing() {
                 b: "Year, make, model, and how rough it is. About a minute. No VIN hunting and no account to create." },
               { icon: BadgeDollarSign, n: "02", t: "Get your real number",
                 b: "A guaranteed cash offer priced from live scrap weight, the catalytic converter and parts that still sell." },
-              { icon: Truck, n: "03", t: "We collect it and pay you",
-                b: "Pick a time that suits you. We come to your driveway anywhere in DFW, hand you the cash, and tow it free." },
+              { icon: Truck, n: "03", t: PICKUPS_LIVE ? "We collect it and pay you" : "We contact you when pickups start",
+                b: PICKUPS_LIVE
+                  ? "Pick a time that suits you. We come to your driveway anywhere in DFW, hand you the cash, and tow it free."
+                  : "Save your offer now. We are not scheduling pickups yet. We will contact you before arranging collection and payment." },
             ].map(({ icon: Icon, n, t, b }) => (
               <div key={n} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">
                 <div className="flex items-center justify-between">

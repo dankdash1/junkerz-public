@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as catalog from "../src/lib/shop-catalog.ts";
+import { loadCatalogModule, resolveCatalogDependency } from "./cart-module-loader.cjs";
+
+const catalog = loadCatalogModule("src/lib/shop-catalog.ts");
 
 const { getShopCatalog, validateCart } = catalog;
 
@@ -17,20 +19,19 @@ test("cart rejects duplicates, fabricated kinds, extra quantities and empty inpu
   for (const bad of [[], null, [{key:"car:1",quantity:2}], [{key:"car:1",quantity:1},{key:"car:1",quantity:1}], [{key:"furniture:1",quantity:1}], [{key:"part:0",quantity:1}]]) assert.throws(() => validateCart(bad));
 });
 test("catalog preserves trusted prices and refuses missing or invalid prices", async () => {
-  const original = globalThis.fetch;
   const calls = [];
-  globalThis.fetch = async (url) => {
+  const fetchImpl = async (url) => {
     calls.push(url);
     return Response.json({items: url.includes('/cars?') ? [{id:7,year:2025,make:'TEST',model:'Car',mileage:123456,asking_price_cents:55000},{id:8,asking_price_cents:null}] : [{id:7,part_name:'Test part',condition:'like_new',price_cents:12000},{id:8,price_cents:-1}]});
   };
-  try {
-    const products = await getShopCatalog(allLive);
+  {
+    const products = await getShopCatalog(allLive, fetchImpl);
     assert.deepEqual(products.map((p)=>[p.key,p.priceCents,p.maxQuantity]), [['car:7',55000,1],['car:8',null,1],['parts-car:7',null,1],['parts-car:8',null,1],['part:7',12000,1],['part:8',null,1]]);
     assert.equal(products[0].mileage, 123456);
     assert.equal(products[1].mileage, null);
     assert.equal(products.find((product) => product.key === 'part:7').condition, 'like new');
     assert(calls.every((url)=>url.startsWith('https://api.dankdash.ai/api/junkyard-public/')));
-  } finally { globalThis.fetch = original; }
+  }
 });
 
 test("catalog listings retain canonical IDs and detail routes for request actions", async () => {
@@ -131,4 +132,27 @@ test("detail loading obeys the matching section gate and preserves stock identit
 test('missing donor VIN never produces a generic or invented detail route',async()=>{
  const products=await getShopCatalog({...allLive,sections:{parts:'off',cars_for_parts:'live',cars_for_sale:'off'}},async()=>Response.json({items:[{id:8,vin:null,year:2017,make:'Honda',model:'Civic'},{id:9,vin:'   ',year:2018,make:'Honda',model:'Civic'}],state:'live'}));
  assert.deepEqual(products.map(p=>({id:p.id,carId:p.carId,href:p.href})),[{id:8,carId:8,href:null},{id:9,carId:9,href:null}]);
+});
+
+test("real API module keeps server direct and browser same-origin catalog calls", async () => {
+  for (const browser of [false, true]) {
+    const api = loadCatalogModule("src/lib/api-base.ts", { browser });
+    assert.equal(api.API_BASE, browser ? "" : "https://api.dankdash.ai");
+    const lib = loadCatalogModule("src/lib/shop-catalog.ts", { browser });
+    const urls = [];
+    await lib.getShopCatalog({ ...allLive, sections: { parts: "live", cars_for_parts: "off", cars_for_sale: "off" } }, async url => {
+      urls.push(url);
+      return Response.json({ items: [] });
+    });
+    assert.deepEqual(urls, [`${api.API_BASE}/api/junkyard-public/parts-inventory?limit=200`]);
+  }
+});
+
+test("catalog loader rejects unknown modules and unstubbed network access", async () => {
+  assert.throws(() => loadCatalogModule("node:fs"), /Unexpected dependency/);
+  assert.throws(() => loadCatalogModule("..\/src/lib/site.ts"), /Unexpected dependency/);
+  assert.throws(() => resolveCatalogDependency("src/lib/shop-catalog.ts", "node:fs"), /Unexpected dependency/);
+  assert.throws(() => resolveCatalogDependency("src/lib/shop-catalog.ts", "@/lib/site"), /Unexpected dependency/);
+  assert.throws(() => resolveCatalogDependency("src/lib/api-base.ts", "@/lib/api-base"), /Unexpected dependency/);
+  await assert.rejects(() => catalog.getShopCatalog(allLive), /Unstubbed fetch/);
 });

@@ -5,9 +5,15 @@ import userEvent from '@testing-library/user-event';
 import SellerSchedulePage from '@/app/schedule/[token]/page';
 vi.mock('next/navigation',()=>({useParams:()=>({token:'tok-123'}),useSearchParams:()=>new URLSearchParams(),useRouter:()=>({push:vi.fn(),replace:vi.fn()})}));
 const offer={id:1,vin:null,year:2009,make:'Ford',model:'Focus',condition:'used',offer_cents:33000,contact_name:'Test Seller',contact_email:'seller@example.com',contact_phone:null,zip_code:'76107',pickup_address:'1 Main St, Fort Worth, TX 76107',seller_schedule_token_expires_at:null};
+// PR #57 deliberately paused production pickups; these flow fixtures opt in locally.
+const pickupState=vi.hoisted(()=>({live:true}));
+vi.mock('@/lib/site',async(importOriginal)=>({
+ ...await importOriginal<typeof import('@/lib/site')>(),
+ get PICKUPS_LIVE(){return pickupState.live;},
+}));
 const fetchMock=vi.fn();
 vi.stubGlobal('fetch',fetchMock);
-beforeEach(()=>{
+beforeEach(()=>{pickupState.live=true;
  Element.prototype.scrollIntoView=vi.fn();
  fetchMock.mockImplementation(async(url:string,init?:RequestInit)=>{
   if(init?.method==='POST'){
@@ -29,7 +35,7 @@ it('a custom pickup sends the chosen window label with pickup_date and eta_at, a
  await userEvent.click(screen.getByRole('button',{name:'Schedule this slot'}));
  await screen.findByText('Pickup scheduled');
  const {url,body}=posted();
- expect(url).toBe('https://api.dankdash.ai/api/public/junkerz/seller/schedule/tok-123');
+ expect(url).toBe('/api/public/junkerz/seller/schedule/tok-123');
  expect(body.window).toBe('1pm-3pm');
  expect(body.pickup_date).toBe('2026-09-16');
  expect(body.slot).toMatch(/Sep 16 — 1pm-3pm$/);
@@ -52,4 +58,15 @@ it('a quick pick names the window the backend uses and an immediate pickup names
  expect(body.quick_pick).toBe('immediately');
  expect('window' in body).toBe(false);
  await waitFor(()=>expect(screen.getByText(/1:00 PM CT/)).toBeTruthy());
+});
+
+it('paused pickups show the opening notice without loading or submitting a pickup',async()=>{
+ const productionSite=await vi.importActual<typeof import('@/lib/site')>('@/lib/site');
+ expect(productionSite.PICKUPS_LIVE).toBe(false);
+ pickupState.live=productionSite.PICKUPS_LIVE;
+ render(<SellerSchedulePage/>);
+ expect(await screen.findByRole('heading',{name: /not picking up cars yet/i})).toBeTruthy();
+ expect(screen.getByText(/we are not scheduling pickups yet/)).toBeTruthy();
+ expect(screen.queryByRole('button',{name:/Confirm pickup|Schedule this slot|Tomorrow morning/})).toBeNull();
+ expect(fetchMock).not.toHaveBeenCalled();
 });

@@ -35,7 +35,7 @@ const signIn=(headers:Record<string,string>,url='https://www.junkerz.com/api/cus
  POST(new NextRequest(url,{method:'POST',headers:{'content-type':'application/json',...headers},body:JSON.stringify({email:'seller@example.test'})}),{params:{path:['sign-in-link']}});
 it('proxy accepts a mutation from both the apex and the www host',async()=>{
  // A fresh Response each call: a body can only be read once.
- const fetcher=vi.fn(async()=>new Response(JSON.stringify({accepted:true}),{status:202}));vi.stubGlobal('fetch',fetcher);
+ const fetcher=vi.fn<typeof fetch>(async()=>new Response(JSON.stringify({accepted:true}),{status:202}));vi.stubGlobal('fetch',fetcher);
  const apex=await signIn({origin:'https://junkerz.com','sec-fetch-site':'same-origin'},'https://junkerz.com/api/customer/sign-in-link');
  expect(apex.status).toBe(202);expect(await apex.json()).toEqual({accepted:true});
  const www=await signIn({origin:'https://www.junkerz.com','sec-fetch-site':'same-origin'});
