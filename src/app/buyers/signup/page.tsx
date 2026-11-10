@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import OnboardingChecklist from "@/components/buyers/OnboardingChecklist";
 import { buyerApi, BuyerSignupBody, OnboardingStatus } from "@/lib/buyer-api";
+import { rememberLang, storedLang, type Lang } from "@/lib/buyer-lang";
 
 type FieldKey =
   | "business_name" | "login_email" | "password"
@@ -26,7 +27,7 @@ const FIELD_LABELS: Record<FieldKey, string> = {
 
 export default function BuyerSignup() {
   const router = useRouter();
-  const [form, setForm] = useState<Required<Omit<BuyerSignupBody, "form_ticket" | "confirm_site">>>({
+  const [form, setForm] = useState<Required<Omit<BuyerSignupBody, "form_ticket" | "confirm_site" | "preferred_language">>>({
     email: "",
     password: "",
     business_name: "",
@@ -38,6 +39,9 @@ export default function BuyerSignup() {
     notification_email: "",
     sms_consent: false,
   });
+  // English or Español. The bid-rule form follows this choice (2026-11-09).
+  const [lang, setLang] = useState<Lang>("en");
+  useEffect(() => { setLang(storedLang()); }, []);
   const [checklist, setChecklist] = useState<OnboardingStatus | null>(null);
   const [requiredFields, setRequiredFields] = useState<FieldKey[]>([]);
   const [err, setErr] = useState<string | null>(null);
@@ -69,6 +73,7 @@ export default function BuyerSignup() {
         business_name: form.business_name,
         form_ticket: ticket.current,
         confirm_site: trap.current?.value ?? "",
+        preferred_language: lang,
       };
       // Only send the optional fields that have a value
       const optional: (keyof BuyerSignupBody)[] = [
@@ -137,6 +142,26 @@ export default function BuyerSignup() {
           <label htmlFor="confirm_site">Leave this empty</label>
           <input id="confirm_site" name="confirm_site" type="text" tabIndex={-1} autoComplete="off" ref={trap} defaultValue="" />
         </div>
+        <fieldset className="rounded-lg border border-slate-200 p-3">
+          <legend className="px-1 text-sm font-semibold text-slate-700">Language / Idioma</legend>
+          <div className="flex gap-4 text-sm text-slate-800">
+            {(["en", "es"] as const).map((l) => (
+              <label key={l} className="flex items-center gap-2" lang={l}>
+                <input
+                  type="radio"
+                  name="preferred_language"
+                  checked={lang === l}
+                  onChange={() => { setLang(l); rememberLang(l); }}
+                />
+                {l === "en" ? "English" : "Español"}
+              </label>
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-slate-500" lang="es">
+            Las reglas de oferta se muestran en el idioma que elija. / Your bid rules show in the language you pick.
+          </p>
+        </fieldset>
+
         <section>
           <h2 className="text-sm font-semibold text-slate-700 mb-3">Login credentials</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
