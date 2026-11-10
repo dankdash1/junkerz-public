@@ -285,5 +285,7 @@ export function ruleText(lang: Lang): RuleText {
 
 export function serverProblem(t: RuleText, code: string | undefined | null): string {
   if (!code) return t.serverOther("?");
-  return t.server[code] ?? (code.includes(" ") ? code : t.serverOther(code));
+  if (t.server[code]) return t.server[code];
+  // "HTTP 500", "insert_failed", "Failed to fetch": not words a buyer should read raw.
+  return t.serverOther(code);
 }
