@@ -6,24 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import OnboardingChecklist from "@/components/buyers/OnboardingChecklist";
 import { buyerApi, BuyerSignupBody, OnboardingStatus } from "@/lib/buyer-api";
-import { rememberLang, storedLang, type Lang } from "@/lib/buyer-lang";
+import { useBuyerLang } from "@/lib/buyer-lang";
+import { buyerText, serverWords, type SignupField } from "@/components/buyers/buyerText";
 
-type FieldKey =
-  | "business_name" | "login_email" | "password"
-  | "contact_name" | "address" | "phone"
-  | "website" | "license_number" | "notification_email";
-
-const FIELD_LABELS: Record<FieldKey, string> = {
-  business_name: "Business name",
-  login_email: "Login email",
-  password: "Password",
-  contact_name: "Your name",
-  address: "Yard address",
-  phone: "Phone",
-  website: "Website",
-  license_number: "License number",
-  notification_email: "Notification email",
-};
+type FieldKey = SignupField;
 
 export default function BuyerSignup() {
   const router = useRouter();
@@ -39,9 +25,13 @@ export default function BuyerSignup() {
     notification_email: "",
     sms_consent: false,
   });
-  // English or Español. The bid-rule form follows this choice (2026-11-09).
-  const [lang, setLang] = useState<Lang>("en");
-  useEffect(() => { setLang(storedLang()); }, []);
+  // English or Español: the whole page follows the switch at the top of the
+  // buyer pages, and the account is created with it (2026-11-10).
+  const [lang] = useBuyerLang({ account: false });
+  const T = buyerText(lang);
+  const t = T.signup;
+  // Load problems are kept as a key so they change language with the switch.
+  const [configFailed, setConfigFailed] = useState(false);
   const [checklist, setChecklist] = useState<OnboardingStatus | null>(null);
   const [requiredFields, setRequiredFields] = useState<FieldKey[]>([]);
   const [err, setErr] = useState<string | null>(null);
@@ -54,7 +44,7 @@ export default function BuyerSignup() {
     buyerApi
       .signupConfig()
       .then((cfg) => { ticket.current = cfg.form_ticket ?? ""; setRequiredFields((cfg.required_fields || []) as FieldKey[]); setChecklist(cfg.onboarding); })
-      .catch(() => setErr("Unable to load onboarding requirements. Please reload before signing up."));
+      .catch(() => setConfigFailed(true));
   }, []);
 
   const isRequired = (k: FieldKey) =>
@@ -65,6 +55,7 @@ export default function BuyerSignup() {
     e.preventDefault();
     setBusy(true);
     setErr(null);
+    setConfigFailed(false);
     try {
       // 1. Create the account
       const body: BuyerSignupBody = {
@@ -110,41 +101,32 @@ export default function BuyerSignup() {
       if (code !== "too_fast") {
         buyerApi.signupConfig().then((cfg) => { ticket.current = cfg.form_ticket ?? ""; }).catch(() => {});
       }
-      if (code === "form_expired") {
-        setErr("This form expired. Please check your details and press Create again in a few seconds.");
-      } else if (code === "check_form") {
-        setErr("We couldn't save your application. Please reload the page and try again. If it keeps happening, turn off autofill for this form.");
-      } else if (code === "too_fast") {
-        setErr("That was quick! Please check your details and press Create again.");
-      } else {
-        setErr(code ?? "Signup failed");
-      }
+      setErr(code || "?");
     } finally {
       setBusy(false);
     }
   }
 
   const lbl = (k: FieldKey) =>
-    `${FIELD_LABELS[k]}${isRequired(k) ? " *" : ""}`;
+    `${t.fields[k]}${isRequired(k) ? " *" : ""}`;
+  // The error is kept as the server's code and turned into words here, so it
+  // follows the language switch too.
+  const errText = configFailed ? t.configFailed : err ? serverWords(T, t.server, err) : null;
 
   return (
-    <main className="max-w-xl mx-auto pt-12 px-6 pb-16">
-      <h1 className="text-2xl font-bold mb-2">Create Junkerz Buyer Account</h1>
+    <main className="max-w-xl mx-auto pt-12 px-6 pb-16" lang={lang}>
+      <h1 className="text-2xl font-bold mb-2">{t.title}</h1>
       {/* George 2026-11-10: short form first. Name + address up front, the rest
           folds away. Papers can be skipped now; a photo ID and a card are needed
           before a yard can win cars. */}
-      <p className="text-sm text-slate-600 mb-4">
-        Takes about 2 minutes. You can set your prices right away. Before you can win
-        cars you&apos;ll add a photo ID and a card (not charged until a pickup) &mdash;
-        you can skip those for now and come back.
-      </p>
+      <p className="text-sm text-slate-600 mb-4">{t.intro}</p>
 
       {checklist && (
         <details className="mb-6 rounded-lg border border-slate-200 bg-white p-3">
           <summary className="cursor-pointer text-sm font-semibold text-slate-700">
-            What you&apos;ll need before you can win cars
+            {t.needBefore}
           </summary>
-          <div className="mt-3"><OnboardingChecklist status={checklist} preview /></div>
+          <div className="mt-3"><OnboardingChecklist status={checklist} preview lang={lang} /></div>
         </details>
       )}
       <form onSubmit={submit} className="space-y-6">
@@ -153,28 +135,8 @@ export default function BuyerSignup() {
           <label htmlFor="confirm_site">Leave this empty</label>
           <input id="confirm_site" name="confirm_site" type="text" tabIndex={-1} autoComplete="off" ref={trap} defaultValue="" />
         </div>
-        <fieldset className="rounded-lg border border-slate-200 p-3">
-          <legend className="px-1 text-sm font-semibold text-slate-700">Language / Idioma</legend>
-          <div className="flex gap-4 text-sm text-slate-800">
-            {(["en", "es"] as const).map((l) => (
-              <label key={l} className="flex items-center gap-2" lang={l}>
-                <input
-                  type="radio"
-                  name="preferred_language"
-                  checked={lang === l}
-                  onChange={() => { setLang(l); rememberLang(l); }}
-                />
-                {l === "en" ? "English" : "Español"}
-              </label>
-            ))}
-          </div>
-          <p className="mt-1 text-xs text-slate-500" lang="es">
-            Las reglas de oferta se muestran en el idioma que elija. / Your bid rules show in the language you pick.
-          </p>
-        </fieldset>
-
         <section>
-          <h2 className="text-sm font-semibold text-slate-700 mb-3">Login credentials</h2>
+          <h2 className="text-sm font-semibold text-slate-700 mb-3">{t.loginSection}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <Label>{lbl("login_email")}</Label>
@@ -199,7 +161,7 @@ export default function BuyerSignup() {
         </section>
 
         <section>
-          <h2 className="text-sm font-semibold text-slate-700 mb-3">Business profile</h2>
+          <h2 className="text-sm font-semibold text-slate-700 mb-3">{t.businessSection}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="md:col-span-2">
               <Label>{lbl("business_name")}</Label>
@@ -215,7 +177,7 @@ export default function BuyerSignup() {
                 value={form.contact_name}
                 onChange={(e) => setForm({ ...form, contact_name: e.target.value })}
                 required={isRequired("contact_name")}
-                placeholder="Jane Doe"
+                placeholder={t.placeholders.contact_name}
               />
             </div>
             <div className="md:col-span-2">
@@ -224,7 +186,7 @@ export default function BuyerSignup() {
                 value={form.address}
                 onChange={(e) => setForm({ ...form, address: e.target.value })}
                 required={isRequired("address")}
-                placeholder="Street, City, State, ZIP"
+                placeholder={t.placeholders.address}
               />
             </div>
             <div>
@@ -234,7 +196,7 @@ export default function BuyerSignup() {
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 required={isRequired("phone")}
-                placeholder="(555) 555-0100"
+                placeholder={t.placeholders.phone}
               />
             </div>
             <details
@@ -242,7 +204,7 @@ export default function BuyerSignup() {
               open={(["website", "license_number", "notification_email"] as FieldKey[]).some((k) => isRequired(k))}
             >
               <summary className="cursor-pointer text-sm font-semibold text-slate-700">
-                More details (optional): text alerts, website, license number, notification email
+                {t.moreDetails}
               </summary>
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
@@ -254,15 +216,12 @@ export default function BuyerSignup() {
                     checked={form.sms_consent}
                     onChange={(e) => setForm({ ...form, sms_consent: e.target.checked })}
                   />
-                  <span>Yes, text me when I win a car, when a pickup is scheduled or rescheduled, and pickup reminders (optional).</span>
+                  <span>{t.smsBox}</span>
                 </label>
                 <p className="mt-2 text-xs text-slate-500">
-                  By checking this box and providing your phone number, you agree to receive SMS car-assignment,
-                  pickup and reminder messages from Junkerz. Message frequency may vary. Standard Message and Data
-                  Rates may apply. Reply STOP to opt out. Reply HELP for help. We will not share mobile information
-                  with third parties for promotional or marketing purposes. Leave the box unchecked and we contact you
-                  by email only. See our <a href="/terms" className="underline">Terms</a> and{" "}
-                  <a href="/privacy-policy" className="underline">Privacy Policy</a>.
+                  {t.smsConsent}{" "}
+                  <a href="/terms" className="underline">{t.termsLink}</a> {t.and}{" "}
+                  <a href="/privacy-policy" className="underline">{t.privacyLink}</a>.
                 </p>
               </div>
               <div>
@@ -271,7 +230,7 @@ export default function BuyerSignup() {
                   value={form.website}
                   onChange={(e) => setForm({ ...form, website: e.target.value })}
                   required={isRequired("website")}
-                  placeholder="https://example.com"
+                  placeholder={t.placeholders.website}
                 />
               </div>
               <div>
@@ -280,7 +239,7 @@ export default function BuyerSignup() {
                   value={form.license_number}
                   onChange={(e) => setForm({ ...form, license_number: e.target.value })}
                   required={isRequired("license_number")}
-                  placeholder="State dealer / dismantler #"
+                  placeholder={t.placeholders.license_number}
                 />
               </div>
               <div className="md:col-span-2">
@@ -290,27 +249,21 @@ export default function BuyerSignup() {
                   value={form.notification_email}
                   onChange={(e) => setForm({ ...form, notification_email: e.target.value })}
                   required={isRequired("notification_email")}
-                  placeholder="Defaults to your login email if blank"
+                  placeholder={t.placeholders.notification_email}
                 />
-                <p className="text-xs text-slate-500 mt-1">
-                  Where we send won-match notifications + reschedule alerts. Can differ
-                  from your login email.
-                </p>
+                <p className="text-xs text-slate-500 mt-1">{t.notificationHelp}</p>
               </div>
               </div>
             </details>
           </div>
         </section>
 
-        {err && <p className="text-red-600 text-sm">{err}</p>}
+        {errText && <p className="text-red-600 text-sm">{errText}</p>}
 
         <Button className="w-full" type="submit" disabled={busy}>
-          {busy ? "Creating…" : "Create account + continue"}
+          {busy ? t.creating : t.submit}
         </Button>
-        <p className="text-xs text-slate-500 text-center">
-          Fields marked * are required. Set your prices as soon as you sign up. You can win
-          cars once you add a photo ID and a card and we approve your account.
-        </p>
+        <p className="text-xs text-slate-500 text-center">{t.footer}</p>
       </form>
     </main>
   );

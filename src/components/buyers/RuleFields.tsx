@@ -391,22 +391,25 @@ export function ruleSummary(r: RuleVehicleFields & {
   zip_codes?: string[] | null;
   zip_center?: string | null;
   zip_radius_miles?: number | null;
-}): string {
-  const types = r.vehicle_categories?.length ? r.vehicle_categories.join("/") : "all vehicles";
+}, lang: Lang = "en"): string {
+  const t = ruleText(lang);
+  // English keeps the raw type keys (car/truck); Spanish reads them as words.
+  const typeWord = (c: string) => (lang === "en" ? c : (t.typeNames[c] ?? c).toLowerCase());
+  const types = r.vehicle_categories?.length ? r.vehicle_categories.map(typeWord).join("/") : t.sumAllVehicles;
   const years =
-    r.year_min || r.year_max ? `${r.year_min ?? "any"}–${r.year_max ?? "newest"}` : "any year";
-  const makes = r.makes?.length ? r.makes.join(", ") : "any make";
+    r.year_min || r.year_max ? `${r.year_min ?? t.sumAny}–${r.year_max ?? t.sumNewest}` : t.sumAnyYear;
+  const makes = r.makes?.length ? r.makes.join(", ") : t.sumAnyMake;
   // 2026-11-09: a rule with make cards reads the same way the form does.
   const cards = r.vehicle_wants?.length
-    ? describeWants(r.vehicle_categories ?? [], wantsFromRule(r), "en").lines.join("; ")
+    ? describeWants(r.vehicle_categories ?? [], wantsFromRule(r), lang).lines.join("; ")
     : null;
   const where: string[] = [];
-  if (r.zip_center && r.zip_radius_miles) where.push(`${r.zip_radius_miles} mi of ${r.zip_center}`);
-  if (r.area_codes?.length) where.push(`area ${r.area_codes.join(", ")}`);
+  if (r.zip_center && r.zip_radius_miles) where.push(t.sumMilesOf(r.zip_radius_miles, r.zip_center));
+  if (r.area_codes?.length) where.push(t.sumArea(r.area_codes.join(", ")));
   if (r.zip_codes?.length) {
-    where.push(`ZIPs ${r.zip_codes.slice(0, 3).join(", ")}${r.zip_codes.length > 3 ? "…" : ""}`);
+    where.push(t.sumZips(`${r.zip_codes.slice(0, 3).join(", ")}${r.zip_codes.length > 3 ? "…" : ""}`));
   }
-  const place = where.length ? where.join(" or ") : "anywhere";
+  const place = where.length ? where.join(t.sumOr) : t.sumAnywhere;
   if (cards) return `${cards} · ${place}`;
   return `${types} · ${years} · ${makes} · ${place}`;
 }
