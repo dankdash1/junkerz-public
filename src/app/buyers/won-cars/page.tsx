@@ -88,6 +88,15 @@ export default function WonCars() {
 
       {rows === null ? (
         <p>Loading…</p>
+      ) : rows.length === 0 && filter ? (
+        // 2026-11-10 George: an empty tab said "No matches yet" while his car sat
+        // under Picked Up, so the tab buttons looked broken.
+        <div className="bg-white rounded shadow p-12 text-center text-slate-600">
+          No cars under {STATUS_FILTERS.find((f) => f.value === filter)?.label ?? "this tab"}.{" "}
+          <button type="button" onClick={() => setFilter("")} className="text-brand-600 underline">
+            Show all cars
+          </button>
+        </div>
       ) : rows.length === 0 ? (
         <div className="bg-white rounded shadow p-12 text-center text-slate-600">
           No matches yet.{" "}
@@ -145,7 +154,14 @@ export default function WonCars() {
                       </div>
                     )}
                   </td>
-                  <td className="p-3">${(r.bid_cents / 100).toFixed(0)}</td>
+                  <td className="p-3">
+                    ${(r.bid_cents / 100).toFixed(0)}
+                    {r.offer_cents != null && (
+                      <div className="text-xs text-slate-500 whitespace-nowrap">
+                        Seller gets ${(r.offer_cents / 100).toFixed(0)}
+                      </div>
+                    )}
+                  </td>
                   <td className="p-3 whitespace-nowrap">
                     {r.picked_up_charge_cents != null ? (
                       <>
@@ -168,6 +184,12 @@ export default function WonCars() {
                             ? "Declined"
                             : "Pending"}
                         </span>
+                      </>
+                    ) : r.finder_fee_cents != null && r.status === "won" && r.finder_fee_cents > 0 ? (
+                      // Before pickup: bid - seller payout, charged when the pickup is completed.
+                      <>
+                        <span className="font-medium">${(r.finder_fee_cents / 100).toFixed(2)}</span>
+                        <div className="text-xs text-slate-500">charged at pickup</div>
                       </>
                     ) : (
                       <span className="text-slate-400 text-xs">—</span>
