@@ -27,3 +27,11 @@ test('an empty tab names the tab instead of "No matches yet"', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Show all cars' }));
   expect(await screen.findByText('Seller gets $330')).toBeTruthy();
 });
+
+test('no "charged at pickup" on a backup car', async () => {
+  wonCars.mockImplementationOnce(async () => [{ match_id: 9, status: 'backup', bid_cents: 100000,
+    offer_cents: 33000, finder_fee_cents: 67000, picked_up_charge_cents: null, year: 2008, make: 'Toyota', model: 'Corolla' }]);
+  render(<WonCars />);
+  expect(await screen.findByText('Seller gets $330')).toBeTruthy();
+  expect(screen.queryByText('charged at pickup')).toBeNull();
+});

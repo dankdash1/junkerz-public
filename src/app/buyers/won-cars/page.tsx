@@ -185,7 +185,7 @@ export default function WonCars() {
                             : "Pending"}
                         </span>
                       </>
-                    ) : r.finder_fee_cents != null ? (
+                    ) : r.finder_fee_cents != null && r.status === "won" && r.finder_fee_cents > 0 ? (
                       // Before pickup: bid - seller payout, charged when the pickup is completed.
                       <>
                         <span className="font-medium">${(r.finder_fee_cents / 100).toFixed(2)}</span>
