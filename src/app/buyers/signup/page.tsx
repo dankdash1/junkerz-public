@@ -17,7 +17,7 @@ const FIELD_LABELS: Record<FieldKey, string> = {
   business_name: "Business name",
   login_email: "Login email",
   password: "Password",
-  contact_name: "Contact name",
+  contact_name: "Your name",
   address: "Yard address",
   phone: "Phone",
   website: "Website",
@@ -130,12 +130,23 @@ export default function BuyerSignup() {
   return (
     <main className="max-w-xl mx-auto pt-12 px-6 pb-16">
       <h1 className="text-2xl font-bold mb-2">Create Junkerz Buyer Account</h1>
-      <p className="text-sm text-slate-600 mb-6">
-        Fill in your business profile. After creating your account you&apos;ll be asked to
-        complete the checklist below. Documents marked optional are requested for review.
+      {/* George 2026-11-10: short form first. Name + address up front, the rest
+          folds away. Papers can be skipped now; a photo ID and a card are needed
+          before a yard can win cars. */}
+      <p className="text-sm text-slate-600 mb-4">
+        Takes about 2 minutes. You can set your prices right away. Before you can win
+        cars you&apos;ll add a photo ID and a card (not charged until a pickup) &mdash;
+        you can skip those for now and come back.
       </p>
 
-      {checklist && <div className="mb-6"><OnboardingChecklist status={checklist} preview /></div>}
+      {checklist && (
+        <details className="mb-6 rounded-lg border border-slate-200 bg-white p-3">
+          <summary className="cursor-pointer text-sm font-semibold text-slate-700">
+            What you&apos;ll need before you can win cars
+          </summary>
+          <div className="mt-3"><OnboardingChecklist status={checklist} preview /></div>
+        </details>
+      )}
       <form onSubmit={submit} className="space-y-6">
         {/* Robot trap: hidden from people and screen readers; robots fill it. */}
         <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
@@ -207,36 +218,6 @@ export default function BuyerSignup() {
                 placeholder="Jane Doe"
               />
             </div>
-            <div>
-              <Label>{lbl("phone")}</Label>
-              <Input
-                type="tel"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                required={isRequired("phone")}
-                placeholder="(555) 555-0100"
-              />
-            </div>
-            <div className="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <label htmlFor="sms_consent" className="flex items-start gap-2 text-sm text-slate-800">
-                <input
-                  id="sms_consent"
-                  type="checkbox"
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-600"
-                  checked={form.sms_consent}
-                  onChange={(e) => setForm({ ...form, sms_consent: e.target.checked })}
-                />
-                <span>Yes, text me when I win a car, when a pickup is scheduled or rescheduled, and pickup reminders (optional).</span>
-              </label>
-              <p className="mt-2 text-xs text-slate-500">
-                By checking this box and providing your phone number, you agree to receive SMS car-assignment,
-                pickup and reminder messages from Junkerz. Message frequency may vary. Standard Message and Data
-                Rates may apply. Reply STOP to opt out. Reply HELP for help. We will not share mobile information
-                with third parties for promotional or marketing purposes. Leave the box unchecked and we contact you
-                by email only. See our <a href="/terms" className="underline">Terms</a> and{" "}
-                <a href="/privacy-policy" className="underline">Privacy Policy</a>.
-              </p>
-            </div>
             <div className="md:col-span-2">
               <Label>{lbl("address")}</Label>
               <Input
@@ -247,37 +228,77 @@ export default function BuyerSignup() {
               />
             </div>
             <div>
-              <Label>{lbl("website")}</Label>
+              <Label>{lbl("phone")}</Label>
               <Input
-                value={form.website}
-                onChange={(e) => setForm({ ...form, website: e.target.value })}
-                required={isRequired("website")}
-                placeholder="https://example.com"
+                type="tel"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                required={isRequired("phone")}
+                placeholder="(555) 555-0100"
               />
             </div>
-            <div>
-              <Label>{lbl("license_number")}</Label>
-              <Input
-                value={form.license_number}
-                onChange={(e) => setForm({ ...form, license_number: e.target.value })}
-                required={isRequired("license_number")}
-                placeholder="State dealer / dismantler #"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <Label>{lbl("notification_email")}</Label>
-              <Input
-                type="email"
-                value={form.notification_email}
-                onChange={(e) => setForm({ ...form, notification_email: e.target.value })}
-                required={isRequired("notification_email")}
-                placeholder="Defaults to your login email if blank"
-              />
-              <p className="text-xs text-slate-500 mt-1">
-                Where we send won-match notifications + reschedule alerts. Can differ
-                from your login email.
-              </p>
-            </div>
+            <details
+              className="md:col-span-2 rounded-lg border border-slate-200 p-3"
+              open={(["website", "license_number", "notification_email"] as FieldKey[]).some((k) => isRequired(k))}
+            >
+              <summary className="cursor-pointer text-sm font-semibold text-slate-700">
+                More details (optional): text alerts, website, license number, notification email
+              </summary>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <label htmlFor="sms_consent" className="flex items-start gap-2 text-sm text-slate-800">
+                  <input
+                    id="sms_consent"
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-600"
+                    checked={form.sms_consent}
+                    onChange={(e) => setForm({ ...form, sms_consent: e.target.checked })}
+                  />
+                  <span>Yes, text me when I win a car, when a pickup is scheduled or rescheduled, and pickup reminders (optional).</span>
+                </label>
+                <p className="mt-2 text-xs text-slate-500">
+                  By checking this box and providing your phone number, you agree to receive SMS car-assignment,
+                  pickup and reminder messages from Junkerz. Message frequency may vary. Standard Message and Data
+                  Rates may apply. Reply STOP to opt out. Reply HELP for help. We will not share mobile information
+                  with third parties for promotional or marketing purposes. Leave the box unchecked and we contact you
+                  by email only. See our <a href="/terms" className="underline">Terms</a> and{" "}
+                  <a href="/privacy-policy" className="underline">Privacy Policy</a>.
+                </p>
+              </div>
+              <div>
+                <Label>{lbl("website")}</Label>
+                <Input
+                  value={form.website}
+                  onChange={(e) => setForm({ ...form, website: e.target.value })}
+                  required={isRequired("website")}
+                  placeholder="https://example.com"
+                />
+              </div>
+              <div>
+                <Label>{lbl("license_number")}</Label>
+                <Input
+                  value={form.license_number}
+                  onChange={(e) => setForm({ ...form, license_number: e.target.value })}
+                  required={isRequired("license_number")}
+                  placeholder="State dealer / dismantler #"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <Label>{lbl("notification_email")}</Label>
+                <Input
+                  type="email"
+                  value={form.notification_email}
+                  onChange={(e) => setForm({ ...form, notification_email: e.target.value })}
+                  required={isRequired("notification_email")}
+                  placeholder="Defaults to your login email if blank"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Where we send won-match notifications + reschedule alerts. Can differ
+                  from your login email.
+                </p>
+              </div>
+              </div>
+            </details>
           </div>
         </section>
 
@@ -287,8 +308,8 @@ export default function BuyerSignup() {
           {busy ? "Creating…" : "Create account + continue"}
         </Button>
         <p className="text-xs text-slate-500 text-center">
-          Fields marked * are required. Your account is approved by an admin before
-          you can place bids.
+          Fields marked * are required. Set your prices as soon as you sign up. You can win
+          cars once you add a photo ID and a card and we approve your account.
         </p>
       </form>
     </main>

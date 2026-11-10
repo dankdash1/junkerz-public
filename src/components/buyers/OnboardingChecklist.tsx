@@ -10,16 +10,16 @@ export default function OnboardingChecklist({ status, preview = false }: { statu
         <div>
           <p className="font-medium">{item.label}</p>
           <p className="text-xs text-slate-500">{item.required ? 'Required' : 'Requested · optional'}</p>
-          {!preview && <p className="text-sm">{item.review_status === 'uploaded' ? 'Uploaded · awaiting review' : item.review_status === 'signed' ? 'Signed' : ['approved', 'verified', 'valid'].includes(item.review_status) ? 'Reviewed' : item.review_status === 'rejected' ? 'Rejected · upload a replacement' : item.completed ? 'Uploaded' : 'Incomplete'}</p>}
+          {!preview && <p className="text-sm">{item.review_status === 'uploaded' ? 'Uploaded · awaiting review' : item.review_status === 'signed' ? 'Signed' : item.review_status === 'saved' ? 'Saved' : ['approved', 'verified', 'valid'].includes(item.review_status) ? 'Reviewed' : item.review_status === 'rejected' ? 'Rejected · upload a replacement' : item.completed ? 'Uploaded' : 'Incomplete'}</p>}
         </div>
         {!preview && !item.completed && <a className="text-sm text-brand-700 underline" href={item.next_action_url}>Complete {item.label}</a>}
       </li>)}
     </ul>
     {!preview && <div className="border-t pt-3 text-sm space-y-1">
       <p>{status.approved ? 'Business approved' : status.approval_ready ? 'Ready for staff approval' : 'Business approval pending'}</p>
-      <p>{status.payment_ready ? 'Payment method ready' : <a className="underline" href="/buyers/settings">Add a payment method</a>}</p>
+      {!status.items.some(i => i.key === 'card') && <p>{status.payment_ready ? 'Payment method ready' : <a className="underline" href="/buyers/settings">Add a payment method</a>}</p>}
       {status.approved && !status.active && <p>Account inactive{status.suspended_reason ? `: ${status.suspended_reason}` : ''}. Contact Junkerz for assistance.</p>}
-      <p className="text-slate-500">Business approval and payment setup are separate. Vehicle eligibility also depends on your bids, balance and pickup limits.</p>
+      <p className="text-slate-500">You can set your prices now. You can win cars once the required items are done and we approve your account.</p>
     </div>}
   </section>;
 }

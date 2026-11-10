@@ -65,7 +65,7 @@ export type SignupConfig = {
 };
 
 export type OnboardingItem = {
-  key: string; label: string; kind: "document" | "terms";
+  key: string; label: string; kind: "document" | "terms" | "payment";
   required: boolean; requested: boolean; completed: boolean;
   review_status: string; next_action_url: string;
 };
