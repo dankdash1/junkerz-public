@@ -227,6 +227,22 @@ export default function BuyerPickupDetail() {
             <div className="text-lg font-semibold">{fmtMoney(d.offer_cents)}</div>
           </div>
         </div>
+        {/* 2026-11-10 George: show the company login the split. Drivers use the
+            pickup link (PickupMobile), which shows only the seller payout. */}
+        {d.bid_cents != null && d.offer_cents != null && (
+          <div className="border-t pt-3">
+            <div className="text-xs text-slate-500">
+              Junkerz finder fee {d.picked_up_charge_cents != null ? "" : "(charged to your card when you complete the pickup)"}
+            </div>
+            <div className="text-lg font-semibold">
+              {fmtMoney(d.picked_up_charge_cents ?? Math.max(0, d.bid_cents - d.offer_cents))}
+            </div>
+            <div className="text-xs text-slate-500">
+              Your bid {fmtMoney(d.bid_cents)} = seller payout {fmtMoney(d.offer_cents)} + finder fee{" "}
+              {fmtMoney(d.picked_up_charge_cents ?? Math.max(0, d.bid_cents - d.offer_cents))}
+            </div>
+          </div>
+        )}
 
         <div className="border-t pt-3">
           <div className="text-xs text-slate-500">Pickup address</div>
