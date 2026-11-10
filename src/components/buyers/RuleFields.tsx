@@ -1,10 +1,13 @@
 "use client";
-// Fields shared by the new and edit bid-rule pages: vehicle types, the year
-// range, and where the car is (a circle around a town, or exact ZIP codes).
+// Fields shared by the new and edit bid-rule pages: vehicle types, year
+// dropdowns, and where the car is (a circle around a town, or exact ZIP codes).
 import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { buyerApi, type Place } from "@/lib/buyer-api";
+import type { Lang } from "@/lib/buyer-lang";
+import { ruleText } from "@/components/buyers/ruleText";
+import { describeWants, wantsFromRule, type RuleVehicleFields } from "@/lib/rule-wants";
 
 export function Chip({
   on,
@@ -34,45 +37,42 @@ export function Chip({
 
 // ---- vehicle types -------------------------------------------------------
 
-const VEHICLE_CATEGORIES: Array<{ value: string; label: string }> = [
-  { value: "car", label: "All cars" },
-  { value: "truck", label: "All trucks" },
-  { value: "suv", label: "All SUVs" },
-  { value: "van", label: "All vans" },
-];
+// 2026-11-09: "All trucks" read as "every truck, whatever the make"; with makes
+// picked a type only narrows them (Trucks + Toyota = Toyota trucks), so the
+// buttons say Cars / Trucks / SUVs / Vans.
+const VEHICLE_CATEGORIES = ["car", "truck", "suv", "van"];
 
 export function VehicleTypesField({
   value,
   onChange,
+  lang = "en",
 }: {
   value: string[];
   onChange: (v: string[]) => void;
+  lang?: Lang;
 }) {
+  const t = ruleText(lang);
   return (
     <div>
-      <Label>Vehicle types</Label>
+      <Label>{t.vehicleTypes}</Label>
       <div className="flex flex-wrap gap-2 mt-1">
         <Chip on={value.length === 0} onClick={() => onChange([])}>
-          All vehicles
+          {t.typeAll}
         </Chip>
         {VEHICLE_CATEGORIES.map((cat) => {
-          const on = value.includes(cat.value);
+          const on = value.includes(cat);
           return (
             <Chip
-              key={cat.value}
+              key={cat}
               on={on}
-              onClick={() =>
-                onChange(on ? value.filter((v) => v !== cat.value) : [...value, cat.value])
-              }
+              onClick={() => onChange(on ? value.filter((v) => v !== cat) : [...value, cat])}
             >
-              {cat.label}
+              {t.typeNames[cat]}
             </Chip>
           );
         })}
       </div>
-      <p className="text-xs text-slate-500 mt-1">
-        All vehicles takes every type. Or pick one or more, like just trucks.
-      </p>
+      <p className="text-xs text-slate-500 mt-1">{t.typesHelp}</p>
     </div>
   );
 }
@@ -81,14 +81,15 @@ export function VehicleTypesField({
 
 const NEWEST_YEAR = new Date().getFullYear() + 1;
 
-export function yearRangeProblem(min: string, max: string): string | null {
-  for (const [label, v] of [["From year", min], ["To year", max]] as const) {
+export function yearRangeProblem(min: string, max: string, lang: Lang = "en"): string | null {
+  const t = ruleText(lang);
+  for (const [label, v] of [[t.yearFrom, min], [t.yearTo, max]] as const) {
     if (v && !(/^\d{4}$/.test(v) && Number(v) >= 1900 && Number(v) <= NEWEST_YEAR)) {
-      return `${label} must be a 4-digit year between 1900 and ${NEWEST_YEAR}.`;
+      return t.badYear(label, NEWEST_YEAR);
     }
   }
   if (min && max && Number(min) > Number(max)) {
-    return "From year must be the same as or before To year.";
+    return t.yearOrder;
   }
   return null;
 }
@@ -97,14 +98,18 @@ const OLDEST_YEAR = 1960;
 const YEAR_OPTIONS: string[] = [];
 for (let y = NEWEST_YEAR; y >= OLDEST_YEAR; y--) YEAR_OPTIONS.push(String(y));
 
-function YearSelect({
+export function YearSelect({
   label,
   value,
   onChange,
+  lang = "en",
+  hideLabel = false,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  lang?: Lang;
+  hideLabel?: boolean;
 }) {
   // A saved year outside the list (an old rule) still shows, so it is never
   // silently dropped when the buyer saves the page.
@@ -112,14 +117,14 @@ function YearSelect({
     value && !YEAR_OPTIONS.includes(value) ? [value, ...YEAR_OPTIONS] : YEAR_OPTIONS;
   return (
     <label className="text-sm text-slate-700">
-      {label}
+      {hideLabel ? null : label}
       <select
         className="mt-1 w-full border rounded h-10 px-2 bg-white"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
       >
-        <option value="">Any</option>
+        <option value="">{ruleText(lang).any}</option>
         {options.map((y) => (
           <option key={y} value={y}>
             {y}
@@ -127,34 +132,6 @@ function YearSelect({
         ))}
       </select>
     </label>
-  );
-}
-
-export function YearRangeField({
-  yearMin,
-  yearMax,
-  onChange,
-}: {
-  yearMin: string;
-  yearMax: string;
-  onChange: (min: string, max: string) => void;
-}) {
-  const problem = yearRangeProblem(yearMin, yearMax);
-  return (
-    <div>
-      <Label>Years</Label>
-      <div className="grid grid-cols-2 gap-3 mt-1">
-        <YearSelect label="From year:" value={yearMin} onChange={(v) => onChange(v, yearMax)} />
-        <YearSelect label="To year:" value={yearMax} onChange={(v) => onChange(yearMin, v)} />
-      </div>
-      {problem ? (
-        <p className="text-xs text-red-600 mt-1">{problem}</p>
-      ) : (
-        <p className="text-xs text-slate-500 mt-1">
-          Pick a range, like 2015 to 2020. Leave Any for no limit.
-        </p>
-      )}
-    </div>
   );
 }
 
@@ -180,13 +157,14 @@ function isZipEntry(s: string): boolean {
   return !!m && m[1] <= m[2];
 }
 
-export function whereProblem(v: WhereValue): string | null {
+export function whereProblem(v: WhereValue, lang: Lang = "en"): string | null {
+  const t = ruleText(lang);
   const bad = parseZipList(v.zip_codes).filter((z) => !isZipEntry(z));
-  if (bad.length) return `Not a ZIP code, prefix or range: ${bad.join(", ")}`;
+  if (bad.length) return t.notZip(bad.join(", "));
   const center = v.zip_center.trim();
-  if (center && !/^\d{5}$/.test(center)) return "Pick the town for the circle from the list.";
-  if (v.zip_radius_miles && !center) return "Pick the town for the circle from the list.";
-  if (center && !v.zip_radius_miles) return "Type how many miles the circle reaches.";
+  if (center && !/^\d{5}$/.test(center)) return t.pickTown;
+  if (v.zip_radius_miles && !center) return t.pickTown;
+  if (center && !v.zip_radius_miles) return t.typeMiles;
   return null;
 }
 
@@ -196,11 +174,14 @@ function TownCircle({
   zipCenter,
   miles,
   onChange,
+  lang,
 }: {
   zipCenter: string;
   miles: string;
   onChange: (patch: Partial<WhereValue>) => void;
+  lang: Lang;
 }) {
+  const t = ruleText(lang);
   const [text, setText] = useState("");
   const [townName, setTownName] = useState<string | null>(null);
   const [unknownZip, setUnknownZip] = useState(false);
@@ -272,25 +253,25 @@ function TownCircle({
 
   return (
     <div>
-      <Label>Circle around a town or city</Label>
+      <Label>{t.circleLabel}</Label>
       <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-slate-700">
-        <span>Take cars within</span>
+        <span>{t.takeWithin}</span>
         <Input
           className="w-20"
           inputMode="numeric"
           value={miles}
           onChange={(e) => onChange({ zip_radius_miles: e.target.value.replace(/\D/g, "") })}
           placeholder="50"
-          aria-label="Miles"
+          aria-label={t.miles}
         />
-        <span>miles of</span>
+        <span>{t.milesOf}</span>
       </div>
       <div className="relative mt-2">
         <Input
           value={text}
           onChange={(e) => type(e.target.value)}
-          placeholder="Type a town or city, like Fort Worth"
-          aria-label="Town or city"
+          placeholder={t.townPlaceholder}
+          aria-label={t.townAria}
           autoComplete="off"
         />
         {results.length > 0 && (
@@ -310,17 +291,13 @@ function TownCircle({
         )}
       </div>
       {townName && miles && (
-        <p className="text-xs text-slate-600 mt-1">
-          Cars within {miles} miles of {townName} count.
-        </p>
+        <p className="text-xs text-slate-600 mt-1">{t.circleSays(miles, townName)}</p>
       )}
       {unknownZip && (
-        <p className="text-xs text-red-600 mt-1">
-          We can&apos;t find ZIP {zipCenter.trim()}. This circle would match no cars.
-        </p>
+        <p className="text-xs text-red-600 mt-1">{t.unknownZip(zipCenter.trim())}</p>
       )}
       {typed.current && text.trim() && !zipCenter && results.length === 0 && text.trim().length >= 2 && (
-        <p className="text-xs text-slate-500 mt-1">Keep typing, then pick the town from the list.</p>
+        <p className="text-xs text-slate-500 mt-1">{t.keepTyping}</p>
       )}
     </div>
   );
@@ -329,13 +306,16 @@ function TownCircle({
 export function WhereField({
   value,
   onChange,
+  lang = "en",
 }: {
   value: WhereValue;
   onChange: (patch: Partial<WhereValue>) => void;
+  lang?: Lang;
 }) {
+  const t = ruleText(lang);
   const [showZips, setShowZips] = useState(Boolean(value.zip_codes.trim()));
 
-  const problem = whereProblem(value);
+  const problem = whereProblem(value, lang);
   const anywhere =
     !value.area_codes.length &&
     !value.zip_codes.trim() &&
@@ -344,30 +324,26 @@ export function WhereField({
   return (
     <div className="border rounded p-4 space-y-4 bg-slate-50">
       <div>
-        <h2 className="font-semibold text-slate-800">Where the car is</h2>
-        <p className="text-xs text-slate-500">
-          A car counts if it matches any one of these.
-        </p>
+        <h2 className="font-semibold text-slate-800">{t.whereTitle}</h2>
+        <p className="text-xs text-slate-500">{t.whereHelp}</p>
       </div>
 
       <TownCircle
         zipCenter={value.zip_center}
         miles={value.zip_radius_miles}
         onChange={onChange}
+        lang={lang}
       />
 
       {value.area_codes.length > 0 && (
         <p className="text-xs text-slate-600 bg-white border rounded p-2 flex flex-wrap items-center gap-2">
-          <span>
-            This rule also takes area codes <strong>{value.area_codes.join(", ")}</strong>{" "}
-            (an older setting).
-          </span>
+          <span>{t.areaCodesOld(value.area_codes.join(", "))}</span>
           <button
             type="button"
             onClick={() => onChange({ area_codes: [] })}
             className="underline"
           >
-            Remove area codes
+            {t.removeAreaCodes}
           </button>
         </p>
       )}
@@ -379,7 +355,7 @@ export function WhereField({
           className="text-sm text-slate-700 underline"
           aria-expanded={showZips}
         >
-          {showZips ? "Hide exact ZIP codes" : "Add exact ZIP codes (optional)"}
+          {showZips ? t.hideZips : t.showZips}
         </button>
         {showZips && (
           <div className="mt-2">
@@ -387,12 +363,9 @@ export function WhereField({
               value={value.zip_codes}
               onChange={(e) => onChange({ zip_codes: e.target.value })}
               placeholder="75201, 752, 76001-76099"
-              aria-label="ZIP codes"
+              aria-label={t.zipAria}
             />
-            <p className="text-xs text-slate-500 mt-1">
-              A full ZIP (75201), the first 3 digits for a whole area (752 = all of
-              Dallas), or a range (76001-76099). Separate them with commas.
-            </p>
+            <p className="text-xs text-slate-500 mt-1">{t.zipHelp}</p>
           </div>
         )}
       </div>
@@ -400,7 +373,7 @@ export function WhereField({
       {problem && <p className="text-sm text-red-600">{problem}</p>}
       {anywhere && !problem && (
         <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded p-2">
-          No area set. This rule takes cars from anywhere.
+          {t.anywhere}
         </p>
       )}
     </div>
@@ -409,7 +382,7 @@ export function WhereField({
 
 // ---- one-line summary for the rules list ---------------------------------
 
-export function ruleSummary(r: {
+export function ruleSummary(r: RuleVehicleFields & {
   vehicle_categories?: string[] | null;
   year_min?: number | null;
   year_max?: number | null;
@@ -423,11 +396,17 @@ export function ruleSummary(r: {
   const years =
     r.year_min || r.year_max ? `${r.year_min ?? "any"}–${r.year_max ?? "newest"}` : "any year";
   const makes = r.makes?.length ? r.makes.join(", ") : "any make";
+  // 2026-11-09: a rule with make cards reads the same way the form does.
+  const cards = r.vehicle_wants?.length
+    ? describeWants(r.vehicle_categories ?? [], wantsFromRule(r), "en").lines.join("; ")
+    : null;
   const where: string[] = [];
   if (r.zip_center && r.zip_radius_miles) where.push(`${r.zip_radius_miles} mi of ${r.zip_center}`);
   if (r.area_codes?.length) where.push(`area ${r.area_codes.join(", ")}`);
   if (r.zip_codes?.length) {
     where.push(`ZIPs ${r.zip_codes.slice(0, 3).join(", ")}${r.zip_codes.length > 3 ? "…" : ""}`);
   }
-  return `${types} · ${years} · ${makes} · ${where.length ? where.join(" or ") : "anywhere"}`;
+  const place = where.length ? where.join(" or ") : "anywhere";
+  if (cards) return `${cards} · ${place}`;
+  return `${types} · ${years} · ${makes} · ${place}`;
 }

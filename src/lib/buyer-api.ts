@@ -49,6 +49,8 @@ export type BuyerSignupBody = {
   // Optional texting consent, unchecked by default. Carriers require a
   // reviewable consent control before Junkerz may text a buyer at all.
   sms_consent?: boolean;
+  // English or Español; the bid-rule form follows it (2026-11-09).
+  preferred_language?: "en" | "es";
   // Robot check: the signed ticket signup-config gave this page, and the
   // hidden trap box people never see.
   form_ticket?: string;
@@ -116,6 +118,8 @@ export const buyerApi = {
   consumeRecovery: (token: string, password: string) =>
     _fetch("/api/buyers/auth/recovery/consume", { method: "POST", body: JSON.stringify({ token, password }) }).then(_json),
   me: () => _fetch("/api/buyers/me").then(_json),
+  setLanguage: (language: "en" | "es") =>
+    _fetch("/api/buyers/me/language", { method: "POST", body: JSON.stringify({ language }) }).then(_json),
   paymentMethod: () => _fetch("/api/buyers/onboarding/payment-method").then(_json),
   createPaymentSetup: () => _fetch("/api/buyers/onboarding/payment-setup", { method: "POST" }).then(_json),
   savePaymentMethod: (setupIntentId: string) => _fetch("/api/buyers/onboarding/payment-method", { method: "POST", body: JSON.stringify({setup_intent_id: setupIntentId}) }).then(_json),
