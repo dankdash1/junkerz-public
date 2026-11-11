@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { buyerApi } from "@/lib/buyer-api";
-import { useBuyerLang, type Lang } from "@/lib/buyer-lang";
+import { useBuyerLang, useInBuyerLangProvider, type Lang } from "@/lib/buyer-lang";
+import LanguageSwitch from "@/components/buyers/LangSwitch";
 import { ruleText, serverProblem, type RuleText } from "@/components/buyers/ruleText";
 import { VehicleTypesField, WhereField, parseZipList, whereProblem } from "@/components/buyers/RuleFields";
 import VehicleWantsField from "@/components/buyers/VehicleWantsField";
@@ -258,33 +259,14 @@ function YesAny({
   );
 }
 
-function LanguageSwitch({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => void }) {
-  return (
-    <div className="flex gap-1" role="group" aria-label="Language / Idioma">
-      {(["en", "es"] as const).map((l) => (
-        <button
-          key={l}
-          type="button"
-          lang={l}
-          aria-pressed={lang === l}
-          onClick={() => onChange(l)}
-          className={`px-3 py-1 rounded border text-sm ${
-            lang === l ? "bg-slate-800 text-white border-slate-900" : "bg-white text-slate-700"
-          }`}
-        >
-          {l === "en" ? "English" : "Español"}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 type Status = { kind: "saved" } | { kind: "error"; message: string } | null;
 
 export default function BidRuleForm({ ruleId }: { ruleId?: number }) {
   const router = useRouter();
   const edit = ruleId != null;
   const [lang, setLang] = useBuyerLang();
+  // Inside the buyers layout the switch sits at the top of the page already.
+  const layoutSwitch = useInBuyerLangProvider();
   const t = ruleText(lang);
 
   const [loaded, setLoaded] = useState(!edit);
@@ -392,8 +374,8 @@ export default function BidRuleForm({ ruleId }: { ruleId?: number }) {
     }
   }
 
-  if (loadErr) return <main className="p-12 text-red-600">{loadErr}</main>;
-  if (!loaded) return <main className="p-12">{t.loading}</main>;
+  if (loadErr) return <main className="p-12 text-red-600" lang={lang}>{serverProblem(t, loadErr)}</main>;
+  if (!loaded) return <main className="p-12" lang={lang}>{t.loading}</main>;
 
   const showSaved = status?.kind === "saved" && savedSnap === snap(form, wants);
   const pick = (on: boolean) =>
@@ -403,7 +385,7 @@ export default function BidRuleForm({ ruleId }: { ruleId?: number }) {
     <main className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6" lang={lang}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{edit ? t.titleEdit(ruleId as number) : t.titleNew}</h1>
-        <LanguageSwitch lang={lang} onChange={setLang} />
+        {!layoutSwitch && <LanguageSwitch lang={lang} onChange={setLang} />}
       </div>
       <form onSubmit={save} className="space-y-4 bg-white rounded shadow p-4 sm:p-6">
         <div>

@@ -4,6 +4,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { buyerApi } from "@/lib/buyer-api";
 import { ruleSummary } from "@/components/buyers/RuleFields";
+import { useBuyerLang } from "@/lib/buyer-lang";
+import { buyerText } from "@/components/buyers/buyerText";
+import { ruleText, serverProblem } from "@/components/buyers/ruleText";
 
 interface BidRule {
   id: number;
@@ -24,19 +27,19 @@ interface BidRule {
   zip_radius_miles?: number | null;
 }
 
-const PRIORITY_LABEL: Record<number, string> = {
-  0: "Off",
-  1: "Low",
-  5: "Med",
-  10: "High",
-};
-function priorityLabel(p?: number) {
+// Priority and channel names come from the bid-rule form's own table (ruleText).
+function priorityLabel(labels: Record<number, string>, p?: number) {
   if (p == null) return "—";
-  return PRIORITY_LABEL[p] ?? String(p);
+  return labels[p] ?? String(p);
 }
 
 export default function BidRulesList() {
+  // English or Español, from the switch at the top of the buyer pages (2026-11-10).
+  const [lang] = useBuyerLang();
+  const t = buyerText(lang).rules;
+  const rt = ruleText(lang);
   const [rules, setRules] = useState<BidRule[] | null>(null);
+  // Kept as the server's code; turned into words below so it follows the switch.
   const [err, setErr] = useState<string | null>(null);
 
   async function reload() {
@@ -44,7 +47,7 @@ export default function BidRulesList() {
       const r = await buyerApi.listRules();
       setRules(r);
     } catch (e: unknown) {
-      setErr((e as Error)?.message ?? "load failed");
+      setErr((e as Error)?.message || "lookup_failed");
     }
   }
 
@@ -53,12 +56,12 @@ export default function BidRulesList() {
   }, []);
 
   async function remove(id: number) {
-    if (!confirm("Delete this rule?")) return;
+    if (!confirm(t.confirmDelete)) return;
     try {
       await buyerApi.deleteRule(id);
       reload();
     } catch (e: unknown) {
-      setErr((e as Error)?.message ?? "delete failed");
+      setErr((e as Error)?.message || "delete_failed");
     }
   }
 
@@ -67,7 +70,7 @@ export default function BidRulesList() {
       await buyerApi.updateRule(rule.id, { active: !rule.active });
       reload();
     } catch (e: unknown) {
-      setErr((e as Error)?.message ?? "toggle failed");
+      setErr((e as Error)?.message || "update_failed");
     }
   }
 
@@ -76,44 +79,44 @@ export default function BidRulesList() {
       await buyerApi.cloneRule(id);
       reload();
     } catch (e: unknown) {
-      setErr((e as Error)?.message ?? "clone failed");
+      setErr((e as Error)?.message || "clone_failed");
     }
   }
 
   return (
-    <main className="p-6 max-w-5xl mx-auto">
+    <main className="p-6 max-w-5xl mx-auto" lang={lang}>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Bid Rules</h1>
+        <h1 className="text-2xl font-bold">{t.title}</h1>
         <Link href="/buyers/bid-rules/new">
-          <Button>+ New rule</Button>
+          <Button>{t.newRule}</Button>
         </Link>
       </div>
-      {err && <p className="text-red-600 mb-4">{err}</p>}
+      {err && <p className="text-red-600 mb-4">{serverProblem(rt, err)}</p>}
       {rules === null ? (
-        <p>Loading…</p>
+        <p>{rt.loading}</p>
       ) : rules.length === 0 ? (
         <div className="bg-white rounded shadow p-12 text-center text-slate-600">
-          No bid rules yet. Create one to start receiving matched cars.
+          {t.empty}
         </div>
       ) : (
         <div className="bg-white rounded shadow overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-100 text-left">
               <tr>
-                <th className="p-3">Name</th>
-                <th className="p-3">Bid</th>
-                <th className="p-3">Active</th>
-                <th className="p-3">Priority</th>
-                <th className="p-3">Notify</th>
-                <th className="p-3">This week</th>
-                <th className="p-3">Filters</th>
+                <th className="p-3">{t.colName}</th>
+                <th className="p-3">{t.colBid}</th>
+                <th className="p-3">{t.colActive}</th>
+                <th className="p-3">{t.colPriority}</th>
+                <th className="p-3">{t.colNotify}</th>
+                <th className="p-3">{t.colWeek}</th>
+                <th className="p-3">{t.colFilters}</th>
                 <th className="p-3"></th>
               </tr>
             </thead>
             <tbody>
               {rules.map((r) => (
                 <tr key={r.id} className="border-t">
-                  <td className="p-3">{r.name || `Rule ${r.id}`}</td>
+                  <td className="p-3">{r.name || t.ruleN(r.id)}</td>
                   <td className="p-3">${(r.bid_cents / 100).toFixed(0)}</td>
                   <td className="p-3">
                     <button
@@ -124,17 +127,17 @@ export default function BidRulesList() {
                           : "bg-slate-200 text-slate-700 border-slate-300"
                       }`}
                       aria-pressed={r.active}
-                      title={r.active ? "Click to pause this rule" : "Click to activate this rule"}
+                      title={r.active ? t.pauseTitle : t.activateTitle}
                     >
-                      {r.active ? "ON" : "OFF"}
+                      {r.active ? t.on : t.off}
                     </button>
                   </td>
                   <td className="p-3 text-slate-700 text-xs">
-                    {priorityLabel(r.priority)}
+                    {priorityLabel(rt.priorities, r.priority)}
                   </td>
                   <td className="p-3 text-slate-600 text-xs">
                     {(r.notification_preference ?? []).length
-                      ? (r.notification_preference ?? []).join(", ")
+                      ? (r.notification_preference ?? []).map((c) => rt.channelNames[c] ?? c).join(", ")
                       : "—"}
                   </td>
                   <td className="p-3">
@@ -142,24 +145,24 @@ export default function BidRulesList() {
                     {r.max_per_week ? ` / ${r.max_per_week}` : " / ∞"}
                   </td>
                   <td className="p-3 text-slate-600 text-xs">
-                    {ruleSummary(r)}
+                    {ruleSummary(r, lang)}
                   </td>
                   <td className="p-3 space-x-2 whitespace-nowrap">
                     <Link href={`/buyers/bid-rules/${r.id}`} className="text-blue-600 hover:underline">
-                      Edit
+                      {t.edit}
                     </Link>
                     <button
                       onClick={() => cloneRule(r.id)}
                       className="text-cyan-700 hover:underline"
-                      title="Make a copy of this rule (starts inactive)"
+                      title={t.cloneTitle}
                     >
-                      Clone
+                      {t.clone}
                     </button>
                     <button
                       onClick={() => remove(r.id)}
                       className="text-red-600 hover:underline"
                     >
-                      Delete
+                      {t.delete}
                     </button>
                   </td>
                 </tr>

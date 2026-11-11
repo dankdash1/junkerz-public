@@ -4,53 +4,67 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import OnboardingChecklist from "@/components/buyers/OnboardingChecklist";
 import { buyerApi, DocumentType, OnboardingStatus } from "@/lib/buyer-api";
+import { useBuyerLang } from "@/lib/buyer-lang";
+import { buyerText, itemLabel, serverWords } from "@/components/buyers/buyerText";
+
+type Problem = { kind: "upload" | "terms" | "load"; code: string } | null;
 
 export default function BuyerSignupDocuments() {
   const router = useRouter();
+  // English or Español, from the switch at the top of the buyer pages (2026-11-10).
+  const [lang] = useBuyerLang();
+  const T = buyerText(lang);
+  const t = T.documents;
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [error, setError] = useState("");
+  // Kept as the server's code; turned into words below so it follows the switch.
+  const [error, setError] = useState<Problem>(null);
   async function reload() { setStatus(await buyerApi.onboardingStatus()); }
   useEffect(() => {
     if (!window.localStorage.getItem("buyer_token")) { router.replace("/buyers/login?signed_up=1"); return; }
     // The server checklist reads persisted documents on every visit.
-    buyerApi.onboardingStatus().then(setStatus).catch(e => setError(e.message));
+    buyerApi.onboardingStatus().then(setStatus).catch(e => setError({ kind: "load", code: e?.message || "" }));
   }, [router]);
   async function upload(kind: DocumentType, file?: File) {
     if (!file) return;
-    setBusy(kind); setError("");
+    setBusy(kind); setError(null);
     try { await buyerApi.uploadDocument(kind, file); await reload(); }
-    catch (e) { setError((e as Error).message || "Upload failed"); }
+    catch (e) { setError({ kind: "upload", code: (e as Error).message || "" }); }
     finally { setBusy(null); }
   }
   async function sign() {
-    setBusy("terms"); setError("");
+    setBusy("terms"); setError(null);
     try { await buyerApi.signTerms(); await reload(); }
-    catch (e) { setError((e as Error).message || "Could not save acceptance"); }
+    catch (e) { setError({ kind: "terms", code: (e as Error).message || "" }); }
     finally { setBusy(null); }
   }
-  return <main className="max-w-xl mx-auto pt-12 px-6 pb-16">
-    <h1 className="text-2xl font-bold mb-2">Upload your documents</h1>
-    <p className="text-sm text-slate-600 mb-6">Complete required items for staff approval. PDF, PNG or JPG files up to 10 MB.</p>
-    {error && <p role="alert" className="text-red-700 mb-4">{error}</p>}
+  const errorText = !error ? ""
+    : t.server[error.code] ? t.server[error.code]
+    : error.kind === "upload" ? t.uploadFailed
+    : error.kind === "terms" ? t.termsFailed
+    : serverWords(T, {}, error.code);
+  return <main className="max-w-xl mx-auto pt-12 px-6 pb-16" lang={lang}>
+    <h1 className="text-2xl font-bold mb-2">{t.title}</h1>
+    <p className="text-sm text-slate-600 mb-6">{t.intro}</p>
+    {errorText && <p role="alert" className="text-red-700 mb-4">{errorText}</p>}
     {status ? <>
-      <OnboardingChecklist status={status}/>
+      <OnboardingChecklist status={status} lang={lang}/>
       <div className="space-y-4 mt-6">
         {status.items.filter(i => i.kind === "document" && (i.requested || i.required)).map(item => <div id={item.key} key={item.key} className="border rounded p-4 bg-white">
-          <label htmlFor={`upload-${item.key}`} className="block font-medium mb-2">{item.completed ? 'Replace' : 'Upload'} {item.label}</label>
+          <label htmlFor={`upload-${item.key}`} className="block font-medium mb-2">{item.completed ? t.replace(itemLabel(T, lang, item)) : t.upload(itemLabel(T, lang, item))}</label>
           <input id={`upload-${item.key}`} type="file" accept=".pdf,.png,.jpg,.jpeg" disabled={!!busy} className="text-sm max-w-full" onChange={e => { void upload(item.key as DocumentType, e.target.files?.[0]); }}/>
-          {busy === item.key && <p role="status">Uploading…</p>}
+          {busy === item.key && <p role="status">{t.uploading}</p>}
         </div>)}
         {!status.items.find(i => i.key === "terms")?.completed && <div id="terms" className="border rounded p-4 bg-white space-y-3">
-          <p>Read the <a className="underline" href="/terms" target="_blank" rel="noreferrer">Terms of Service</a> before accepting.</p>
-          <Button disabled={!!busy} onClick={sign}>I accept the Terms of Service</Button>
+          <p>{t.termsBefore} <a className="underline" href="/terms" target="_blank" rel="noreferrer">{t.termsLink}</a> {t.termsAfter}</p>
+          <Button disabled={!!busy} onClick={sign}>{t.accept}</Button>
         </div>}
       </div>
-    </> : !error && <p>Loading saved checklist…</p>}
+    </> : !error && <p>{t.loadingChecklist}</p>}
     <div className="mt-8 flex flex-wrap gap-3">
-      <Button onClick={() => router.replace("/buyers/dashboard")} disabled={!!busy}>Continue to dashboard</Button>
-      <Button variant="outline" onClick={() => router.replace("/buyers/dashboard")} disabled={!!busy}>Skip for now</Button>
+      <Button onClick={() => router.replace("/buyers/dashboard")} disabled={!!busy}>{t.continue}</Button>
+      <Button variant="outline" onClick={() => router.replace("/buyers/dashboard")} disabled={!!busy}>{t.skip}</Button>
     </div>
-    <p className="text-xs text-slate-500 mt-3">Your saved progress stays on your dashboard. Return to any incomplete item there.</p>
+    <p className="text-xs text-slate-500 mt-3">{t.footer}</p>
   </main>;
 }

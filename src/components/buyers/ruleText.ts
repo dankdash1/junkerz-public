@@ -139,6 +139,18 @@ const en = {
   typeMiles: "Type how many miles the circle reaches.",
   legacyModels: (models: string) => `This rule also limits models to ${models} (an older setting).`,
   removeLegacyModels: "Remove this limit",
+
+  // the one-line summary on the bid-rules list (2026-11-10)
+  sumAllVehicles: "all vehicles",
+  sumAnyYear: "any year",
+  sumAny: "any",
+  sumNewest: "newest",
+  sumAnyMake: "any make",
+  sumMilesOf: (miles: number, center: string) => `${miles} mi of ${center}`,
+  sumArea: (codes: string) => `area ${codes}`,
+  sumZips: (zips: string) => `ZIPs ${zips}`,
+  sumOr: " or ",
+  sumAnywhere: "anywhere",
 };
 
 export type RuleText = typeof en;
@@ -277,6 +289,17 @@ const es: RuleText = {
   typeMiles: "Escriba cuántas millas abarca el círculo.",
   legacyModels: (models: string) => `Esta regla también limita los modelos a ${models} (un ajuste anterior).`,
   removeLegacyModels: "Quitar este límite",
+
+  sumAllVehicles: "todos los vehículos",
+  sumAnyYear: "cualquier año",
+  sumAny: "cualquiera",
+  sumNewest: "el más nuevo",
+  sumAnyMake: "cualquier marca",
+  sumMilesOf: (miles: number, center: string) => `${miles} millas de ${center}`,
+  sumArea: (codes: string) => `código de área ${codes}`,
+  sumZips: (zips: string) => `ZIP ${zips}`,
+  sumOr: " o ",
+  sumAnywhere: "cualquier lugar",
 };
 
 export function ruleText(lang: Lang): RuleText {
