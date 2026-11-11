@@ -27,6 +27,13 @@ export const SITE = {
  */
 export const PICKUPS_LIVE = false;
 
+/**
+ * The yellow "we are not picking up cars yet" ribbon at the top of every seller
+ * page. George, 2026-11-11: take the ribbon off. Pickups stay off (sellers still
+ * get "Save my offer" on the result page); only the top ribbon is hidden.
+ */
+export const SHOW_NOT_LIVE_BANNER = false;
+
 export const NOT_LIVE_COPY = {
   en: {
     banner: "We're opening soon. We are not picking up cars yet — get your offer now and we'll contact you when we start.",

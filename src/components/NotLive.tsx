@@ -3,14 +3,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Phone } from "lucide-react";
 import Logo from "@/components/Logo";
-import { NOT_LIVE_COPY, PICKUPS_LIVE, SITE } from "@/lib/site";
+import { NOT_LIVE_COPY, PICKUPS_LIVE, SHOW_NOT_LIVE_BANNER, SITE } from "@/lib/site";
 
 const mono = "font-[family-name:var(--font-geist-mono)]";
 
 /** Thin bar on every seller page while pickups are not live. Buyers and staff pages skip it. */
 export function NotLiveBanner() {
   const path = usePathname() || "/";
-  if (PICKUPS_LIVE) return null;
+  if (PICKUPS_LIVE || !SHOW_NOT_LIVE_BANNER) return null;
   if (path.startsWith("/buyers") || path.startsWith("/account") || path.startsWith("/yard-")) return null;
   const es = path.startsWith("/carro-viejos");
   return (
