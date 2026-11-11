@@ -6,7 +6,7 @@ import PickupPage from '@/app/pickup/[offer_id]/page';
 import {readAcceptOtp} from '@/lib/pickup-accept';
 const nav=vi.hoisted(()=>({search:new URLSearchParams(),push:vi.fn()}));
 vi.mock('next/navigation',()=>({useParams:()=>({offer_id:'42'}),useSearchParams:()=>nav.search,useRouter:()=>({push:nav.push,replace:vi.fn()})}));
-// PR #57 deliberately paused production pickups; these flow fixtures opt in locally.
+// Flow fixtures set the pickup switch themselves (on by default; the pause test turns it off).
 const pickupState=vi.hoisted(()=>({live:true}));
 vi.mock('@/lib/site',async(importOriginal)=>({
  ...await importOriginal<typeof import('@/lib/site')>(),
@@ -70,9 +70,8 @@ it('a rejected or expired code is explained, and the pickup is not scheduled',as
 });
 
 it('paused pickups show the opening notice without loading or submitting a pickup',async()=>{
- const productionSite=await vi.importActual<typeof import('@/lib/site')>('@/lib/site');
- expect(productionSite.PICKUPS_LIVE).toBe(false);
- pickupState.live=productionSite.PICKUPS_LIVE;
+ // Production pickups are on (George 11-11); this keeps the off switch working.
+ pickupState.live=false;
  render(<PickupPage/>);
  expect(await screen.findByRole('heading',{name: /not picking up cars yet/i})).toBeTruthy();
  expect(screen.getByText(/we are not scheduling pickups yet/)).toBeTruthy();
