@@ -25,6 +25,9 @@ function back(status: "connected" | "failed", detail?: string) {
   // connection the outcome belongs to.
   const url = new URL("/admin/junkyard", ADMIN_URL);
   url.searchParams.set("tab", "tiktok");
+  // The dashboard rewrites tab=tiktok to Settings > Advertising; `channel`
+  // keeps the Advertising screen on its TikTok button after that rewrite.
+  url.searchParams.set("channel", "tiktok");
   url.searchParams.set("tiktok_business", status);
   if (detail) url.searchParams.set("reason", detail.slice(0, 80));
   return NextResponse.redirect(url.toString(), { status: 303 });
