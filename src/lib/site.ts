@@ -7,7 +7,7 @@ export const SITE = {
   tagline: "Cash for junk cars across Dallas–Fort Worth",
   phone: "817-420-9180",
   phoneHref: "tel:+18174209180",
-  email: "info@junkerz.com",
+  email: "junkerzdfw@gmail.com",
   street: "14057 Skyfrost Dr",
   city: "Dallas",
   state: "TX",
