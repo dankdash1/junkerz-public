@@ -21,11 +21,12 @@ export const SITE = {
 } as const;
 
 /**
- * False while Junkerz is not picking up cars yet (George, 2026-10-11).
- * Sellers still get a quote, but cannot accept or book a pickup: the site
- * shows a banner and "Save my offer" instead. Flip to true when pickups start.
+ * George 2026-11-11: pickups on. Sellers can accept an offer and book a pickup.
+ * History: false from 2026-10-11 (not picking up cars yet; on briefly 11-01 for
+ * a test). Set false again to bring back the banner and "Save my offer" —
+ * NOT_LIVE_COPY and NotLive.tsx stay for that.
  */
-export const PICKUPS_LIVE = false;
+export const PICKUPS_LIVE = true;
 
 export const NOT_LIVE_COPY = {
   en: {

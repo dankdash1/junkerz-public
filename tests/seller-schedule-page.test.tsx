@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import SellerSchedulePage from '@/app/schedule/[token]/page';
 vi.mock('next/navigation',()=>({useParams:()=>({token:'tok-123'}),useSearchParams:()=>new URLSearchParams(),useRouter:()=>({push:vi.fn(),replace:vi.fn()})}));
 const offer={id:1,vin:null,year:2009,make:'Ford',model:'Focus',condition:'used',offer_cents:33000,contact_name:'Test Seller',contact_email:'seller@example.com',contact_phone:null,zip_code:'76107',pickup_address:'1 Main St, Fort Worth, TX 76107',seller_schedule_token_expires_at:null};
-// PR #57 deliberately paused production pickups; these flow fixtures opt in locally.
+// Flow fixtures set the pickup switch themselves (on by default; the pause test turns it off).
 const pickupState=vi.hoisted(()=>({live:true}));
 vi.mock('@/lib/site',async(importOriginal)=>({
  ...await importOriginal<typeof import('@/lib/site')>(),
@@ -61,9 +61,8 @@ it('a quick pick names the window the backend uses and an immediate pickup names
 });
 
 it('paused pickups show the opening notice without loading or submitting a pickup',async()=>{
- const productionSite=await vi.importActual<typeof import('@/lib/site')>('@/lib/site');
- expect(productionSite.PICKUPS_LIVE).toBe(false);
- pickupState.live=productionSite.PICKUPS_LIVE;
+ // Production pickups are on (George 11-11); this keeps the off switch working.
+ pickupState.live=false;
  render(<SellerSchedulePage/>);
  expect(await screen.findByRole('heading',{name: /not picking up cars yet/i})).toBeTruthy();
  expect(screen.getByText(/we are not scheduling pickups yet/)).toBeTruthy();
