@@ -2,6 +2,7 @@
 import { API_BASE } from "@/lib/api-base";
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
+import TrimPicker from "@/components/TrimPicker";
 
 
 export type VehicleSelection = {
@@ -17,6 +18,7 @@ type Props = {
   value: VehicleSelection;
   onChange: (v: VehicleSelection) => void;
   showTrim?: boolean;
+  lang?: "en" | "es";
   // PR-J5.5c Phase 4: cascading filter from outer form.
   // When provided, the Make list is filtered to manufacturers that build
   // at least one model in any of `categories` within [yearMin, yearMax].
@@ -33,6 +35,7 @@ export default function VehiclePicker({
   value,
   onChange,
   showTrim = true,
+  lang = "en",
   categories,
   yearMin,
   yearMax,
@@ -76,14 +79,15 @@ export default function VehiclePicker({
     <div>
       <Label>Year{makeFirst ? " (optional, to list models)" : ""}</Label>
       <select
+        aria-label="Vehicle year"
         className="w-full border rounded h-10 px-2"
         value={value.year ?? ""}
         onChange={(e) => {
           const year = e.target.value ? parseInt(e.target.value, 10) : null;
           onChange(
             makeFirst
-              ? { ...value, year, model_id: null, model_name: null }
-              : { ...value, year, make_id: null, make_name: null, model_id: null, model_name: null },
+              ? { ...value, year, model_id: null, model_name: null, trim: "" }
+              : { ...value, year, make_id: null, make_name: null, model_id: null, model_name: null, trim: "" },
           );
         }}
       >
@@ -97,6 +101,7 @@ export default function VehiclePicker({
     <div>
       <Label>Make</Label>
       <select
+        aria-label="Vehicle make"
         className="w-full border rounded h-10 px-2"
         value={value.make_id ?? ""}
         disabled={!makeFirst && !value.year}
@@ -104,7 +109,7 @@ export default function VehiclePicker({
           const id = e.target.value ? parseInt(e.target.value, 10) : null;
           const name = makes.find((m) => m.id === id)?.name ?? null;
           onChange({ ...value, make_id: id, make_name: name,
-                     model_id: null, model_name: null });
+                     model_id: null, model_name: null, trim: "" });
         }}
       >
         <option value="">
@@ -125,13 +130,14 @@ export default function VehiclePicker({
     <div>
       <Label>Model</Label>
       <select
+        aria-label="Vehicle model"
         className="w-full border rounded h-10 px-2"
         value={value.model_id ?? ""}
         disabled={!value.make_id || !value.year}
         onChange={(e) => {
           const id = e.target.value ? parseInt(e.target.value, 10) : null;
           const name = models.find((m) => m.id === id)?.name ?? null;
-          onChange({ ...value, model_id: id, model_name: name });
+          onChange({ ...value, model_id: id, model_name: name, trim: "" });
         }}
       >
         <option value="">{modelHint}</option>
@@ -157,15 +163,9 @@ export default function VehiclePicker({
       )}
 
       {showTrim && (
-        <div>
-          <Label>Trim (optional)</Label>
-          <input
-            className="w-full border rounded h-10 px-2"
-            value={value.trim}
-            onChange={(e) => onChange({ ...value, trim: e.target.value })}
-            placeholder="e.g., LE, SE, Sport"
-          />
-        </div>
+        <TrimPicker key={`${value.year}-${value.make_id}-${value.model_id}`}
+          year={value.year} make={value.make_name} model={value.model_name}
+          value={value.trim} onChange={(trim) => onChange({ ...value, trim })} lang={lang} />
       )}
     </div>
   );

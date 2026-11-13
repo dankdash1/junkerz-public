@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import TrimPicker from "@/components/TrimPicker";
 
 
 type Opt = { id: number; name: string };
@@ -51,6 +52,7 @@ export default function HeroQuoteForm({
   const [year, setYear] = useState<string>("");
   const [make, setMake] = useState<Opt | null>(null);
   const [model, setModel] = useState<Opt | null>(null);
+  const [trim, setTrim] = useState("");
   const [going, setGoing] = useState(false);
 
   useEffect(() => {
@@ -84,6 +86,7 @@ export default function HeroQuoteForm({
       make: make!.name,
       model_id: String(model!.id),
       model: model!.name,
+      ...(trim.trim() ? { trim: trim.trim() } : {}),
     });
     router.push(`/quote?${p.toString()}`);
   }
@@ -98,7 +101,7 @@ export default function HeroQuoteForm({
           aria-label="Vehicle year"
           className={selectCls}
           value={year}
-          onChange={(e) => { setYear(e.target.value); setModel(null); }}
+          onChange={(e) => { setYear(e.target.value); setModel(null); setTrim(""); }}
         >
           <option value="">{copy.year}</option>
           {years.map((y) => <option key={y} value={y}>{y}</option>)}
@@ -111,7 +114,7 @@ export default function HeroQuoteForm({
           value={make?.id ?? ""}
           onChange={(e) => {
             const m = makes.find((x) => String(x.id) === e.target.value) || null;
-            setMake(m); setModel(null);
+            setMake(m); setModel(null); setTrim("");
           }}
         >
           <option value="">{year ? copy.make : copy.pickYear}</option>
@@ -123,13 +126,18 @@ export default function HeroQuoteForm({
           className={selectCls}
           disabled={!make || models.length === 0}
           value={model?.id ?? ""}
-          onChange={(e) =>
-            setModel(models.find((x) => String(x.id) === e.target.value) || null)
-          }
+          onChange={(e) => {
+            setModel(models.find((x) => String(x.id) === e.target.value) || null);
+            setTrim("");
+          }}
         >
           <option value="">{make ? copy.model : copy.pickMake}</option>
           {models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
+
+        {model && <TrimPicker key={`${year}-${make?.id}-${model.id}`}
+          year={Number(year)} make={make?.name ?? null} model={model.name}
+          value={trim} onChange={setTrim} lang={lang} className={selectCls} />}
 
         <Button
           onClick={go}
