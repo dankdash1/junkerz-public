@@ -66,12 +66,14 @@ function ResultContent() {
         firm: "Oferta garantizada.", accept: "Aceptar y programar la grúa",
         decline: "¿No le sirve? Díganos por qué", call: "O llámenos",
         free: "Grúa gratis", cash: "Efectivo al recoger", fast: "24 a 48 horas",
-        wait: "Estamos calculando su oferta…" }
+        wait: "Estamos calculando su oferta…",
+        paperwork: "Después de aceptar, le pediremos el VIN o la placa para los documentos. Puede proporcionarlos antes de la recogida o cuando llegue el conductor." }
     : { head: "Your offer", pending: "One of our team is confirming this number now.",
         firm: "This is a guaranteed offer.", accept: "Accept & schedule pickup",
         decline: "Not right? Tell us why", call: "Or call us",
         free: "Free towing", cash: "Cash at pickup", fast: "24 to 48 hours",
-        wait: "Working out your offer…" };
+        wait: "Working out your offer…",
+        paperwork: "After you accept, we'll need your VIN or license plate for the paperwork. You can provide it before pickup or when the driver arrives." };
 
   if (error) {
     return (
@@ -123,6 +125,8 @@ function ResultContent() {
           })}
         </div>
       </div>
+
+      <p className="mt-5 text-center text-sm text-zinc-600">{t.paperwork}</p>
 
       {!PICKUPS_LIVE ? (
         saved ? (

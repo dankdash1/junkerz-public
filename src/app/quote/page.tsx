@@ -14,16 +14,6 @@ import ConditionGrid, { DamageZones } from "@/components/ConditionGrid";
 
 const STEPS = ["vehicle", "title", "drivability", "components", "damage", "zip", "contact"] as const;
 
-const STEP_META: { title: string; subtitle: string }[] = [
-  { title: "What are we buying?", subtitle: "Pick your vehicle and give us the VIN or the license plate." },
-  { title: "Do you have the title?", subtitle: "No title is often fine — just let us know." },
-  { title: "Does it run?", subtitle: "Be honest — dead cars are still worth real cash." },
-  { title: "What's still on it?", subtitle: "Engine, transmission and key parts drive the offer." },
-  { title: "Any damage?", subtitle: "Tap any areas that are wrecked or missing." },
-  { title: "Where is it?", subtitle: "We tow from your location — always free." },
-  { title: "Where do we send the offer?", subtitle: "We'll email your guaranteed number, and text it too if you want." },
-];
-
 const mono = "font-[family-name:var(--font-geist-mono)]";
 
 type Lang = "en" | "es";
@@ -31,19 +21,18 @@ type Lang = "en" | "es";
 const T = {
   en: {
     steps: [
-      { title: "What are we buying?", subtitle: "Pick your vehicle and give us the VIN or the license plate." },
+      { title: "What are we buying?", subtitle: "Choose your vehicle. We'll collect the paperwork after you accept." },
       { title: "Do you have the title?", subtitle: "No title is often fine — just let us know." },
       { title: "Does it run?", subtitle: "Be honest — dead cars are still worth real cash." },
       { title: "What's still on it?", subtitle: "Engine, transmission and key parts drive the offer." },
       { title: "Any damage?", subtitle: "Tap any areas that are wrecked or missing." },
       { title: "Where is it?", subtitle: "We tow from your location — always free." },
-      { title: "Where do we send the offer?", subtitle: "We'll email your guaranteed number, and text it too if you want." },
+      { title: "Where do we send the offer?", subtitle: "See your offer right here. We'll also email it to you." },
     ],
     guaranteed: "Guaranteed offer", step: "Step", of: "of",
     back: "Back", cont: "Continue", submit: "Get my offer", submitting: "Getting your offer…",
-    vin: "VIN", mileage: "Mileage (optional)",
-    plate: "License plate", plateState: "State", vinOrPlate: "Enter the VIN or the license plate — one is enough.",
-    name: "Your name", nameHint: "As it should read on the bill of sale.",
+    mileage: "Mileage (optional)",
+    name: "Your name", nameHint: "So we know who to contact.",
     titles: { clean: "Clean title", salvage: "Salvage title", rebuilt: "Rebuilt title", no_title: "No title" },
     runs: "Does it run/drive?", starts: "Does it start?",
     wheels: "All four wheels attached?", tires: "All tires inflated?",
@@ -57,7 +46,7 @@ const T = {
     phone: "Phone", email: "Email",
     phoneReq: "Phone is required", phoneBad: "Enter a valid 10-digit phone number",
     emailReq: "Email is required", emailBad: "Enter a valid email address",
-    contactHint: "We need your phone and email. We'll email your confirmation. Tick the box below if you also want texts.",
+    contactHint: "We need your name, phone and email. We'll email your confirmation. Tick the box below if you also want texts.",
     smsBox: "Yes, text me about my quote, offer and pickup (optional).",
     smsConsent: "By checking this box and providing your phone number, you agree to receive SMS quote, offer and pickup updates from Junkerz. Message frequency may vary. Standard Message and Data Rates may apply. Reply STOP to opt out. Reply HELP for help. We will not share mobile information with third parties for promotional or marketing purposes. See our",
     termsLink: "Terms", privacyLink: "Privacy Policy", and: "and",
@@ -68,19 +57,18 @@ const T = {
   },
   es: {
     steps: [
-      { title: "¿Qué carro vamos a comprar?", subtitle: "Elija su vehículo y denos el VIN o la placa." },
+      { title: "¿Qué carro vamos a comprar?", subtitle: "Elija su vehículo. Le pediremos los documentos después de que acepte." },
       { title: "¿Tiene el título?", subtitle: "Sin título casi siempre está bien — solo díganos." },
       { title: "¿Enciende?", subtitle: "Sea honesto — los carros muertos todavía valen dinero." },
       { title: "¿Qué le queda puesto?", subtitle: "El motor, la transmisión y las piezas mueven la oferta." },
       { title: "¿Tiene daño?", subtitle: "Toque las partes chocadas o que faltan." },
       { title: "¿Dónde está?", subtitle: "Lo recogemos donde esté — la grúa siempre es gratis." },
-      { title: "¿A dónde le mandamos la oferta?", subtitle: "Le mandamos su número garantizado por correo, y por texto si quiere." },
+      { title: "¿A dónde le mandamos la oferta?", subtitle: "Vea su oferta aquí mismo. También se la mandamos por correo." },
     ],
     guaranteed: "Oferta garantizada", step: "Paso", of: "de",
     back: "Atrás", cont: "Continuar", submit: "Ver mi oferta", submitting: "Buscando su oferta…",
-    vin: "VIN", mileage: "Millaje (opcional)",
-    plate: "Placa", plateState: "Estado", vinOrPlate: "Ponga el VIN o la placa — con uno basta.",
-    name: "Su nombre", nameHint: "Como debe salir en el contrato de venta.",
+    mileage: "Millaje (opcional)",
+    name: "Su nombre", nameHint: "Para saber con quién comunicarnos.",
     titles: { clean: "Título limpio", salvage: "Título de salvamento", rebuilt: "Título reconstruido", no_title: "Sin título" },
     runs: "¿Camina el carro?", starts: "¿Prende el motor?",
     wheels: "¿Tiene las cuatro llantas puestas?", tires: "¿Las llantas tienen aire?",
@@ -94,7 +82,7 @@ const T = {
     phone: "Teléfono", email: "Correo electrónico",
     phoneReq: "El teléfono es obligatorio", phoneBad: "Ponga un teléfono válido de 10 dígitos",
     emailReq: "El correo es obligatorio", emailBad: "Ponga un correo válido",
-    contactHint: "Necesitamos su teléfono y su correo. Le mandamos la confirmación por correo. Marque la casilla de abajo si también quiere mensajes de texto.",
+    contactHint: "Necesitamos su nombre, teléfono y correo. Le mandamos la confirmación por correo. Marque la casilla de abajo si también quiere mensajes de texto.",
     smsBox: "Sí, mándenme mensajes de texto sobre mi cotización, oferta y recogida (opcional).",
     smsConsent: "Al marcar esta casilla y darnos su teléfono, acepta recibir mensajes SMS de Junkerz sobre su cotización, oferta y recogida. La frecuencia de los mensajes puede variar. Pueden aplicar tarifas estándar de mensajes y datos. Responda STOP para cancelar. Responda HELP para recibir ayuda. No compartiremos su información móvil con terceros para fines promocionales o de marketing. Vea nuestros",
     termsLink: "Términos", privacyLink: "Política de privacidad", and: "y nuestra",
@@ -108,9 +96,6 @@ const T = {
 
 type Form = {
   vehicle: VehicleSelection;
-  vin: string;
-  license_plate: string;
-  license_plate_state: string;
   name: string;
   mileage: string;
   title_status: string;
@@ -202,12 +187,6 @@ function isValidEmail(email: string) {
   return /\S+@\S+\.\S+/.test(email.trim());
 }
 
-// A VIN or a plate names the car on the bill of sale (George 11-01).
-function hasVinOrPlate(vin: string, plate: string) {
-  const clean = (v: string) => v.replace(/[^a-z0-9]/gi, "");
-  return clean(vin).length >= 11 || clean(plate).length >= 2;
-}
-
 function QuoteWizardInner() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -216,8 +195,7 @@ function QuoteWizardInner() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Form>({
     vehicle: EMPTY_VEHICLE,
-    vin: "",
-    license_plate: "", license_plate_state: "TX", name: "",
+    name: "",
     mileage: "",
     title_status: "",
     runs: null, starts: null,
@@ -243,6 +221,7 @@ function QuoteWizardInner() {
     const make = sp.get("make");
     const model = sp.get("model");
     if (!year || !makeId || !modelId || !make || !model) return;
+    if (![year, makeId, modelId].every((value) => Number.isSafeInteger(Number(value)) && Number(value) > 0)) return;
     setForm((f) => ({
       ...f,
       vehicle: {
@@ -251,11 +230,10 @@ function QuoteWizardInner() {
         make_name: make,
         model_id: Number(modelId),
         model_name: model,
-        trim: "",
+        trim: sp.get("trim")?.slice(0, 64) || "",
       },
     }));
-    // Stay on the first card: the car is filled in, but the VIN or plate
-    // still has to be asked there (George 11-01).
+    setStep((current) => current === 0 ? 1 : current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -275,7 +253,6 @@ function QuoteWizardInner() {
     try {
       const v = form.vehicle;
       const result = await submitQuote({
-        vin: form.vin.trim() || undefined,
         year: v.year ?? 0,
         make: v.make_name ?? "",
         model: v.model_name ?? "",
@@ -284,7 +261,7 @@ function QuoteWizardInner() {
         zip_code: form.zip_code,
         pickup_address: form.pickup_address || undefined,
         photo_count: 0,
-        trim: v.trim || undefined,
+        trim: v.trim.trim() || undefined,
         mileage: form.mileage ? parseInt(form.mileage, 10) : undefined,
         make_id: v.make_id, model_id: v.model_id,
         runs: form.runs ?? undefined,
@@ -303,8 +280,6 @@ function QuoteWizardInner() {
         contact_phone: form.phone,
         contact_email: form.email,
         contact_name: form.name.trim(),
-        license_plate: form.license_plate.trim() || undefined,
-        license_plate_state: form.license_plate.trim() ? form.license_plate_state : undefined,
         sms_consent: form.sms_consent,
       });
       trackLeadSubmission(result.offer_id);
@@ -326,11 +301,11 @@ function QuoteWizardInner() {
   }
 
   const canAdvance = (() => {
-    if (step === 0) return !!(form.vehicle.year && form.vehicle.make_id && form.vehicle.model_id)
-      && hasVinOrPlate(form.vin, form.license_plate);
+    if (step === 0) return !!(form.vehicle.year && form.vehicle.make_id && form.vehicle.model_id);
     if (step === 1) return !!form.title_status;
     if (step === 2) return form.runs !== null && form.starts !== null
                            && form.all_wheels_attached !== null
+                           && form.all_tires_inflated !== null
                            && (form.all_tires_inflated !== false
                                || form.flat_tire_position !== "");
     if (step === 3) return !!form.engine_state && !!form.transmission_state
@@ -388,6 +363,7 @@ function QuoteWizardInner() {
           <div className="mb-4 flex items-center justify-between rounded-xl border border-brand-200 bg-brand-50 px-4 py-3">
             <span className="text-sm font-semibold text-brand-800">
               {form.vehicle.year} {form.vehicle.make_name} {form.vehicle.model_name}
+              {form.vehicle.trim ? ` · ${form.vehicle.trim}` : ""}
             </span>
             <button type="button" onClick={() => setStep(0)}
               className="text-xs font-semibold text-brand-700 underline">
@@ -405,27 +381,10 @@ function QuoteWizardInner() {
           {step === 0 && (
             <div className="space-y-4">
               <VehiclePicker
+                lang={lang}
                 value={form.vehicle}
                 onChange={(v) => setForm({ ...form, vehicle: v })}
               />
-              <p className="text-sm text-zinc-600">{t.vinOrPlate}</p>
-              <div>
-                <Label>{t.vin}</Label>
-                <Input value={form.vin} autoCapitalize="characters" onChange={(e) =>
-                  setForm({ ...form, vin: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-[1fr_5.5rem] gap-3">
-                <div>
-                  <Label htmlFor="plate">{t.plate}</Label>
-                  <Input id="plate" value={form.license_plate} autoCapitalize="characters" maxLength={10}
-                    onChange={(e) => setForm({ ...form, license_plate: e.target.value })} />
-                </div>
-                <div>
-                  <Label htmlFor="plate_state">{t.plateState}</Label>
-                  <Input id="plate_state" value={form.license_plate_state} autoCapitalize="characters" maxLength={2}
-                    onChange={(e) => setForm({ ...form, license_plate_state: e.target.value.replace(/[^a-z]/gi, "").toUpperCase() })} />
-                </div>
-              </div>
               <div>
                 <Label>{t.mileage}</Label>
                 <Input type="number" value={form.mileage} onChange={(e) =>
@@ -540,8 +499,8 @@ function QuoteWizardInner() {
           {step === 5 && (
             <div className="space-y-4">
               <div>
-                <Label>{t.zip}</Label>
-                <Input value={form.zip_code} inputMode="numeric" maxLength={5}
+                <Label htmlFor="zip">{t.zip}</Label>
+                <Input id="zip" value={form.zip_code} inputMode="numeric" maxLength={5}
                   autoComplete="postal-code" onChange={(e) =>
                   setForm({ ...form, zip_code: e.target.value.replace(/\D/g, "").slice(0, 5) })} />
               </div>
