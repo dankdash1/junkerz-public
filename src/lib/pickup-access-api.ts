@@ -1,4 +1,5 @@
 import { API_BASE, API_DIRECT } from "@/lib/api-base";
+import type { SellerAgreementData } from "@/components/junkerz/SellerAgreement";
 const BASE = API_BASE;
 export type PickupAccessDetail = {
   pickup_order_id: number; status: string;
@@ -6,9 +7,12 @@ export type PickupAccessDetail = {
   seller: {name:string|null;phone:string|null;email:string|null};
   pickup_address:string|null; slot:string|null; scheduled_for?:string|null; eta_at:string|null;
   offer_cents:number|null; expires_at?:string|null; thirty_minutes_sent_at?:string|null;
+  /** Travel recorded apart from paperwork status. Absent on older backends. */
+  departed_at?:string|null; arrived_at?:string|null;
   photos:Array<{id:number;photo_kind:string;url?:string}>;
   seller_signature:{signer_name:string|null;signed_at:string}|null;
   completed_at:string|null;
+  agreement?:SellerAgreementData|null;
 };
 export class PickupAccessError extends Error {
   constructor(message:string, public status:number) {super(message);}
@@ -35,7 +39,7 @@ export function createPickupAccessApi(token:string) {
     thirtyMinutes:(driverName:string)=>post('/thirty-minutes',{driver_name:driverName}),
     arrive:(driverName:string)=>post('/arrive',{driver_name:driverName}),
     complete:(driverName:string)=>post('/complete',{driver_name:driverName}),
-    signature:(driverName:string,signerName:string,signature:string,sellerEmail?:string)=>post('/signature',{driver_name:driverName,signer_name:signerName,signature,...(sellerEmail?{seller_email:sellerEmail}:{})}),
+    signature:(driverName:string,signerName:string,signature:string,documentRevision:string,sellerEmail?:string)=>post('/signature',{driver_name:driverName,signer_name:signerName,signature,document_revision:documentRevision,...(sellerEmail?{seller_email:sellerEmail}:{})}),
     upload:(driverName:string,kind:string,file:File)=>{
       const data=new FormData();data.append('driver_name',driverName);data.append('photo_kind',kind);data.append('file',file);
       return request('/photos',{method:'POST',body:data}).then(r=>r.json());

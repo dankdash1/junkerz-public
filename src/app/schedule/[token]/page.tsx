@@ -1,8 +1,10 @@
 "use client";
 import { API_BASE } from "@/lib/api-base";
-import { TIME_WINDOWS, WINDOW_START_HOUR, formatCentral, isTimeWindow, quickPickDate, schedulePayload, windowForQuickPick, type TimeWindow } from "@/lib/seller-schedule";
+import { TIME_WINDOWS, WINDOW_START_HOUR, formatCentral, isTimeWindow, isSavedTimeWindow, quickPickDate, schedulePayload, windowForQuickPick, type TimeWindow, type SavedTimeWindow } from "@/lib/seller-schedule";
+import SellerPickupGuidance from "@/components/junkerz/SellerPickupGuidance";
+import { vinError } from "@/lib/seller-vin";
 import { useEffect, useState, useCallback } from "react";
-import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { NotLiveNotice } from "@/components/NotLive";
 import { PICKUPS_LIVE } from "@/lib/site";
@@ -28,7 +30,7 @@ type Offer = {
   seller_schedule_token_expires_at: string | null;
 };
 
-// The seven two-hour windows (George 2026-09-15) live in @/lib/seller-schedule
+// The preferred three-hour windows live in @/lib/seller-schedule
 // so the tests and this page read the same list. Every window is Central time;
 // the backend derives the real pickup instant from pickup_date + window in
 // America/Chicago, so this page never does timezone math of its own.
@@ -63,7 +65,6 @@ function NotLiveNoticeFromUrl() {
 function SellerScheduleLive() {
   const { token } = useParams<{ token: string }>();
   const search = useSearchParams();
-  const router = useRouter();
 
   const [offer, setOffer] = useState<Offer | null>(null);
   const [quickPicks, setQuickPicks] = useState<QuickPick[]>([]);
@@ -71,11 +72,11 @@ function SellerScheduleLive() {
   const [loading, setLoading] = useState(true);
 
   const [date, setDate] = useState<string>(ymd(new Date()));
-  const [windowSlot, setWindowSlot] = useState<TimeWindow>("9am-11am");
+  const [windowSlot, setWindowSlot] = useState<TimeWindow>("10am-1pm");
   const [address, setAddress] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [submitErr, setSubmitErr] = useState<string | null>(null);
-  const [done, setDone] = useState<{ slot: string; eta_at: string | null; window: TimeWindow | null } | null>(null);
+  const [done, setDone] = useState<{ slot: string; eta_at: string | null; window: SavedTimeWindow | null } | null>(null);
   const [showCustom, setShowCustom] = useState(false);
 
   const loadOffer = useCallback(async () => {
@@ -88,7 +89,14 @@ function SellerScheduleLive() {
         const e = await r.json().catch(() => ({}));
         const code = (e as { error?: string }).error;
         if (code === "already_scheduled") {
-          setLoadErr("This pickup is already scheduled. Check your email for the time.");
+          if (e.offer && e.slot) {
+            setOffer(e.offer);
+            setAddress(e.offer.pickup_address || "");
+            setDone({ slot: e.slot, eta_at: e.eta_at || null, window: isSavedTimeWindow(e.window) ? e.window : null });
+            setVinSkipped(true);
+          } else {
+            setLoadErr("Your pickup preference is already saved. Check your email for updates and partner confirmation.");
+          }
         } else if (code === "expired") {
           setLoadErr("This link has expired. Text or call Junkerz to schedule.");
         } else {
@@ -131,7 +139,7 @@ function SellerScheduleLive() {
         });
         const data = await r.json();
         if (!r.ok) throw new Error((data as { error?: string }).error || "submit failed");
-        setDone({ slot: data.slot, eta_at: data.eta_at, window: isTimeWindow(data.window) ? data.window : window ?? null });
+        setDone({ slot: data.slot, eta_at: data.eta_at, window: isSavedTimeWindow(data.window) ? data.window : window ?? null });
       } catch (e) {
         setSubmitErr((e as Error)?.message ?? "submit failed");
       } finally {
@@ -180,7 +188,7 @@ function SellerScheduleLive() {
       });
       const data = await r.json();
       if (!r.ok) throw new Error((data as { error?: string }).error || "submit failed");
-      setDone({ slot: data.slot, eta_at: data.eta_at, window: windowSlot });
+      setDone({ slot: data.slot, eta_at: data.eta_at, window: isSavedTimeWindow(data.window) ? data.window : windowSlot });
     } catch (e) {
       setSubmitErr((e as Error)?.message ?? "submit failed");
     } finally {
@@ -215,7 +223,7 @@ function SellerScheduleLive() {
         }),
       });
       const data = await r.json();
-      if (!r.ok) throw new Error((data as { error?: string }).error || "save failed");
+      if (!r.ok) throw new Error(vinError((data as { error?: string }).error));
       setVinSaved(true);
     } catch (e) {
       setVinErr((e as Error)?.message ?? "save failed");
@@ -234,36 +242,37 @@ function SellerScheduleLive() {
     );
   }
   if (!offer) return null;
-  const arrivalChannels = [offer.contact_email ? "email" : null, offer.contact_phone ? "text" : null].filter(Boolean).join(" and ");
 
   if (done) {
     return (
       <main className="max-w-md mx-auto pt-12 px-6 pb-12 space-y-5">
         <div className="text-center space-y-3">
           <div className="text-5xl">✓</div>
-          <h1 className="text-2xl font-bold">Pickup scheduled</h1>
+          <h1 className="text-2xl font-bold">Pickup preference saved</h1>
           <p className="text-slate-700">
             {offer.year} {offer.make} {offer.model}
           </p>
           <p className="text-lg font-semibold text-brand-700">{done.slot}</p>
+          {address && <p className="text-sm text-slate-700">Pickup address: {address}</p>}
           {/* Times are Central (America/Chicago) — the yard's clock, not the
               seller's phone. The instant comes back from the backend; this
               page only formats it. */}
           {done.window && (
             <p className="text-base font-semibold text-slate-800">
-              Pickup window: {done.window} CT
+              Preferred window: {done.window} CT
             </p>
           )}
           {done.eta_at && formatCentral(done.eta_at) && (
             <p className="text-sm text-slate-500">
-              Driver arrives around {formatCentral(done.eta_at)} CT
-              {" "}— within a 1-3 hour window. All times are Central.
+              Requested: {formatCentral(done.eta_at)} CT. All times are Central.
             </p>
           )}
           <p className="text-sm text-slate-600">
-            {arrivalChannels ? `We'll ${arrivalChannels} you when the driver is on the way and about 30 minutes before arrival.` : "Contact Junkerz to confirm how to receive driver arrival updates."}
+            This is your preferred time, subject to pickup partner availability and confirmation.
           </p>
         </div>
+
+        <SellerPickupGuidance />
 
         {/* VIN + last-owner capture popup. Skippable. Buyer verifies on
             arrival regardless (George 2026-05-18 strategy: don't gate
@@ -275,9 +284,8 @@ function SellerScheduleLive() {
                 ⚡ Speed up pickup day
               </h2>
               <p className="text-sm text-slate-600 mt-1">
-                Add a few details now and pickup paperwork takes 2 minutes
-                instead of 15. Skip if you don&apos;t have these handy —
-                our driver will collect everything on arrival.
+                Add any details you have to help prepare the pickup paperwork.
+                You can skip this and review the details with your pickup partner.
               </p>
             </div>
 
@@ -332,8 +340,7 @@ function SellerScheduleLive() {
                 {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
               <p className="text-[11px] text-slate-500 mt-1">
-                Some states require the title to be notarized BEFORE pickup.
-                Heads up so we don&apos;t arrive and find out.
+                Your pickup partner can review any document requirements with you before pickup.
               </p>
             </div>
 
@@ -365,7 +372,7 @@ function SellerScheduleLive() {
 
         {vinSkipped && !vinSaved && (
           <p className="text-xs text-slate-500 text-center">
-            No problem — our driver will collect VIN, title, and plates on arrival.
+            No problem — review vehicle and ownership details with your pickup partner before pickup. Keep your plates and toll tag.
           </p>
         )}
       </main>
@@ -377,7 +384,8 @@ function SellerScheduleLive() {
   return (
     <main className="max-w-md mx-auto pt-8 px-4 pb-16 space-y-6">
       <header>
-        <h1 className="text-2xl font-bold">Schedule pickup</h1>
+        <h1 className="text-2xl font-bold">Choose your preferred pickup time</h1>
+        <p className="text-sm text-slate-600 mt-2">Three-hour windows are in Central time, subject to pickup partner availability and confirmation.</p>
         <p className="text-sm text-slate-600 mt-1">
           {offer.year} {offer.make} {offer.model}
           {offer.zip_code ? ` · ${offer.zip_code}` : ""}
@@ -469,15 +477,14 @@ function SellerScheduleLive() {
             </div>
           </div>
           <Button onClick={submitCustom} disabled={busy} className="w-full mt-3">
-            {busy ? "Saving…" : "Schedule this slot"}
+            {busy ? "Saving…" : "Save pickup preference"}
           </Button>
         </section>
       )}
 
       <div className="bg-slate-50 border border-slate-200 rounded p-3 text-xs text-slate-600 space-y-1">
         <p>
-          <strong>Pickup window:</strong> driver arrives within a 1-3 hour window
-          of your chosen time. {arrivalChannels ? `We'll ${arrivalChannels} you when the driver is on the way and about 30 minutes before arrival.` : "Contact Junkerz for driver arrival updates."}
+          <strong>Next step:</strong> Keep your phone nearby and check your email. Your pickup partner will call once assigned to confirm availability and pickup details.
         </p>
         <p>
           Link good for 72 hours. If you don&apos;t pick one we&apos;ll contact you to schedule.

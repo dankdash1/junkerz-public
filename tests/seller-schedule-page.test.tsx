@@ -30,30 +30,30 @@ it('a custom pickup sends the chosen window label with pickup_date and eta_at, a
  render(<SellerSchedulePage/>);
  await userEvent.click(await screen.findByRole('button',{name:/Pick a custom date/}));
  fireEvent.change(screen.getByLabelText('Date'),{target:{value:'2026-09-16'}});
- await userEvent.selectOptions(screen.getByLabelText('Time window (Central)'),'1pm-3pm');
- expect(Array.from((screen.getByLabelText('Time window (Central)') as HTMLSelectElement).options).map(o=>o.value)).toEqual(['7am-9am','9am-11am','11am-1pm','1pm-3pm','3pm-5pm','5pm-7pm','7pm-9pm']);
- await userEvent.click(screen.getByRole('button',{name:'Schedule this slot'}));
- await screen.findByText('Pickup scheduled');
+ await userEvent.selectOptions(screen.getByLabelText('Time window (Central)'),'1pm-4pm');
+ expect(Array.from((screen.getByLabelText('Time window (Central)') as HTMLSelectElement).options).map(o=>o.value)).toEqual(['7am-10am','10am-1pm','1pm-4pm','4pm-7pm']);
+ await userEvent.click(screen.getByRole('button',{name:'Save pickup preference'}));
+ await screen.findByText('Pickup preference saved');
  const {url,body}=posted();
  expect(url).toBe('/api/public/junkerz/seller/schedule/tok-123');
- expect(body.window).toBe('1pm-3pm');
+ expect(body.window).toBe('1pm-4pm');
  expect(body.pickup_date).toBe('2026-09-16');
- expect(body.slot).toMatch(/Sep 16 — 1pm-3pm$/);
+ expect(body.slot).toMatch(/Sep 16 — 1pm-4pm$/);
  expect(typeof body.eta_at).toBe('string');
  expect(body.pickup_address).toBe('1 Main St, Fort Worth, TX 76107');
- expect(screen.getByText('Pickup window: 1pm-3pm CT')).toBeTruthy();
- expect(screen.getByText(/Driver arrives around Wed, Sep 16, 1:00 PM CT/)).toBeTruthy();
+ expect(screen.getByText('Preferred window: 1pm-4pm CT')).toBeTruthy();
+ expect(screen.getByText(/Requested: Wed, Sep 16, 1:00 PM CT/)).toBeTruthy();
 });
 it('a quick pick names the window the backend uses and an immediate pickup names none',async()=>{
  render(<SellerSchedulePage/>);
  await userEvent.click(await screen.findByRole('button',{name:/Tomorrow morning/}));
- await screen.findByText('Pickup scheduled');
- expect(posted().body).toMatchObject({quick_pick:'tomorrow_am',slot:'Tomorrow morning',window:'9am-11am'});
- expect(screen.getByText('Pickup window: 9am-11am CT')).toBeTruthy();
+ await screen.findByText('Pickup preference saved');
+ expect(posted().body).toMatchObject({quick_pick:'tomorrow_am',slot:'Tomorrow morning',window:'10am-1pm'});
+ expect(screen.getByText('Preferred window: 10am-1pm CT')).toBeTruthy();
  cleanup();fetchMock.mockClear();
  render(<SellerSchedulePage/>);
  await userEvent.click(await screen.findByRole('button',{name:/As soon as possible/}));
- await screen.findByText('Pickup scheduled');
+ await screen.findByText('Pickup preference saved');
  const {body}=posted();
  expect(body.quick_pick).toBe('immediately');
  expect('window' in body).toBe(false);
@@ -66,6 +66,25 @@ it('paused pickups show the opening notice without loading or submitting a picku
  render(<SellerSchedulePage/>);
  expect(await screen.findByRole('heading',{name: /not picking up cars yet/i})).toBeTruthy();
  expect(screen.getByText(/we are not scheduling pickups yet/)).toBeTruthy();
- expect(screen.queryByRole('button',{name:/Confirm pickup|Schedule this slot|Tomorrow morning/})).toBeNull();
+ expect(screen.queryByRole('button',{name:/Save pickup preference|Tomorrow morning/})).toBeNull();
  expect(fetchMock).not.toHaveBeenCalled();
+});
+
+it('reopening an existing request shows its legacy window and address without scheduling again',async()=>{
+ fetchMock.mockResolvedValue(Response.json({error:'already_scheduled',offer,slot:'Wed, Sep 16 — 9am-11am',eta_at:'2026-09-16T14:00:00Z'},{status:409}));
+ render(<SellerSchedulePage/>);
+ await screen.findByText('Pickup preference saved');
+ expect(screen.getByText('Wed, Sep 16 — 9am-11am')).toBeTruthy();
+ expect(screen.getByText(/Pickup address: 1 Main St/)).toBeTruthy();
+ expect(screen.queryByRole('button',{name:/Save pickup preference|Tomorrow morning/})).toBeNull();
+ expect(fetchMock).toHaveBeenCalledTimes(1);
+});
+
+it('preserves a legacy window returned by the server instead of relabeling an old booking',async()=>{
+ fetchMock.mockImplementation(async(_url:string,init?:RequestInit)=>init?.method==='POST'
+  ? Response.json({ok:true,slot:'Tomorrow morning',window:'9am-11am',eta_at:'2026-09-16T14:00:00Z'})
+  : Response.json({offer,quick_picks:[{key:'tomorrow_am',label:'Tomorrow morning'}]}));
+ render(<SellerSchedulePage/>);
+ await userEvent.click(await screen.findByRole('button',{name:/Tomorrow morning/}));
+ expect(await screen.findByText('Preferred window: 9am-11am CT')).toBeTruthy();
 });

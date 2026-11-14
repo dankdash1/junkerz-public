@@ -2,6 +2,7 @@
 import { API_BASE } from "@/lib/api-base";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import SellerPickupGuidance from "@/components/junkerz/SellerPickupGuidance";
 
 const BASE = API_BASE;
 
@@ -38,8 +39,9 @@ export default function StatusPage() {
       <main className="p-12 text-center">
         <h1 className="text-2xl font-bold">Pickup Status</h1>
         <p className="mt-6 text-slate-700">
-          Still working on assigning a driver. We'll let you know as soon as one is on the way.
+          A pickup partner has not been confirmed here yet. Your preferred time is subject to availability and confirmation.
         </p>
+        <div className="mx-auto mt-6 max-w-md"><SellerPickupGuidance /></div>
       </main>
     );
   }
@@ -48,10 +50,11 @@ export default function StatusPage() {
     <main className="p-12 text-center">
       <h1 className="text-2xl font-bold">Pickup Status</h1>
       <p className="mt-6 text-slate-700">
-        {data?.driver_name ? `Driver: ${data.driver_name}` : "Assigning driver…"}
+        {data?.driver_name ? `Driver: ${data.driver_name}` : "Waiting for pickup partner confirmation"}
       </p>
       <p className="text-slate-600 mt-2">{data?.eta_message || ""}</p>
-      {data?.slot && <p className="text-slate-500 mt-4">Window: {data.slot}</p>}
+      {data?.slot && <p className="text-slate-500 mt-4">Requested window: {data.slot} (Central), subject to partner confirmation.</p>}
+      <div className="mx-auto mt-6 max-w-md"><SellerPickupGuidance /></div>
     </main>
   );
 }

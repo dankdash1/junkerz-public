@@ -23,3 +23,13 @@ test('private photo uses authenticated fetch with no caching',async()=>{
  expect(request?.cache).toBe('no-store');
  expect((request?.headers as Record<string,string>).Authorization).toBe('Bearer private-capability');
 });
+
+test('signature sends the reviewed document revision in authenticated body',async()=>{
+ const fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify({ok:true}),{status:200}));
+ vi.stubGlobal('fetch',fetcher);
+ await createPickupAccessApi('private-capability').signature('Driver','Seller','ink','revision-1','seller@example.test');
+ const [url,request]=fetcher.mock.calls[0];
+ expect(url).not.toContain('private-capability');
+ expect(request.headers.Authorization).toBe('Bearer private-capability');
+ expect(JSON.parse(request.body)).toEqual({driver_name:'Driver',signer_name:'Seller',signature:'ink',document_revision:'revision-1',seller_email:'seller@example.test'});
+});

@@ -14,3 +14,14 @@ test('payment and departure requests carry buyer auth and only tokenized payment
  {path:'/api/buyers/pickup/42/retry-payment',body:null,auth:'Bearer test-buyer-token'},
  ]);
 });
+test('signature carries reviewed revision with buyer authentication',async()=>{
+ vi.stubGlobal('localStorage',{getItem:()=> 'buyer-auth'});
+ const fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify({ok:true}),{status:200}));
+ vi.stubGlobal('fetch',fetcher);
+ const body={signer_role:'seller' as const,signer_name:'Seller',signature:'ink',document_revision:'revision-1'};
+ await buyerApi.pickupSignature(42,body);
+ const [url,request]=fetcher.mock.calls[0];
+ expect(new URL(url,'https://junkerz.com').pathname).toBe('/api/buyers/pickup/42/signature');
+ expect(request.headers.Authorization).toBe('Bearer buyer-auth');
+ expect(JSON.parse(request.body)).toEqual(body);
+});

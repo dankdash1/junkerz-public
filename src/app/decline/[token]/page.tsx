@@ -16,7 +16,7 @@ type Reason = "price" | "timing" | "already_sold" | "other";
 
 const REASONS: { key: Reason; label: string; sub: string }[] = [
   { key: "price", label: "The price is too low",
-    sub: "Tell us what you'd take and we'll come back to you." },
+    sub: "Share your target price and request a callback if you'd like." },
   { key: "timing", label: "Not ready to sell yet",
     sub: "We'll check back rather than keep chasing you." },
   { key: "already_sold", label: "I already sold it",
@@ -42,6 +42,7 @@ export default function DeclinePage() {
   const [compName, setCompName] = useState("");
   const [compAmt, setCompAmt] = useState("");
   const [note, setNote] = useState("");
+  const [wantsCallback, setWantsCallback] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ message: string; callback: boolean; counterCents?: number } | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -69,7 +70,7 @@ export default function DeclinePage() {
         desired_cents: toCents(wanted),
         competitor_name: compName.trim() || undefined,
         competitor_cents: toCents(compAmt),
-        wants_callback: reason === "price",
+        wants_callback: reason === "price" && wantsCallback,
       });
       setDone({
         message: r.message || "Thanks for telling us.",
@@ -138,7 +139,7 @@ export default function DeclinePage() {
             <p className="mt-3 text-zinc-600">{done.message}</p>
             {done.callback && (
               <p className="mt-4 text-sm text-zinc-500">
-                Want it sorted sooner? Call {SITE.phone} and ask for a better number.
+                You can also call {SITE.phone} to discuss your offer.
               </p>
             )}
             <Link href="/" className="mt-6 inline-block">
@@ -155,8 +156,7 @@ export default function DeclinePage() {
               Not right? Tell us why.
             </h1>
             <p className="mt-2 text-zinc-600">
-              Takes ten seconds, and if it&apos;s the money we&apos;ll come back
-              with a better number.
+              Tell us what didn&apos;t work. Sharing a target price helps us review your feedback; a higher offer isn&apos;t guaranteed.
             </p>
 
             {offer && (
@@ -194,12 +194,12 @@ export default function DeclinePage() {
             {reason === "price" && (
               <div className="mt-5 space-y-4 rounded-xl border border-brand-200 bg-brand-50 p-4">
                 <div>
-                  <Label htmlFor="wanted">What would you take?</Label>
+                  <Label htmlFor="wanted">What would you take? (optional)</Label>
                   <Input id="wanted" inputMode="decimal" value={wanted}
                     onChange={(e) => setWanted(e.target.value)}
                     placeholder="$600" className="bg-white" />
                   <p className="mt-1 text-xs text-zinc-600">
-                    Give us a real number and we&apos;ll tell you straight if we can do it.
+                    Share the price you have in mind, if you want to.
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -215,6 +215,10 @@ export default function DeclinePage() {
                       placeholder="optional" className="bg-white" />
                   </div>
                 </div>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={wantsCallback} onChange={e => setWantsCallback(e.target.checked)} />
+                  Call me to discuss my offer (optional)
+                </label>
               </div>
             )}
 
@@ -232,7 +236,7 @@ export default function DeclinePage() {
 
             <Button onClick={submit} disabled={!reason || busy}
               className="mt-6 h-14 w-full gap-2 text-base font-bold">
-              {busy ? "Sending…" : reason === "price" ? "Send it and call me" : "Send"}
+              {busy ? "Sending…" : reason === "price" && wantsCallback ? "Send it and call me" : "Send"}
               {!busy && <ArrowRight className="h-5 w-5" />}
             </Button>
 
