@@ -17,12 +17,12 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.dankdash.a
 export const metadata: Metadata = {
   title: "Cash for Junk Cars in Dallas–Fort Worth | Junkerz",
   description:
-    "Junkerz buys junk, wrecked and non-running cars across Dallas–Fort Worth. Get a real cash offer in about a minute, free towing, paid at pickup. Call 817-420-9180.",
+    "Connect with junk-car buyers across Dallas–Fort Worth through Junkerz. Get an instant quote online and arrange pickup with an assigned partner. Call 817-420-9180.",
   alternates: { canonical: SITE.url },
   openGraph: {
     title: "Cash for Junk Cars in Dallas–Fort Worth",
     description:
-      "Real cash offer in about a minute. Free towing anywhere in DFW. Paid when we pick it up.",
+      "An online marketplace connecting junk-car sellers and buyers in DFW. Start an instant quote and arrange pickup with your assigned partner.",
     url: SITE.url,
     siteName: SITE.name,
     locale: "en_US",
@@ -44,7 +44,7 @@ const DEFAULTS: HomeContent = {
   hero_eyebrow: `Cash for junk cars · ${SITE.areaLabel}`,
   hero_title: "Your junk car is worth real cash. Find out in a minute.",
   hero_subtitle:
-    "Running or not, wrecked or dead, title or no title. Tell us what you have and we will give you a guaranteed number. Free towing anywhere in DFW, cash in your hand when we collect it.",
+    "Connect with junk-car buyers across Dallas–Fort Worth. Tell us about your vehicle, get an instant quote, and confirm pickup arrangements with your assigned partner.",
   hero_cta: "See what it's worth",
   phone: SITE.phone,
   sample_offer_amount: "620",
@@ -62,7 +62,7 @@ const FAQ: [string, string][] = [
    "Almost always. The value sits in the scrap weight, the catalytic converter and the reusable parts, none of which need the engine to start. Non-running cars are most of what we buy."],
   ["How fast can you pick it up?",
    PICKUPS_LIVE
-     ? "Usually within 24 to 48 hours, and often the same day for pickups close to the yard in north Dallas. If you are on an apartment or city tow deadline, say so and we will work to it."
+     ? "Pickup timing depends on your location and the assigned pickup partner. Confirm the date and time before making arrangements. Tell us about any apartment or city tow deadline when requesting your quote."
      : "We are not scheduling pickups yet. Get your offer now and we will contact you when pickups start. We cannot promise a pickup date while we are opening."],
   ["How do I get paid?",
    "On the spot, when we collect the car, before it goes on the truck. Never a cheque in the post that you have to chase."],
@@ -96,26 +96,15 @@ export default async function Landing() {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": ["AutoDealer", "LocalBusiness"],
+        "@type": "Organization",
         "@id": `${SITE.url}/#business`,
         name: SITE.legal,
         description:
-          "Junkerz buys junk, wrecked and non-running cars for cash across Dallas–Fort Worth, with free towing and payment at pickup.",
+          "Junkerz is an online marketplace connecting junk-car sellers with buyers across Dallas–Fort Worth. Start an instant quote online; pickup is coordinated with the assigned partner.",
         url: SITE.url,
         telephone: SITE.phone,
         email: SITE.email,
         foundingDate: SITE.founded,
-        priceRange: "$$",
-        address: {
-          "@type": "PostalAddress",
-          streetAddress: SITE.street,
-          addressLocality: SITE.city,
-          addressRegion: SITE.state,
-          postalCode: SITE.postal,
-          addressCountry: SITE.country,
-        },
-        geo: { "@type": "GeoCoordinates", latitude: SITE.geo.lat, longitude: SITE.geo.lng },
-        openingHours: SITE.hours,
         areaServed: CITIES.map((x) => ({
           "@type": "City", name: `${x.name}, TX`,
         })),
@@ -163,6 +152,10 @@ export default async function Landing() {
           </div>
 
           {/* and the promise underneath it */}
+          <p className="mx-auto mt-5 max-w-xl text-sm text-zinc-600">
+            Junkerz connects junk-car sellers and buyers online. Pickup is coordinated
+            with your assigned partner. We do not have a public storefront.
+          </p>
           <p className="mx-auto mt-7 max-w-xl text-lg text-zinc-600">
             {c.hero_subtitle}
           </p>
@@ -172,7 +165,7 @@ export default async function Landing() {
               [Truck, "Free towing, every pickup"],
               [BadgeDollarSign, "Cash handed over at collection"],
               [FileText, "Often no title needed"],
-              [Clock, PICKUPS_LIVE ? "Most pickups in 24 to 48 hours" : "Opening soon — pickups have not started"],
+              [Clock, PICKUPS_LIVE ? "Pickup timing confirmed with your partner" : "Opening soon — pickups have not started"],
             ].map(([Icon, t]) => {
               const I = Icon as typeof Truck;
               return (

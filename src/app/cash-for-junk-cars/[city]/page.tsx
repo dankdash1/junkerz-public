@@ -51,17 +51,11 @@ export default async function CityPage(
         name: `Cash for junk cars in ${c.name}, TX`,
         serviceType: "Junk car buying and removal",
         provider: {
-          "@type": "AutoDealer",
+          "@type": "Organization",
+          "@id": `${SITE.url}/#business`,
           name: SITE.legal,
           telephone: SITE.phone,
-          address: {
-            "@type": "PostalAddress",
-            streetAddress: SITE.street,
-            addressLocality: SITE.city,
-            addressRegion: SITE.state,
-            postalCode: SITE.postal,
-            addressCountry: SITE.country,
-          },
+          url: SITE.url,
         },
         areaServed: {
           "@type": "City",
@@ -104,7 +98,7 @@ export default async function CityPage(
           </div>
           <HeroQuoteForm />
           <div className="md:col-span-2">
-            <p className="mx-auto max-w-3xl text-center text-[17px] leading-relaxed text-zinc-700">{c.note}</p>
+            <p className="mx-auto max-w-3xl text-center text-[17px] leading-relaxed text-zinc-700">Junkerz connects sellers in {c.name} and nearby {c.near.join(", ")} with junk-car buyers online. Start an instant quote and confirm pickup availability with your assigned partner. There is no public yard to visit.</p>
             <p className="mt-4 text-center text-sm text-zinc-600">
               Prefer to talk?{" "}
               <a href={SITE.phoneHref} className="inline-flex items-center gap-1.5 font-bold text-brand-700 underline underline-offset-4">

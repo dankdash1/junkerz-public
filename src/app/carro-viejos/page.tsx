@@ -327,7 +327,7 @@ export default function CarroViejos() {
             </div>
           </div>
           <div className="mt-10 flex flex-col gap-2 border-t border-zinc-200 pt-6 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-            <span>© {new Date().getFullYear()} {SITE.legal}. {SITE.street}, {SITE.city}, {SITE.state} {SITE.postal}.</span>
+            <span>© {new Date().getFullYear()} {SITE.legal}. Conectamos vendedores y compradores de autos chatarra en línea en Dallas–Fort Worth. Sin local abierto al público.</span>
             <a href={`mailto:${SITE.email}`} className="underline hover:text-zinc-800">{SITE.email}</a>
           </div>
         </div>

@@ -21,7 +21,7 @@ export default function ContactUs() {
     <PageShell
       eyebrow="Contact us"
       title={PICKUPS_LIVE ? "Sell your car with Junkerz today" : "Get your Junkerz offer while we prepare to open"}
-      lede="Two ways to reach us, and both end the same way. A guaranteed cash number for your vehicle and a free tow anywhere in Dallas–Fort Worth."
+      lede="Junkerz connects junk-car sellers with buyers online across Dallas–Fort Worth. Start an instant quote or contact us for help. Pickup is coordinated with your assigned partner."
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <a href={SITE.phoneHref}
@@ -46,22 +46,22 @@ export default function ContactUs() {
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-6">
           <MapPin className="h-6 w-6 text-brand-600" />
-          <h2 className="mt-3 font-bold text-zinc-900">Where we are</h2>
+          <h2 className="mt-3 font-bold text-zinc-900">Online marketplace</h2>
           <p className="mt-1 text-zinc-700">
-            {SITE.street}<br />{SITE.city}, {SITE.state} {SITE.postal}
+            Serving Dallas–Fort Worth online
           </p>
           <p className="mt-2 text-sm text-zinc-600">
-            You do not need to come to us. We come to the car.
+            We do not have a public storefront or walk-in yard. Use our website or phone to arrange your sale.
           </p>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-6">
           <Clock className="h-6 w-6 text-brand-600" />
-          <h2 className="mt-3 font-bold text-zinc-900">Hours</h2>
-          <p className="mt-1 text-zinc-700">Monday to Saturday, 8am to 7pm</p>
+          <h2 className="mt-3 font-bold text-zinc-900">Quote online anytime</h2>
+          <p className="mt-1 text-zinc-700">Online quotes available 24/7</p>
           <p className="mt-2 text-sm text-zinc-600">
             {PICKUPS_LIVE
-              ? "Online quotes run around the clock. Pickups are scheduled during these hours."
+              ? "Callback and pickup times are confirmed with the assigned buyer or pickup partner."
               : "Online quotes run around the clock. We are not scheduling pickups yet. We will contact you when pickups start."}
           </p>
         </div>
@@ -85,10 +85,10 @@ export default function ContactUs() {
 
       <div className="mt-10">
         <h2 className="text-xl font-extrabold tracking-tight text-zinc-900">
-          Areas we tow from
+          Areas we serve
         </h2>
         <p className="mt-2 text-zinc-600">
-          Free towing across Dallas–Fort Worth and about two hours around it.
+          Connect with junk-car buyers across Dallas–Fort Worth and surrounding North Texas. Confirm pickup availability with your assigned partner.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {CITIES.map((x) => (

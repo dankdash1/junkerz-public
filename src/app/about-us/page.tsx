@@ -8,7 +8,7 @@ const mono = "font-[family-name:var(--font-geist-mono)]";
 export const metadata: Metadata = {
   title: "About Junkerz | Selling Your Junk Car in Dallas–Fort Worth",
   description:
-    "Junkerz has been buying junk cars around Dallas–Fort Worth since 2015. Free towing, fast paperwork and cash the day we collect. Call 817-420-9180.",
+    "Junkerz connects junk-car sellers with buyers online across Dallas–Fort Worth. Get an instant quote at Junkerz.com or call 817-420-9180.",
   alternates: { canonical: `${SITE.url}/about-us` },
 };
 
@@ -16,8 +16,8 @@ export default function AboutUs() {
   return (
     <PageShell
       eyebrow="About us"
-      title="Your salvage yard for selling junk cars"
-      lede="Junkerz is a Dallas–Fort Worth company that buys old, wrecked and unwanted vehicles. Our goal is simple. Pay you properly for the car nobody else wanted, and get it off your property the same week."
+      title="Connecting junk-car sellers and buyers online"
+      lede="Junkerz is an online marketplace serving Dallas–Fort Worth. We connect people selling old, wrecked and unwanted vehicles with buyers and help coordinate pickup through assigned partners. We do not operate a public storefront or walk-in yard."
     >
       <div className="space-y-10 text-[17px] leading-relaxed text-zinc-700">
         <section>
@@ -25,15 +25,14 @@ export default function AboutUs() {
             Who we are
           </h2>
           <p className="mt-3">
-            We have been buying junk cars from people around the DFW metroplex since{" "}
-            {SITE.founded}. In that time we have learned that most sellers are not
-            chasing the last dollar. They want a straight number, someone who turns up
-            when they said they would, and the car gone.
+            Sellers want a clear offer and a convenient way to arrange the sale.
+            Buyers need accurate vehicle information. Junkerz brings both sides
+            together online, starting with an instant quote.
           </p>
           <p className="mt-3">
-            No matter the condition, we can make use of the vehicle and give you cash
-            in exchange. We tow cars, trucks, vans and SUVs that no longer work, and
-            we take the ones other buyers refuse.
+            Tell us the condition of your car, truck, van or SUV, including whether
+            it runs. The vehicle details help buyers evaluate it and help the
+            assigned pickup partner prepare for collection.
           </p>
         </section>
 
@@ -42,15 +41,14 @@ export default function AboutUs() {
             Making the process easy for you
           </h2>
           <p className="mt-3">
-            Our staff values the vehicle, gives you an offer, and handles the paperwork
-            to close the deal. We tow it away free of charge. With a dedicated team
-            covering the whole metroplex, selling a car to us takes a phone call or a
-            minute on this website, not an afternoon.
+            Start your instant quote online or call {SITE.phone} for help. Review
+            your offer and pickup arrangements before proceeding. Once a partner
+            is assigned, confirm who will contact you and when pickup will happen.
           </p>
           <p className="mt-3">
-            We also work with salvage yards and dismantlers across North Texas, which
-            is why our offers hold up. The car goes to whoever values it most, and that
-            is reflected in what we can pay you.
+            The sale starts online; there is no yard to visit. Pickup availability
+            depends on the vehicle location and the assigned partner. Tell us about
+            access restrictions or a removal deadline when requesting your quote.
           </p>
         </section>
 

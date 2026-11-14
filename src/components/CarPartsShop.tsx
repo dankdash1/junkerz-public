@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Bell, CarFront, Package, Plus, ShoppingCart, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { money } from "@/lib/money";
 import { useShopCart } from "@/components/ShopCart";
 import YardRequestForm from "@/components/YardRequestForm";
 import { submitYardRequest, type YardRequestAttempt, type YardRequestReceipt } from "@/lib/yard-requests";
@@ -17,7 +18,7 @@ import {
   type ShopProductKind,
 } from "@/lib/shop-catalog";
 
-export const money = (cents: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
+export { money } from "@/lib/money";
 
 const labels: Record<ShopCategory, string> = {
   all: "All",
