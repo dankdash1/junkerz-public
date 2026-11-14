@@ -69,7 +69,7 @@ export default function NotRunning() {
           <p className="mt-3">
             Tell us when you say. Apartment complexes and code enforcement across
             DFW give short windows before they tow at your expense. We schedule around
-            those dates, and pickups near our north Dallas yard can often happen the same day.
+            those dates with the assigned pickup partner. Availability and pickup times must be confirmed before you rely on them.
           </p>
         </section>
       </div>

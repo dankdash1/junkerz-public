@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CarFront, ChevronLeft, Package, ShieldCheck, Truck } from "lucide-react";
 import { SiteHeader } from "@/components/PageShell";
 import YardRequestForm from "@/components/YardRequestForm";
-import { money } from "@/components/CarPartsShop";
+import { money } from "@/lib/money";
 import type { CatalogSettings, ShopProduct } from "@/lib/shop-catalog";
 
 export default function CatalogDetail({ product, settings, requestIntakeEnabled }: { product: ShopProduct; settings: CatalogSettings; requestIntakeEnabled: boolean }) {

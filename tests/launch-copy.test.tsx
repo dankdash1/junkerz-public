@@ -33,7 +33,13 @@ for (const live of [false, true]) {
       const text = document.body.textContent || '';
       const metadata = JSON.stringify(page.metadata);
       if (route === 'home') {
-        expect(text.includes('Most pickups in 24 to 48 hours')).toBe(live);
+        expect(text.includes('Pickup timing confirmed with your partner')).toBe(live);
+        expect(text).toContain('We do not have a public storefront.');
+        const graph = JSON.parse(document.querySelector('script[type="application/ld+json"]')!.textContent!)['@graph'];
+        const business = graph.find((entry: Record<string, unknown>) => entry['@id'] === 'https://junkerz.com/#business');
+        expect(business).toMatchObject({ '@type': 'Organization' });
+        expect(business).not.toHaveProperty('address');
+        expect(business).not.toHaveProperty('openingHours');
         expect(text.includes('Pick a time that suits you.')).toBe(live);
         if (!live) expect(text).toContain('We are not scheduling pickups yet');
       } else if (route === 'spanish') {
@@ -47,7 +53,8 @@ for (const live of [false, true]) {
         if (!live) expect(text).toContain('We are not picking up cars yet');
       } else {
         expect(text.includes('Sell your car with Junkerz today')).toBe(live);
-        expect(text.includes('Pickups are scheduled during these hours.')).toBe(live);
+        expect(text.includes('Callback and pickup times are confirmed with the assigned buyer or pickup partner.')).toBe(live);
+        expect(text).toContain('We do not have a public storefront or walk-in yard.');
         expect(metadata.includes('Cash Today')).toBe(live);
         if (!live) expect(text).toContain('We are not scheduling pickups yet');
       }
