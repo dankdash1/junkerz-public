@@ -47,7 +47,7 @@ export default async function ShopPage({ searchParams }: { searchParams: { categ
       <p className="text-xs font-bold uppercase tracking-widest text-brand-700">Junkerz shop</p>
       <h1 className="mt-3 text-4xl font-extrabold tracking-tight">Cars &amp; parts</h1>
       <p className="mb-8 mt-4 max-w-2xl text-zinc-600">
-        {requestIntakeEnabled ? "Request the car or part you need. Junkerz confirms stock and fitment, sends a quote for your approval, then provides payment and delivery updates. Parts are delivery only." : "Junkerz buys junk, wrecked and non-running cars today. Online vehicle and parts listings are being introduced section by section; future parts orders will be delivery only."}
+        {requestIntakeEnabled ? "Request the car or part you need. Junkerz confirms stock and fitment, sends a quote for your approval, then provides payment and delivery updates. Parts are delivery only." : "Junkerz connects sellers of junk, wrecked and non-running cars with buyers. Online vehicle and parts listings are being introduced section by section; future parts orders will be delivery only."}
       </p>
       <CarPartsShop
         key={category}

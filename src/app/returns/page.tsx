@@ -17,7 +17,7 @@ const SECTIONS: [string, string[]][] = [
   ]],
   ["Store credit", [
     `If something is wrong with your purchase, contact us within 30 days of delivery or pickup. We may, at our discretion, offer store credit toward another ${SITE.legal} purchase. Store credit is not cash and cannot be refunded.`,
-    "To ask for store credit, tell us your order details and what is wrong, and send photos if you can. The item may need to come back to our yard in the condition we sent it.",
+    "To ask for store credit, tell us your order details and what is wrong, and send photos if you can. If we authorize a return for store credit, we will provide the return instructions and destination. Do not send or bring an item anywhere before receiving those instructions. The item must be in the condition we sent it.",
   ]],
   ["Delivery", [
     `We deliver within ${SITE.areaLabel} for a flat fee, shown before you pay. Inspect the item when it arrives and tell us straight away if it was damaged in delivery.`,
@@ -41,8 +41,9 @@ export default function ReturnsPolicy() {
         <section>
           <h2 className="text-xl font-extrabold tracking-tight text-zinc-900">Contact us</h2>
           <p className="mt-3">
-            {SITE.legal}, {SITE.street}, {SITE.city}, {SITE.state} {SITE.postal}.
-            Phone {SITE.phone}. Email {SITE.email}.
+            Contact {SITE.legal} by phone at <a href={SITE.phoneHref} className="underline">{SITE.phone}</a>{" "}
+            or email at <a href={`mailto:${SITE.email}`} className="underline">{SITE.email}</a>.
+            Junkerz has no public storefront or walk-in yard.
           </p>
         </section>
       </div>

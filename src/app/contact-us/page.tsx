@@ -9,10 +9,10 @@ const mono = "font-[family-name:var(--font-geist-mono)]";
 
 export const metadata: Metadata = {
   title: PICKUPS_LIVE
-    ? "Contact Junkerz | Sell Your Car for Cash Today in DFW"
+    ? "Contact Junkerz | Get a Junk-Car Offer in DFW"
     : "Contact Junkerz | Get a Car Offer in DFW — Opening Soon",
   description:
-    "Call Junkerz on 817-420-9180 or start an online quote. We buy junk and wrecked cars across Dallas–Fort Worth with free towing and cash at pickup.",
+    "Call Junkerz on 817-420-9180 or start an online quote. Connect with junk-car buyers across Dallas–Fort Worth, with free towing and cash at pickup.",
   alternates: { canonical: `${SITE.url}/contact-us` },
 };
 
@@ -20,7 +20,7 @@ export default function ContactUs() {
   return (
     <PageShell
       eyebrow="Contact us"
-      title={PICKUPS_LIVE ? "Sell your car with Junkerz today" : "Get your Junkerz offer while we prepare to open"}
+      title={PICKUPS_LIVE ? "Start your car sale with Junkerz" : "Get your Junkerz offer while we prepare to open"}
       lede="Junkerz connects junk-car sellers with buyers online across Dallas–Fort Worth. Start an instant quote or contact us for help. Pickup is coordinated with your assigned partner."
     >
       <div className="grid gap-4 sm:grid-cols-2">

@@ -6,7 +6,7 @@ import { SITE, PICKUPS_LIVE } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Sell Wrecked & Junk Cars for Cash in DFW",
   description: PICKUPS_LIVE
-    ? "Junkerz buys wrecked and junk cars across Dallas–Fort Worth. Fair quote, cash on the spot, free same-day towing. Call 817-420-9180."
+    ? "Connect with buyers for wrecked and junk cars across Dallas–Fort Worth. Get an instant quote and confirm pickup with your assigned partner. Call 817-420-9180."
     : "Get an offer for your wrecked or junk car in Dallas–Fort Worth. Junkerz is opening soon; pickups have not started. Call 817-420-9180.",
   alternates: { canonical: `${SITE.url}/junk-cars` },
 };
@@ -15,8 +15,8 @@ export default function JunkCars() {
   return (
     <PageShell
       eyebrow="Wrecked & junk cars"
-      title="We buy your wrecked vehicle, damage and all"
-      lede="Junkerz buys wrecked cars right across Dallas–Fort Worth. A junk car in the driveway is an inconvenience for everyone. Ours is the team that proves it is still worth real money."
+      title="Sell your wrecked vehicle, damage and all"
+      lede="Junkerz connects wrecked-car sellers with buyers across Dallas–Fort Worth. A junk car in the driveway can still be worth real money. Start an instant quote and arrange pickup through your assigned partner."
     >
       <div className="space-y-10 text-[17px] leading-relaxed text-zinc-700">
         <section>
@@ -25,7 +25,7 @@ export default function JunkCars() {
           </h2>
           <p className="mt-3">
             {PICKUPS_LIVE
-              ? "When it is time to let the car go, we make it quick. Our team gives you a fair quote once we know what you have, and you do not have to guess at the number or wait for a callback. Once we agree a price, you get cash in hand as we take the vehicle away, usually the same day."
+              ? "Start with an instant quote for your wrecked car. After you accept an offer, confirm pickup availability and timing with your assigned buyer or pickup partner. Payment is made at pickup."
               : "Get a fair quote for your wrecked car now. We are not picking up cars yet. Save your offer and we will contact you when pickups start, before arranging collection and payment."}
           </p>
           <p className="mt-3">
@@ -38,7 +38,7 @@ export default function JunkCars() {
 
         <section>
           <h2 className="text-2xl font-extrabold tracking-tight text-zinc-900">
-            Why sell your car to us
+            Why sell your car through Junkerz
           </h2>
           <p className="mt-3">
             Plenty of outfits buy wrecked cars around DFW. Here is what you get with us.
@@ -64,7 +64,7 @@ export default function JunkCars() {
             What counts as a wrecked car
           </h2>
           <p className="mt-3">
-            More than people think. We buy collision write-offs, cars with deployed
+            More than people think. Buyers accept collision write-offs, cars with deployed
             airbags, flood and hail damage, fire damage, vehicles stripped for parts,
             and cars an insurer has already declared a total loss. If it is sitting
             on your property and you want it gone, start a quote and we will price it.
@@ -74,7 +74,7 @@ export default function JunkCars() {
 
       <div className="mt-14 -mx-5">
         <BottomCTA
-          heading={PICKUPS_LIVE ? "Turn that wreck into cash today" : "Get an offer for that wreck today"}
+          heading="Get an offer for that wreck today"
           body="Tell us what you have and get a guaranteed number in about a minute. Free towing anywhere in DFW."
         />
       </div>

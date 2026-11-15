@@ -53,21 +53,21 @@ const DEFAULTS: HomeContent = {
 
 const FAQ: [string, string][] = [
   ["Do I need the title to sell my car?",
-   "Not always. In Texas we can often buy a vehicle with your registration and photo ID instead. Tell us during the quote and we will say exactly what your situation needs before anyone drives out."],
+   "Not always. In Texas a buyer can often purchase a vehicle with your registration and photo ID instead. Tell us during the quote and we will confirm what your buyer needs before anyone drives out."],
   ["Is the towing really free?",
    "Yes, everywhere we serve. We do not deduct a tow fee, a paperwork fee, or anything else. The number you accept is the number you are handed."],
   ["How far out do you come?",
    "Roughly two hours from the middle of Dallas–Fort Worth. That reaches Gainesville in the north, Midlothian and Ennis in the south, Weatherford in the west and Greenville in the east."],
   ["My car does not run at all. Is it still worth something?",
-   "Almost always. The value sits in the scrap weight, the catalytic converter and the reusable parts, none of which need the engine to start. Non-running cars are most of what we buy."],
+   "Almost always. The value sits in the scrap weight, the catalytic converter and the reusable parts, none of which need the engine to start. You can get a quote for a non-running car through the marketplace."],
   ["How fast can you pick it up?",
    PICKUPS_LIVE
      ? "Pickup timing depends on your location and the assigned pickup partner. Confirm the date and time before making arrangements. Tell us about any apartment or city tow deadline when requesting your quote."
      : "We are not scheduling pickups yet. Get your offer now and we will contact you when pickups start. We cannot promise a pickup date while we are opening."],
   ["How do I get paid?",
-   "On the spot, when we collect the car, before it goes on the truck. Never a cheque in the post that you have to chase."],
-  ["What kinds of vehicles do you buy?",
-   "Cars, trucks, vans and SUVs. Wrecked, flooded, burned, stripped, seized, or simply worn out. We also buy vehicles that have been sitting for years and will not move under their own power."],
+   "At pickup, through your assigned buyer or pickup partner, before the car goes on the truck. Never a cheque in the post that you have to chase."],
+  ["What kinds of vehicles can I sell?",
+   "Cars, trucks, vans and SUVs. Wrecked, flooded, burned, stripped, seized, or simply worn out. Buyers also accept vehicles that have been sitting for years and will not move under their own power."],
 ];
 
 async function getContent(): Promise<HomeContent> {
@@ -204,9 +204,9 @@ export default async function Landing() {
                 b: "Year, make, model, and how rough it is. About a minute. No VIN hunting and no account to create." },
               { icon: BadgeDollarSign, n: "02", t: "Get your real number",
                 b: "A guaranteed cash offer priced from live scrap weight, the catalytic converter and parts that still sell." },
-              { icon: Truck, n: "03", t: PICKUPS_LIVE ? "We collect it and pay you" : "We contact you when pickups start",
+              { icon: Truck, n: "03", t: PICKUPS_LIVE ? "Confirm pickup and payment" : "We contact you when pickups start",
                 b: PICKUPS_LIVE
-                  ? "Pick a time that suits you. We come to your driveway anywhere in DFW, hand you the cash, and tow it free."
+                  ? "Confirm a pickup window with your assigned partner. They collect the vehicle and handle payment at pickup, with free towing across DFW."
                   : "Save your offer now. We are not scheduling pickups yet. We will contact you before arranging collection and payment." },
             ].map(({ icon: Icon, n, t, b }) => (
               <div key={n} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">
@@ -222,15 +222,15 @@ export default async function Landing() {
         </div>
       </section>
 
-      {/* what we buy */}
+      {/* vehicles sellers can quote */}
       <section className="mx-auto max-w-6xl px-5 py-16">
         <h2 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
-          What we buy
+          Vehicles you can sell
         </h2>
         <p className="mt-3 max-w-2xl text-zinc-600">
           If it has four wheels and a title problem, a dead engine or a caved-in
-          front end, it is still worth money. We buy cars, trucks, vans and SUVs
-          in any condition.
+          front end, it is still worth money. Connect with buyers for cars, trucks,
+          vans and SUVs in any condition.
         </p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
@@ -287,11 +287,11 @@ export default async function Landing() {
                 </span>
               </div>
               <h2 className="mt-3 text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
-                We buy cars other places turn away.
+                Find buyers for cars other places turn away.
               </h2>
               <p className="mt-3 text-brand-50">
                 A dead car still carries real value in scrap metal, the catalytic
-                converter and reusable parts. That is exactly what we price and pay for.
+                converter and reusable parts. Those are the details used to price your offer.
               </p>
             </div>
             <Link href="/quote" className="w-full md:w-auto">
@@ -306,7 +306,7 @@ export default async function Landing() {
       {/* service area */}
       <section className="mx-auto max-w-6xl px-5 pb-16">
         <h2 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
-          Where we tow from
+          Pickup service area
         </h2>
         <p className="mt-3 max-w-2xl text-zinc-600">
           We cover Dallas–Fort Worth and about two hours around it, from

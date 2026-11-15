@@ -18,7 +18,7 @@ export default function Logo({
   return (
     <Image
       src={logo}
-      alt="Junkerz — we buy junk cars"
+      alt="Junkerz — junk-car marketplace"
       height={height}
       width={Math.round(height * (790 / 212))}
       priority={priority}
