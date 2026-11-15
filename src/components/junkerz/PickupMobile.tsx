@@ -3,6 +3,7 @@ import {useCallback,useEffect,useMemo,useState} from "react";
 import {Camera,Check,ChevronRight,Clock,MapPin,Phone,ShieldCheck,Truck} from "lucide-react";
 import PrivatePhoto from "@/components/junkerz/PrivatePhoto";
 import SignaturePad from "@/components/junkerz/SignaturePad";
+import SellerAgreement, {agreementReady} from "@/components/junkerz/SellerAgreement";
 import {createPickupAccessApi,PickupAccessError,type PickupAccessDetail} from "@/lib/pickup-access-api";
 
 const actionClass="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-base font-semibold text-white transition-colors hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-500";
@@ -30,6 +31,7 @@ export default function PickupMobile(){
   const [sellerName,setSellerName]=useState('');
   const [sellerEmail,setSellerEmail]=useState('');
   const [signature,setSignature]=useState<string|null>(null);
+  const [agreementChanged,setAgreementChanged]=useState(false);
   const [collected,setCollected]=useState(false);
   const api=useMemo(()=>token?createPickupAccessApi(token):null,[token]);
 
@@ -51,7 +53,7 @@ export default function PickupMobile(){
     if(busy || !driver.trim())return;
     setBusy(key);setError('');setNotice('');
     try{await work();await refresh();setNotice(message);}
-    catch(e){if(e instanceof PickupAccessError && [401,403].includes(e.status))setDetail(null);setError((e as Error).message || 'Could not save. Try again.');}
+    catch(e){if(e instanceof PickupAccessError && [401,403].includes(e.status))setDetail(null);if(key==='signature' && (e as Error).message==='document_changed'){setAgreementChanged(true);setError('The agreement changed. Reload this page and review the updated details before signing.');}else setError((e as Error).message || 'Could not save. Try again.');}
     finally{setBusy(null);}
   };
   if(loading)return <main className="min-h-screen bg-stone-50 px-6 py-16 text-center"><Truck className="mx-auto mb-4 h-8 w-8"/><p>Opening your pickup…</p></main>;
@@ -61,7 +63,14 @@ export default function PickupMobile(){
   const identified=driver.trim().length>0;
   const vehicle=[detail.vehicle.year,detail.vehicle.make,detail.vehicle.model].filter(Boolean).join(' ') || 'Vehicle pickup';
   const enRoute=detail.status==='en_route';
-  const arrived=['arrived','photographed','signed','paid'].includes(detail.status);
+  // Paperwork can move ahead of travel: a seller may sign online before the
+  // driver leaves. 'signed'/'paid' therefore count as arrival only when the
+  // backend recorded one (arrived_at). An older backend omits the field; keep
+  // its previous behavior until it ships.
+  const travelKnown=detail.arrived_at!==undefined;
+  const arrived=!!detail.arrived_at || ['arrived','photographed'].includes(detail.status)
+    || (!travelKnown && ['signed','paid'].includes(detail.status));
+  const departed=enRoute || arrived || !!detail.departed_at;
   return <main className="min-h-screen bg-stone-50 text-slate-950">
     <div className="mx-auto max-w-lg px-5 pb-16">
       <header className="flex items-center justify-between border-b border-slate-200 py-5"><span className="text-xl font-black tracking-tighter">JUNKERZ<span className="text-brand-600">.</span></span><span className="font-mono text-xs uppercase tracking-widest text-slate-500">Pickup {detail.pickup_order_id}</span></header>
@@ -83,18 +92,31 @@ export default function PickupMobile(){
           <p className="mt-2 text-xs text-slate-500">Your name is recorded with each pickup update.</p>
         </Step>
         <Step number="02" title="Keep the seller updated">
-          {arrived?<div className="mb-4 flex items-center gap-2 text-sm font-semibold text-emerald-800"><Check size={18}/>Arrival recorded</div>:enRoute?<div className="mb-4 flex items-center gap-2 text-sm font-semibold text-emerald-800"><Check size={18}/>Departure recorded</div>:<div className="space-y-4"><label className="block text-sm font-medium">ETA in minutes<input className={inputClass} type="number" min={1} max={240} step={1} value={eta} onChange={e=>setEta(e.target.value)}/></label><button className={actionClass} disabled={!identified || !!busy || !Number.isInteger(Number(eta)) || Number(eta)<1 || Number(eta)>240} onClick={()=>void run('start',()=>api.start(driver.trim(),Number(eta)),'Departure saved. The seller’s arrival update has been requested.')}><Truck size={20}/>{busy==='start'?'Sending…':"I'm on my way"}</button></div>}
-          {!arrived && <button className={`${actionClass} mt-3 !bg-white !text-slate-950 ring-1 ring-slate-300 disabled:!text-slate-400`} disabled={!identified || !!busy || !enRoute || !!detail.thirty_minutes_sent_at} onClick={()=>void run('thirty',()=>api.thirtyMinutes(driver.trim()),'30-minute update requested.')}><Clock size={19}/>{detail.thirty_minutes_sent_at?'30-minute notice sent':busy==='thirty'?'Sending…':"I'm 30 minutes away"}</button>}
+          {arrived?<div className="mb-4 flex items-center gap-2 text-sm font-semibold text-emerald-800"><Check size={18}/>Arrival recorded</div>:departed?<div className="mb-4 flex items-center gap-2 text-sm font-semibold text-emerald-800"><Check size={18}/>Departure recorded</div>:<div className="space-y-4"><label className="block text-sm font-medium">ETA in minutes<input className={inputClass} type="number" min={1} max={240} step={1} value={eta} onChange={e=>setEta(e.target.value)}/></label><button className={actionClass} disabled={!identified || !!busy || !Number.isInteger(Number(eta)) || Number(eta)<1 || Number(eta)>240} onClick={()=>void run('start',()=>api.start(driver.trim(),Number(eta)),'Departure saved. The seller’s arrival update has been requested.')}><Truck size={20}/>{busy==='start'?'Sending…':"I'm on my way"}</button></div>}
+          {!arrived && <button className={`${actionClass} mt-3 !bg-white !text-slate-950 ring-1 ring-slate-300 disabled:!text-slate-400`} disabled={!identified || !!busy || !departed || !!detail.thirty_minutes_sent_at} onClick={()=>void run('thirty',()=>api.thirtyMinutes(driver.trim()),'30-minute update requested.')}><Clock size={19}/>{detail.thirty_minutes_sent_at?'30-minute notice sent':busy==='thirty'?'Sending…':"I'm 30 minutes away"}</button>}
         </Step>
         <Step number="03" title="Confirm arrival">
-          {arrived?<p className="text-sm text-emerald-800">You’re at the pickup. Record the vehicle and seller’s signature below.</p>:<><p className="mb-4 text-sm text-slate-600">Tap when you reach the seller’s pickup address.</p><button className={actionClass} disabled={!identified || !!busy || !enRoute} onClick={()=>void run('arrive',()=>api.arrive(driver.trim()),'Arrival saved. Document the vehicle and collect the seller’s signature.')}><MapPin size={20}/>{busy==='arrive'?'Saving…':"I've arrived"}</button></>}
+          {arrived?<p className="text-sm text-emerald-800">You’re at the pickup. Record the vehicle and seller’s signature below.</p>:<><p className="mb-4 text-sm text-slate-600">Tap when you reach the seller’s pickup address.</p><button className={actionClass} disabled={!identified || !!busy || !departed} onClick={()=>void run('arrive',()=>api.arrive(driver.trim()),'Arrival saved. Document the vehicle and collect the seller’s signature.')}><MapPin size={20}/>{busy==='arrive'?'Saving…':"I've arrived"}</button></>}
         </Step>
         <Step number="04" title="Document the pickup">
           <p className="mb-4 text-sm leading-relaxed text-slate-600">Photograph the vehicle and documents at pickup. Seller ID photos stay private to this pickup and the buyer’s office.</p>
           <div className="grid grid-cols-2 gap-3">{kinds.map(([kind,label])=><label key={kind} className={`flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm font-semibold ${!identified || busy?'opacity-50':''}`}><Camera size={20} className="shrink-0 text-slate-500"/><span>{busy===kind?'Uploading…':label}</span><input type="file" accept="image/*" capture="environment" className="sr-only" aria-label={`Upload ${label}`} disabled={!identified || !!busy} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void run(kind,()=>api.upload(driver.trim(),kind,file),`${label} photo saved.`);}}/></label>)}</div>
         </Step>
         <Step number="05" title="Seller signature">
-          {detail.seller_signature?<div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4"><p className="flex items-center gap-2 font-semibold text-emerald-900"><Check size={18}/>Signed by {detail.seller_signature.signer_name || 'seller'}</p><p className="mt-1 text-xs text-emerald-800">{dateTime(detail.seller_signature.signed_at)}</p></div>:<div className="space-y-4"><p className="text-sm leading-relaxed text-slate-600">Hand the phone to the seller to review the pickup details and sign the bill of sale.</p><label className="block text-sm font-medium">Seller’s printed name<input className={inputClass} value={sellerName} onChange={e=>setSellerName(e.target.value)} maxLength={120}/></label><label className="block text-sm font-medium">Seller’s email for their signed copy<input className={inputClass} type="email" inputMode="email" value={sellerEmail} onChange={e=>setSellerEmail(e.target.value)} maxLength={254}/></label><div className="overflow-hidden rounded-xl border border-slate-300 bg-white"><SignaturePad onChange={setSignature} disabled={!identified || !!busy}/></div><button className={actionClass} disabled={!identified || !!busy || !signature || !sellerName.trim()} onClick={()=>void run('signature',()=>api.signature(driver.trim(),sellerName.trim(),signature!,sellerEmail.trim()||undefined),'Seller signature saved.')}><ChevronRight size={20}/>{busy==='signature'?'Saving…':'Save seller signature'}</button></div>}
+          {detail.seller_signature ? <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+            <p className="flex items-center gap-2 font-semibold text-emerald-900"><Check size={18}/>Signed by {detail.seller_signature.signer_name || 'seller'}</p>
+            <p className="mt-1 text-xs text-emerald-800">{dateTime(detail.seller_signature.signed_at)}</p>
+          </div> : <div className="space-y-4">
+            <p className="text-sm leading-relaxed text-slate-600">Hand the phone to the seller to review the agreement below. A signed copy is saved and email delivery is attempted after signing.</p>
+            <SellerAgreement agreement={detail.agreement}/>
+            <label className="block text-sm font-medium">Seller’s printed name<input className={inputClass} value={sellerName} onChange={e=>setSellerName(e.target.value)} maxLength={120}/></label>
+            <label className="block text-sm font-medium">Seller’s email for their signed copy<input className={inputClass} type="email" inputMode="email" value={sellerEmail} onChange={e=>setSellerEmail(e.target.value)} maxLength={254}/></label>
+            <div className="overflow-hidden rounded-xl border border-slate-300 bg-white"><SignaturePad onChange={setSignature} disabled={!identified || !!busy || agreementChanged || !agreementReady(detail.agreement)}/></div>
+            <button className={actionClass} disabled={!identified || !!busy || !signature || !sellerName.trim() || agreementChanged || !agreementReady(detail.agreement)} onClick={()=>{
+              if (!agreementReady(detail.agreement) || agreementChanged) return;
+              void run('signature',()=>api.signature(driver.trim(),sellerName.trim(),signature!,detail.agreement!.document_revision!,sellerEmail.trim()||undefined),'Seller signature and signed copy saved. Check email for delivery or contact Junkerz for the saved copy.');
+            }}><ChevronRight size={20}/>{busy==='signature'?'Saving…':'Save seller signature'}</button>
+          </div>}
         </Step>
         <Step number="06" title="Finish pickup">
           <p className="mb-4 text-sm leading-relaxed text-slate-600">Complete this step after collecting the vehicle. This records collection and processes the buyer’s finder fee under their account agreement.</p>

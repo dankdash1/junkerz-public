@@ -1,29 +1,32 @@
-// George 2026-09-15: seven two-hour windows, the same list the admin uses.
+// New pickup preferences use three-hour windows; old bookings remain readable.
 // Every window is a Central-time (America/Chicago) window: the backend keys
 // its own pickup_time.WINDOWS by these exact labels.
 export const TIME_WINDOWS = [
-  '7am-9am', '9am-11am', '11am-1pm', '1pm-3pm', '3pm-5pm', '5pm-7pm', '7pm-9pm',
+  '7am-10am', '10am-1pm', '1pm-4pm', '4pm-7pm',
 ] as const;
 export type TimeWindow = typeof TIME_WINDOWS[number];
+export const LEGACY_TIME_WINDOWS = ['7am-9am', '9am-11am', '11am-1pm', '1pm-3pm', '3pm-5pm', '5pm-7pm', '7pm-9pm'] as const;
+export type SavedTimeWindow = TimeWindow | typeof LEGACY_TIME_WINDOWS[number];
 
 // Map the human-readable window to the START hour (24h) so we can build
 // a real ISO timestamp for the backend's eta_at column. Without this,
 // the backend stored NULL eta_at and the calendar bucketed the pickup
 // to today instead of the chosen date (George 2026-05-18 bug report).
 export const WINDOW_START_HOUR: Record<TimeWindow, number> = {
-  '7am-9am': 7,
-  '9am-11am': 9,
-  '11am-1pm': 11,
-  '1pm-3pm': 13,
-  '3pm-5pm': 15,
-  '5pm-7pm': 17,
-  '7pm-9pm': 19,
+  '7am-10am': 7,
+  '10am-1pm': 10,
+  '1pm-4pm': 13,
+  '4pm-7pm': 16,
 };
 
 export const PICKUP_TIME_ZONE = 'America/Chicago';
 
 export function isTimeWindow(value: unknown): value is TimeWindow {
   return typeof value === 'string' && (TIME_WINDOWS as readonly string[]).includes(value);
+}
+
+export function isSavedTimeWindow(value: unknown): value is SavedTimeWindow {
+  return isTimeWindow(value) || (typeof value === 'string' && (LEGACY_TIME_WINDOWS as readonly string[]).includes(value));
 }
 
 /** Keep the seller's calendar date alongside the UTC travel timestamp, plus the window label when one was chosen. */
@@ -40,15 +43,15 @@ export function schedulePayload(selected: Date, window?: TimeWindow) {
 
 /**
  * The window a quick pick lands in. Quick picks are the backend's own
- * shortcuts (tomorrow morning = 9am-11am, tomorrow afternoon = 1pm-3pm);
- * "immediately" is a 24-hour promise, not a window, so it sends none.
- * A label that spells out one of the seven windows wins over the key.
+ * shortcuts (tomorrow morning = 10am-1pm, tomorrow afternoon = 1pm-4pm).
+ * "immediately" requests the earliest availability, so it sends no window.
+ * A label that spells out a current window wins over the key.
  */
 export function windowForQuickPick(key: string, label = ''): TimeWindow | undefined {
   const spelled = TIME_WINDOWS.find((window) => label.includes(window));
   if (spelled) return spelled;
-  if (key === 'tomorrow_pm') return '1pm-3pm';
-  if (['tomorrow_am', 'in_2_days', 'this_weekend'].includes(key)) return '9am-11am';
+  if (key === 'tomorrow_pm') return '1pm-4pm';
+  if (['tomorrow_am', 'in_2_days', 'this_weekend'].includes(key)) return '10am-1pm';
   return undefined;
 }
 

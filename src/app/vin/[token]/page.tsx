@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { vinError } from "@/lib/seller-vin";
 
 const BASE = API_BASE;
 
@@ -14,8 +15,9 @@ type Offer = {
   year: number | null;
   make: string | null;
   model: string | null;
-  pickup_address: string | null;
-  scheduled_at: string | null;
+  last_owner_name?: string | null;
+  last_owner_address?: string | null;
+  title_state?: string | null;
 };
 
 const US_STATES = [
@@ -27,7 +29,7 @@ const US_STATES = [
 
 /**
  * VIN-only capture page, target of the 7-day VIN reminder email.
- * Same token as the schedule page — but this UI only collects:
+ * Accepts a restricted VIN reminder token or an existing seller token:
  *   - VIN (17 char)
  *   - Name on title
  *   - Address on title
@@ -55,26 +57,24 @@ export default function VinUpdatePage() {
     setLoading(true);
     setLoadErr(null);
     try {
-      // Same GET endpoint the schedule page uses — returns the offer
-      // even after scheduled_at is set (that path only blocks the POST
-      // schedule, not the GET detail).
-      const r = await fetch(`${BASE}/api/public/junkerz/seller/schedule/${token}`);
+      // VIN reminder tokens cannot authorize scheduling or expose contact details.
+      const r = await fetch(`${BASE}/api/public/junkerz/seller/vin-update/${token}`);
       const data = await r.json();
-      // GET returns 410/400/etc with {error: 'already_scheduled'|'expired'|...}
-      // For 'already_scheduled' the response still has offer data — we can
-      // surface it. For 'expired' or 'bad_token', show error.
       if (data?.error === "expired") {
         setLoadErr("This link has expired. Text or call Junkerz.");
         return;
       }
-      if (data?.error && data.error !== "already_scheduled") {
-        setLoadErr("Invalid link. Check the email or contact Junkerz.");
+      if (!r.ok || data?.error) {
+        setLoadErr(vinError(data?.error));
         return;
       }
-      // data.offer is present in both happy-path and already_scheduled
-      if (data.offer) {
-        setOffer(data.offer);
-        if (data.offer.vin) setVin(data.offer.vin);
+      const details = data.offer ?? data;
+      if (details.id) {
+        setOffer(details);
+        setVin(details.vin || "");
+        setOwnerName(details.last_owner_name || "");
+        setOwnerAddress(details.last_owner_address || "");
+        setTitleState(details.title_state || "");
       } else {
         setLoadErr("Couldn't load your offer. Contact Junkerz.");
       }
@@ -105,7 +105,7 @@ export default function VinUpdatePage() {
         }),
       });
       const data = await r.json();
-      if (!r.ok) throw new Error((data as { error?: string }).error || "save failed");
+      if (!r.ok) throw new Error(vinError((data as { error?: string }).error));
       setSaved(true);
     } catch (e) {
       setSubmitErr((e as Error)?.message ?? "save failed");
@@ -131,8 +131,7 @@ export default function VinUpdatePage() {
         <div className="text-5xl">✓</div>
         <h1 className="text-2xl font-bold">Got it — thanks</h1>
         <p className="text-slate-600">
-          Your details are on file. Driver will still verify on arrival but
-          paperwork should fly.
+          Your details are saved. Your pickup partner will review the vehicle and ownership documents with you.
         </p>
       </main>
     );
@@ -146,8 +145,7 @@ export default function VinUpdatePage() {
           {offer.year} {offer.make} {offer.model}
         </p>
         <p className="text-xs text-slate-500 mt-1">
-          Pickup is coming up. Adding these now means we&apos;re in and
-          out faster on the day.
+          Add the details you have to help prepare your paperwork. If the title is missing, discuss ownership documents with your pickup partner.
         </p>
       </header>
 
@@ -159,8 +157,9 @@ export default function VinUpdatePage() {
 
       <div className="space-y-4">
         <div>
-          <Label className="text-sm font-semibold">VIN (17 characters)</Label>
+          <Label htmlFor="vin" className="text-sm font-semibold">VIN (17 characters)</Label>
           <Input
+            id="vin"
             value={vin}
             onChange={(e) => setVin(e.target.value.toUpperCase())}
             placeholder="1HGBH41JXMN109186"
@@ -173,8 +172,9 @@ export default function VinUpdatePage() {
         </div>
 
         <div>
-          <Label className="text-sm font-semibold">Name on the title</Label>
+          <Label htmlFor="owner-name" className="text-sm font-semibold">Name on the title</Label>
           <Input
+            id="owner-name"
             value={ownerName}
             onChange={(e) => setOwnerName(e.target.value)}
             placeholder="John Q Public"
@@ -183,8 +183,9 @@ export default function VinUpdatePage() {
         </div>
 
         <div>
-          <Label className="text-sm font-semibold">Address on the title</Label>
+          <Label htmlFor="owner-address" className="text-sm font-semibold">Address on the title</Label>
           <Input
+            id="owner-address"
             value={ownerAddress}
             onChange={(e) => setOwnerAddress(e.target.value)}
             placeholder="123 Main St, City, ST"
@@ -193,8 +194,9 @@ export default function VinUpdatePage() {
         </div>
 
         <div>
-          <Label className="text-sm font-semibold">State the title was issued in</Label>
+          <Label htmlFor="title-state" className="text-sm font-semibold">State the title was issued in</Label>
           <select
+            id="title-state"
             value={titleState}
             onChange={(e) => setTitleState(e.target.value)}
             className="w-full h-10 mt-1 border rounded px-2 text-sm"

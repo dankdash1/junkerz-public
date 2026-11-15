@@ -65,15 +65,15 @@ function ResultContent() {
     ? { head: "Su oferta", pending: "Un compañero está confirmando este número ahora.",
         firm: "Oferta garantizada.", accept: "Aceptar y programar la grúa",
         decline: "¿No le sirve? Díganos por qué", call: "O llámenos",
-        free: "Grúa gratis", cash: "Efectivo al recoger", fast: "24 a 48 horas",
+        free: "Grúa gratis", cash: "Efectivo al recoger", fast: "Sujeto a disponibilidad",
         wait: "Estamos calculando su oferta…",
-        paperwork: "Después de aceptar, le pediremos el VIN o la placa para los documentos. Puede proporcionarlos antes de la recogida o cuando llegue el conductor." }
+        paperwork: "Después de aceptar, el socio de recogida revisará el VIN y los documentos de propiedad con usted. Tenga su teléfono cerca y revise su correo. El socio le llamará una vez asignado para confirmar la recogida." }
     : { head: "Your offer", pending: "One of our team is confirming this number now.",
         firm: "This is a guaranteed offer.", accept: "Accept & schedule pickup",
         decline: "Not right? Tell us why", call: "Or call us",
-        free: "Free towing", cash: "Cash at pickup", fast: "24 to 48 hours",
+        free: "Free towing", cash: "Cash at pickup", fast: "Subject to availability",
         wait: "Working out your offer…",
-        paperwork: "After you accept, we'll need your VIN or license plate for the paperwork. You can provide it before pickup or when the driver arrives." };
+        paperwork: "After you accept, your pickup partner will review the VIN and ownership paperwork with you. Keep your phone nearby and check your email. Your pickup partner will call once assigned to confirm the pickup." };
 
   if (error) {
     return (
@@ -163,8 +163,8 @@ function ResultContent() {
         </>
       ) : (
         <p className="mt-6 text-center text-sm text-zinc-500">
-          {es ? "Le mandamos la oferta por correo en un momento." :
-                "We're emailing this offer to you now."}
+          {es ? "Revise su correo para encontrar el enlace privado de su oferta. Si no llega, llámenos." :
+                "Check your email for your private offer link. If it hasn't arrived, call us."}
         </p>
       )}
 

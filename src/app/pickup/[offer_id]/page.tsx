@@ -8,12 +8,9 @@ import { PICKUPS_LIVE } from "@/lib/site";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OPEN_EMAIL_LINK_MESSAGE, OTP_REJECTED_MESSAGE, readAcceptOtp } from "@/lib/pickup-accept";
+import { TIME_WINDOWS } from "@/lib/seller-schedule";
 
-const SLOTS = [
-  "Tomorrow 10AM-12PM",
-  "Tomorrow 1PM-3PM",
-  "Tomorrow 4PM-6PM",
-];
+const SLOTS = TIME_WINDOWS.map(window => `Tomorrow ${window}`);
 const PAYMENT_METHODS = ["zelle", "cash", "check"];
 const BASE = API_BASE;
 
@@ -90,7 +87,8 @@ function PickupLive() {
   return (
     <main className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-md mx-auto pt-12 space-y-6">
-        <h1 className="text-2xl font-bold">Schedule Pickup</h1>
+        <h1 className="text-2xl font-bold">Choose your preferred pickup time</h1>
+        <p className="text-sm text-slate-600">Three-hour windows are in Central time, subject to pickup partner availability and confirmation.</p>
 
         {!otp && (
           <p role="alert" className="rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
@@ -99,7 +97,7 @@ function PickupLive() {
         )}
 
         <div className="space-y-2">
-          <Label>Pickup window</Label>
+          <Label>Preferred pickup window (Central)</Label>
           {SLOTS.map((s) => (
             <Button
               key={s}
@@ -138,7 +136,7 @@ function PickupLive() {
           className="w-full h-12"
           disabled={!canSubmit || submitting}
           onClick={schedule}
-        >{submitting ? "Scheduling..." : "Confirm pickup"}</Button>
+        >{submitting ? "Saving..." : "Save pickup preference"}</Button>
       </div>
     </main>
   );

@@ -192,6 +192,11 @@ export const buyerApi = {
   },
   pickupDetail: (matchId: number) =>
     _fetch(`/api/buyers/pickup/${matchId}/detail`).then(_json),
+  pickupBillOfSale: async (matchId: number): Promise<Blob> => {
+    const response = await _fetch(`/api/buyers/pickup/${matchId}/bill-of-sale`, {cache: "no-store", referrerPolicy: "no-referrer"});
+    if (!response.ok) throw new Error("The signed Bill of Sale is unavailable. Contact Junkerz for help.");
+    return response.blob();
+  },
   pickupPhoto: async (matchId: number, kind: string, file: File, caption?: string) => {
     const t = token();
     const fd = new FormData();
@@ -209,6 +214,7 @@ export const buyerApi = {
     signer_role: "seller" | "buyer";
     signer_name?: string;
     signature: string;
+    document_revision: string;
   }) =>
     _fetch(`/api/buyers/pickup/${matchId}/signature`, {
       method: "POST",

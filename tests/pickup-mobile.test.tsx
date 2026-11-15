@@ -3,6 +3,7 @@ import { afterEach,beforeEach,expect,test,vi } from 'vitest';
 import {cleanup,render,screen,waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PickupMobile from '@/components/junkerz/PickupMobile';
+import {sellerAgreement} from './fixtures/seller-agreement';
 const api=vi.hoisted(()=>({detail:vi.fn(),start:vi.fn(),arrive:vi.fn(),thirtyMinutes:vi.fn(),complete:vi.fn(),signature:vi.fn(),upload:vi.fn(),photo:vi.fn()}));
 vi.mock('@/lib/pickup-access-api',async(importOriginal)=>({...await importOriginal<typeof import('@/lib/pickup-access-api')>(),createPickupAccessApi:()=>api}));
 vi.mock('@/components/junkerz/SignaturePad',()=>({default:({onChange}:{onChange:(s:string)=>void})=><button onClick={()=>onChange('data:image/png;base64,test')}>Test seller draws signature</button>}));
@@ -82,4 +83,68 @@ test('driver explicitly arrives before completing and cannot restart departure',
  expect(screen.queryByRole('button',{name:"I'm on my way"})).toBeNull();
  expect(screen.queryByRole('button',{name:"I'm 30 minutes away"})).toBeNull();
  expect(api.complete).not.toHaveBeenCalled();
+});
+
+test('seller reviews actual agreement and submits its revision without completing collection',async()=>{
+ api.detail.mockResolvedValue({...detail,agreement:sellerAgreement});
+ render(<PickupMobile/>);await screen.findByRole('region',{name:'Bill of Sale agreement'});
+ expect(screen.getByText(sellerAgreement.buyer_address)).toBeTruthy();
+ expect(screen.getByText(sellerAgreement.agreement_text)).toBeTruthy();
+ expect(screen.getByText(`Condition: ${sellerAgreement.condition}`)).toBeTruthy();
+ expect(screen.getByText(`License plate: ${sellerAgreement.license_plate} (${sellerAgreement.license_plate_state})`)).toBeTruthy();
+ await userEvent.type(screen.getByLabelText('Your name'),'Test Driver');
+ await userEvent.type(screen.getByLabelText('Seller’s email for their signed copy'),'seller@example.test');
+ await userEvent.click(screen.getByRole('button',{name:'Test seller draws signature'}));
+ api.signature.mockResolvedValue({ok:true});
+ api.detail.mockResolvedValue({...detail,seller_signature:{signer_name:'Test Seller',signed_at:'2026-09-13T12:00:00Z'},agreement:{...sellerAgreement,agreement_text:'Changed current terms'}});
+ await userEvent.click(screen.getByRole('button',{name:'Save seller signature'}));
+ await waitFor(()=>expect(api.signature).toHaveBeenCalledWith('Test Driver','Test Seller','data:image/png;base64,test','preview-revision-1','seller@example.test'));
+ await waitFor(()=>expect(screen.queryByRole('region',{name:'Bill of Sale agreement'})).toBeNull());
+ expect(screen.queryByText('Changed current terms')).toBeNull();
+ expect(api.complete).not.toHaveBeenCalled();
+});
+
+test.each(['buyer_address','seller_address','vin','document_revision','agreement_text'] as const)('missing %s blocks onsite signature',async field=>{
+ api.detail.mockResolvedValue({...detail,agreement:{...sellerAgreement,[field]:''}});
+ render(<PickupMobile/>);await screen.findByRole('region',{name:'Bill of Sale agreement'});
+ await userEvent.type(screen.getByLabelText('Your name'),'Driver');
+ await userEvent.click(screen.getByRole('button',{name:'Test seller draws signature'}));
+ expect(screen.getByRole('button',{name:'Save seller signature'})).toHaveProperty('disabled',true);
+ expect(api.signature).not.toHaveBeenCalled();
+});
+
+test('changed agreement requires reload before another signature attempt',async()=>{
+ api.detail.mockResolvedValue({...detail,agreement:sellerAgreement});
+ api.signature.mockRejectedValue(new Error('document_changed'));
+ render(<PickupMobile/>);await screen.findByRole('region',{name:'Bill of Sale agreement'});
+ await userEvent.type(screen.getByLabelText('Your name'),'Driver');
+ await userEvent.click(screen.getByRole('button',{name:'Test seller draws signature'}));
+ await userEvent.click(screen.getByRole('button',{name:'Save seller signature'}));
+ expect(await screen.findByRole('alert')).toHaveProperty('textContent',expect.stringContaining('Reload'));
+ expect(screen.getByRole('button',{name:'Save seller signature'})).toHaveProperty('disabled',true);
+ expect(api.signature).toHaveBeenCalledTimes(1);
+ expect(api.complete).not.toHaveBeenCalled();
+});
+test('seller signed online first: driver still records departure then arrival',async()=>{
+ const signed={...detail,status:'signed',seller_signature:{signer_name:'Seller',signed_at:'2026-09-13T12:00:00Z'},departed_at:null,arrived_at:null};
+ api.detail.mockResolvedValue(signed);
+ render(<PickupMobile/>);await screen.findByText('2010 Honda Civic');
+ expect(screen.queryByText('Arrival recorded')).toBeNull();
+ expect(screen.getByRole('button',{name:"I've arrived"})).toHaveProperty('disabled',true);
+ await userEvent.type(screen.getByLabelText('Your name'),'Test Driver');
+ api.start.mockResolvedValue({ok:true,status:'signed'});
+ api.detail.mockResolvedValue({...signed,departed_at:'2026-09-13T12:05:00Z'});
+ await userEvent.click(screen.getByRole('button',{name:"I'm on my way"}));
+ expect(await screen.findByText('Departure recorded')).toBeTruthy();
+ expect(screen.getByRole('button',{name:'Pickup complete'})).toHaveProperty('disabled',true);
+ api.arrive.mockResolvedValue({ok:true,status:'signed'});
+ api.detail.mockResolvedValue({...signed,departed_at:'2026-09-13T12:05:00Z',arrived_at:'2026-09-13T12:30:00Z'});
+ await userEvent.click(screen.getByRole('button',{name:"I've arrived"}));
+ await waitFor(()=>expect(api.arrive).toHaveBeenCalledWith('Test Driver'));
+ expect(await screen.findByText('Arrival recorded')).toBeTruthy();
+});
+test('older backend without travel fields keeps signed pickups treated as arrived',async()=>{
+ api.detail.mockResolvedValue({...detail,status:'signed',seller_signature:{signer_name:'Seller',signed_at:'2026-09-13T12:00:00Z'}});
+ render(<PickupMobile/>);await screen.findByText('2010 Honda Civic');
+ expect(screen.getByText('Arrival recorded')).toBeTruthy();
 });

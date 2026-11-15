@@ -17,7 +17,7 @@ vi.stubGlobal('fetch',fetchMock);
 beforeEach(()=>{pickupState.live=true;nav.search=new URLSearchParams();nav.push.mockReset();window.history.replaceState({},'','/pickup/42');fetchMock.mockResolvedValue(Response.json({ok:true}));});
 afterEach(()=>{cleanup();fetchMock.mockReset();});
 async function fillForm(){
- await userEvent.click(await screen.findByRole('button',{name:'Tomorrow 1PM-3PM'}));
+ await userEvent.click(await screen.findByRole('button',{name:'Tomorrow 1pm-4pm'}));
  fireEvent.change(screen.getAllByRole('textbox')[0],{target:{value:'1 Main St, Fort Worth, TX'}});
  fireEvent.change(screen.getAllByRole('textbox')[1],{target:{value:'8175550100'}});
 }
@@ -34,7 +34,7 @@ it('the emailed link ?otp= is sent in the accept body and the seller moves on to
  render(<PickupPage/>);
  expect(screen.queryByText(/Open the link from your email/)).toBeNull();
  await fillForm();
- await userEvent.click(screen.getByRole('button',{name:'Confirm pickup'}));
+ await userEvent.click(screen.getByRole('button',{name:'Save pickup preference'}));
  await waitFor(()=>expect(nav.push).toHaveBeenCalledWith('/status/42'));
  const [acceptUrl,acceptInit]=fetchMock.mock.calls[0];
  expect(acceptUrl).toBe('/api/public/junkerz/offer/42/accept');
@@ -47,7 +47,7 @@ it('a code carried in the #otp= fragment works too',async()=>{
  render(<PickupPage/>);
  await waitFor(()=>expect(screen.queryByText(/Open the link from your email/)).toBeNull());
  await fillForm();
- await userEvent.click(screen.getByRole('button',{name:'Confirm pickup'}));
+ await userEvent.click(screen.getByRole('button',{name:'Save pickup preference'}));
  await waitFor(()=>expect(fetchMock).toHaveBeenCalled());
  expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({otp:'frag_token'});
 });
@@ -55,7 +55,7 @@ it('without a code the page says to open the email link and never posts a silent
  render(<PickupPage/>);
  expect((await screen.findByRole('alert')).textContent).toMatch(/Open the link from your email to accept/);
  await fillForm();
- expect(screen.getByRole('button',{name:'Confirm pickup'})).toHaveProperty('disabled',true);
+ expect(screen.getByRole('button',{name:'Save pickup preference'})).toHaveProperty('disabled',true);
  expect(fetchMock).not.toHaveBeenCalled();
 });
 it('a rejected or expired code is explained, and the pickup is not scheduled',async()=>{
@@ -63,7 +63,7 @@ it('a rejected or expired code is explained, and the pickup is not scheduled',as
  fetchMock.mockResolvedValue(Response.json({error:'otp_invalid_or_expired'},{status:401}));
  render(<PickupPage/>);
  await fillForm();
- await userEvent.click(screen.getByRole('button',{name:'Confirm pickup'}));
+ await userEvent.click(screen.getByRole('button',{name:'Save pickup preference'}));
  expect((await screen.findByText(/expired or was already used/)).textContent).toMatch(/newest email/);
  expect(fetchMock).toHaveBeenCalledTimes(1);
  expect(nav.push).not.toHaveBeenCalled();
@@ -75,6 +75,6 @@ it('paused pickups show the opening notice without loading or submitting a picku
  render(<PickupPage/>);
  expect(await screen.findByRole('heading',{name: /not picking up cars yet/i})).toBeTruthy();
  expect(screen.getByText(/we are not scheduling pickups yet/)).toBeTruthy();
- expect(screen.queryByRole('button',{name:/Confirm pickup|Schedule this slot|Tomorrow morning/})).toBeNull();
+ expect(screen.queryByRole('button',{name:/Save pickup preference|Tomorrow morning/})).toBeNull();
  expect(fetchMock).not.toHaveBeenCalled();
 });

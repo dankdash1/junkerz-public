@@ -10,8 +10,11 @@ import PrivatePhoto from "@/components/junkerz/PrivatePhoto";
 import PaymentRecovery from "@/components/junkerz/PaymentRecovery";
 import PickupStart from "@/components/junkerz/PickupStart";
 import SignaturePad from "@/components/junkerz/SignaturePad";
+import SignedBillOfSaleDownload from "@/components/junkerz/SignedBillOfSaleDownload";
+import SellerAgreement, { agreementReady, type SellerAgreementData } from "@/components/junkerz/SellerAgreement";
 
 type Detail = {
+  agreement?: SellerAgreementData | null;
   match_id: number;
   car_offer_id: number;
   bid_cents: number | null;
@@ -95,6 +98,7 @@ export default function BuyerPickupDetail() {
   const [sigData, setSigData] = useState<string | null>(null);
   const [sigBusy, setSigBusy] = useState(false);
   const [sigErr, setSigErr] = useState<string | null>(null);
+  const [agreementChanged, setAgreementChanged] = useState(false);
 
   const [completing, setCompleting] = useState(false);
   const [completeMsg, setCompleteMsg] = useState<string | null>(null);
@@ -154,6 +158,7 @@ export default function BuyerPickupDetail() {
   };
 
   const saveSignature = async () => {
+    if (sigBusy || agreementChanged || !agreementReady(d.agreement) || !sellerName.trim()) return;
     if (!sigData) {
       setSigErr("Please sign before saving.");
       return;
@@ -165,10 +170,14 @@ export default function BuyerPickupDetail() {
         signer_role: "seller",
         signer_name: sellerName.trim() || undefined,
         signature: sigData,
+        document_revision: d.agreement!.document_revision!,
       });
       await load();
     } catch (e) {
-      setSigErr((e as Error)?.message ?? "signature save failed");
+      if ((e as Error)?.message === "document_changed") {
+        setAgreementChanged(true);
+        setSigErr("The agreement changed. Reload this page and review the updated details before signing.");
+      } else setSigErr((e as Error)?.message ?? "signature save failed");
     } finally {
       setSigBusy(false);
     }
@@ -286,6 +295,7 @@ export default function BuyerPickupDetail() {
       </section>
 
       <PickupShare matchId={matchId} completed={isCompleted} />
+      {sellerSigned && <SignedBillOfSaleDownload matchId={matchId} />}
 
       {!isCompleted && <PickupStart matchId={matchId} status={d.match_status === "delivered" ? "completed" : (d.po_status || d.purchase_status)} etaAt={d.eta_at} onStarted={load} />}
 
@@ -350,13 +360,15 @@ export default function BuyerPickupDetail() {
 
           <section className="bg-white border rounded-lg p-4 space-y-3">
             <h2 className="font-semibold">Seller signs Bill of Sale</h2>
+            {!sellerSigned && <>
             <p className="text-xs text-slate-600">
-              Hand your phone to the seller. They sign below — we&apos;ll email
-              them a copy after you mark complete.
+              Hand your phone to the seller to review the agreement below. A signed copy is saved and email delivery is attempted after signing.
             </p>
+            <SellerAgreement agreement={d.agreement} />
             <div>
-              <Label className="text-xs">Seller&apos;s name (printed)</Label>
+              <Label htmlFor="onsite-seller-name" className="text-xs">Seller&apos;s name (printed)</Label>
               <Input
+                id="onsite-seller-name"
                 value={sellerName}
                 onChange={(e) => setSellerName(e.target.value)}
                 placeholder={d.contact_name || "Seller name"}
@@ -364,16 +376,17 @@ export default function BuyerPickupDetail() {
             </div>
             <SignaturePad
               onChange={setSigData}
-              disabled={sellerSigned}
+              disabled={sigBusy || agreementChanged || !agreementReady(d.agreement)}
             />
             {sigErr && <div className="text-red-600 text-sm">{sigErr}</div>}
             <Button
               onClick={() => void saveSignature()}
-              disabled={sigBusy || sellerSigned || !sigData}
+              disabled={sigBusy || agreementChanged || !sigData || !sellerName.trim() || !agreementReady(d.agreement)}
               className="w-full"
             >
-              {sellerSigned ? "✓ Signed" : sigBusy ? "Saving…" : "Save signature"}
+              {sigBusy ? "Saving…" : "Save signature"}
             </Button>
+            </>}
             {sellerSigned && (
               <p className="text-xs text-brand-700">
                 Signed by {d.signatures.find((s) => s.signer_role === "seller")?.signer_name || "seller"} at{" "}
@@ -385,8 +398,7 @@ export default function BuyerPickupDetail() {
           <section className="bg-white border rounded-lg p-4 space-y-3">
             <h2 className="font-semibold">Mark complete</h2>
             <p className="text-xs text-slate-600">
-              Requires the seller&apos;s signature on file. Marking complete
-              auto-emails them their signed Bill of Sale and charges your saved card the finder fee
+              Complete this step after collecting the vehicle. It requires the seller&apos;s signature on file and charges your saved card the finder fee
               {d.bid_cents != null && d.offer_cents != null ? ` of $${(Math.max(0, d.bid_cents - d.offer_cents) / 100).toFixed(2)}` : ""}.
             </p>
             <Button
