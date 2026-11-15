@@ -25,7 +25,7 @@ const SECTIONS: [string, string[]][] = [
     "We may disclose information where the law requires it, for example to law enforcement, to a state motor vehicle authority, or where we must prove the lawful transfer of a vehicle.",
   ]],
   ["Text messages", [
-    "If you give us your mobile number, Junkerz texts you about your quote, your offer and your pickup. Message frequency varies. Message and data rates may apply. Reply STOP to stop receiving texts, or HELP for help.",
+    "If you choose the optional text-message consent box when giving us your mobile number, Junkerz may text you about your quote, your offer and your pickup. Message frequency varies. Message and data rates may apply. Reply STOP to stop receiving texts, or HELP for help.",
     "No mobile information will be shared with third parties or affiliates for marketing or promotional purposes. Text messaging opt-in data and consent are not shared with any third party.",
   ]],
   ["Tracking user behaviour", [
@@ -65,8 +65,8 @@ export default function PrivacyPolicy() {
         <section>
           <h2 className="text-xl font-extrabold tracking-tight text-zinc-900">Contact us</h2>
           <p className="mt-3">
-            {SITE.legal}, {SITE.street}, {SITE.city}, {SITE.state} {SITE.postal}.
-            Phone {SITE.phone}. Email {SITE.email}.
+            Contact {SITE.legal} by phone at <a href={SITE.phoneHref} className="underline">{SITE.phone}</a>{" "}
+            or email at <a href={`mailto:${SITE.email}`} className="underline">{SITE.email}</a>.
           </p>
         </section>
       </div>

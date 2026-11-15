@@ -37,7 +37,7 @@ const FAQ_ES: [string, string][] = [
    "Casi siempre sí. El valor está en el peso del metal, el convertidor catalítico y las piezas que aún sirven. Nada de eso necesita que el motor arranque. La mayoría de los carros que compramos no encienden."],
   ["¿Qué tan rápido lo pueden recoger?",
    PICKUPS_LIVE
-     ? "Normalmente entre 24 y 48 horas, y muchas veces el mismo día si está cerca de nuestro patio en el norte de Dallas. Si tiene una fecha límite del apartamento o de la ciudad, díganos y trabajamos con esa fecha."
+     ? "La disponibilidad depende de su ubicación y del socio de recogida asignado. Confirme la fecha y la hora con ese socio antes de hacer planes. Si tiene una fecha límite del apartamento o de la ciudad, díganos al pedir su cotización."
      : "Todavía no programamos recogidas. Reciba su oferta ahora y le contactaremos cuando empecemos. No podemos prometer una fecha de recogida mientras preparamos la apertura."],
   ["¿Cómo me pagan?",
    "En efectivo, en el momento de recoger el carro, antes de subirlo a la grúa. Nunca un cheque por correo que usted tenga que perseguir."],
@@ -104,9 +104,9 @@ export default function CarroViejos() {
           </div>
 
           <p className="mx-auto mt-7 max-w-xl text-lg text-zinc-600">
-            Camine o no, chocado o muerto, con título o sin título. Díganos qué
-            tiene y le damos un número garantizado. Grúa gratis en todo DFW y
-            dinero en la mano cuando recogemos el carro.
+            Conectamos vendedores y compradores de carros chatarra en línea en
+            Dallas–Fort Worth. Díganos qué tiene, reciba su oferta y confirme
+            la recogida con su socio asignado. No tenemos local abierto al público.
           </p>
 
           <ul className="mx-auto mt-8 grid max-w-2xl gap-3 text-[15px] text-zinc-700 sm:grid-cols-2">
@@ -114,7 +114,7 @@ export default function CarroViejos() {
               [Truck, "Grúa gratis, siempre"],
               [BadgeDollarSign, "Efectivo al recoger el carro"],
               [FileText, "Muchas veces sin título"],
-              [Clock, PICKUPS_LIVE ? "Casi siempre en 24 a 48 horas" : "Abrimos pronto — aún no recogemos carros"],
+              [Clock, PICKUPS_LIVE ? "Horario confirmado con su socio de recogida" : "Abrimos pronto — aún no recogemos carros"],
             ].map(([Icon, t]) => {
               const I = Icon as typeof Truck;
               return (
@@ -153,9 +153,9 @@ export default function CarroViejos() {
                 b: "Año, marca, modelo y en qué condición está. Como un minuto. Sin crear cuenta y sin buscar el número de serie." },
               { icon: BadgeDollarSign, n: "02", t: "Reciba su número real",
                 b: "Una oferta garantizada, calculada con el precio del metal, el convertidor catalítico y las piezas que todavía se venden." },
-              { icon: Truck, n: "03", t: PICKUPS_LIVE ? "Lo recogemos y le pagamos" : "Le contactamos cuando empecemos",
+              { icon: Truck, n: "03", t: PICKUPS_LIVE ? "Confirme la recogida y el pago" : "Le contactamos cuando empecemos",
                 b: PICKUPS_LIVE
-                  ? "Escoja la hora. Vamos a su casa en todo DFW, le entregamos el efectivo y nos llevamos el carro gratis."
+                  ? "Confirme la fecha y la hora con su socio de recogida asignado. Ese socio recoge el carro y coordina el pago al recogerlo, con grúa gratis."
                   : "Guarde su oferta ahora. Todavía no programamos recogidas. Le contactaremos antes de coordinar la recogida y el pago." },
             ].map(({ icon: Icon, n, t, b }) => (
               <div key={n} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">

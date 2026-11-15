@@ -6,7 +6,7 @@ import { SITE, PICKUPS_LIVE } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Sell Wrecked & Junk Cars for Cash in DFW",
   description: PICKUPS_LIVE
-    ? "Junkerz buys wrecked and junk cars across Dallas–Fort Worth. Fair quote, cash on the spot, free same-day towing. Call 817-420-9180."
+    ? "Connect with buyers for wrecked and junk cars across Dallas–Fort Worth. Get an instant quote and confirm pickup with your assigned partner. Call 817-420-9180."
     : "Get an offer for your wrecked or junk car in Dallas–Fort Worth. Junkerz is opening soon; pickups have not started. Call 817-420-9180.",
   alternates: { canonical: `${SITE.url}/junk-cars` },
 };
@@ -25,7 +25,7 @@ export default function JunkCars() {
           </h2>
           <p className="mt-3">
             {PICKUPS_LIVE
-              ? "When it is time to let the car go, we make it quick. Our team gives you a fair quote once we know what you have, and you do not have to guess at the number or wait for a callback. Once we agree a price, you get cash in hand as we take the vehicle away, usually the same day."
+              ? "Start with an instant quote for your wrecked car. After you accept an offer, confirm pickup availability and timing with your assigned buyer or pickup partner. Payment is made at pickup."
               : "Get a fair quote for your wrecked car now. We are not picking up cars yet. Save your offer and we will contact you when pickups start, before arranging collection and payment."}
           </p>
           <p className="mt-3">
@@ -74,7 +74,7 @@ export default function JunkCars() {
 
       <div className="mt-14 -mx-5">
         <BottomCTA
-          heading={PICKUPS_LIVE ? "Turn that wreck into cash today" : "Get an offer for that wreck today"}
+          heading="Get an offer for that wreck today"
           body="Tell us what you have and get a guaranteed number in about a minute. Free towing anywhere in DFW."
         />
       </div>

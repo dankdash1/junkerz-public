@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { Check } from "lucide-react";
 import PageShell, { BottomCTA } from "@/components/PageShell";
-import { SITE } from "@/lib/site";
+import { SITE, PICKUPS_LIVE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Non-Running Vehicle Removal in DFW",
-  description:
-    "Car will not start? Junkerz buys non-running vehicles across Dallas–Fort Worth with a fair cash offer and free same-day pickup. Call 817-420-9180.",
+  description: PICKUPS_LIVE
+    ? "Car will not start? Connect with buyers across Dallas–Fort Worth through Junkerz. Get a quote and confirm pickup with your assigned partner. Call 817-420-9180."
+    : "Get an offer for your non-running car in Dallas–Fort Worth. Junkerz is opening soon; pickups have not started. Call 817-420-9180.",
   alternates: { canonical: `${SITE.url}/not-running` },
 };
 
@@ -46,8 +47,8 @@ export default function NotRunning() {
             {[
               "You tell us the year, make, model and roughly what is wrong with it",
               "We give you a guaranteed cash number, no inspection visit needed first",
-              "You pick a pickup window that suits you",
-              "Our truck comes to you, we hand over the cash, and we tow it free",
+              PICKUPS_LIVE ? "Confirm a pickup window with your assigned pickup partner" : "Save your offer; we are not scheduling pickups yet",
+              PICKUPS_LIVE ? "Your assigned pickup partner collects the vehicle and handles payment at pickup, with free towing" : "We will contact you when pickups start, before arranging collection and payment",
             ].map((t) => (
               <li key={t} className="flex gap-3">
                 <Check className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
@@ -56,9 +57,9 @@ export default function NotRunning() {
             ))}
           </ul>
           <p className="mt-5">
-            The car does not need to roll, steer or hold air in the tyres. Our
-            drivers bring the equipment to load a vehicle that cannot move under
-            its own power. It can sit on the grass, on a flat, or on blocks.
+            Tell your assigned pickup partner if the car cannot roll or steer,
+            has flat tyres, or is on grass or blocks. They need those details to
+            confirm access and arrange suitable loading equipment.
           </p>
         </section>
 

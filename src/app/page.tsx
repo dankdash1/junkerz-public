@@ -65,7 +65,7 @@ const FAQ: [string, string][] = [
      ? "Pickup timing depends on your location and the assigned pickup partner. Confirm the date and time before making arrangements. Tell us about any apartment or city tow deadline when requesting your quote."
      : "We are not scheduling pickups yet. Get your offer now and we will contact you when pickups start. We cannot promise a pickup date while we are opening."],
   ["How do I get paid?",
-   "On the spot, when we collect the car, before it goes on the truck. Never a cheque in the post that you have to chase."],
+   "At pickup, through your assigned buyer or pickup partner, before the car goes on the truck. Never a cheque in the post that you have to chase."],
   ["What kinds of vehicles do you buy?",
    "Cars, trucks, vans and SUVs. Wrecked, flooded, burned, stripped, seized, or simply worn out. We also buy vehicles that have been sitting for years and will not move under their own power."],
 ];
@@ -204,9 +204,9 @@ export default async function Landing() {
                 b: "Year, make, model, and how rough it is. About a minute. No VIN hunting and no account to create." },
               { icon: BadgeDollarSign, n: "02", t: "Get your real number",
                 b: "A guaranteed cash offer priced from live scrap weight, the catalytic converter and parts that still sell." },
-              { icon: Truck, n: "03", t: PICKUPS_LIVE ? "We collect it and pay you" : "We contact you when pickups start",
+              { icon: Truck, n: "03", t: PICKUPS_LIVE ? "Confirm pickup and payment" : "We contact you when pickups start",
                 b: PICKUPS_LIVE
-                  ? "Pick a time that suits you. We come to your driveway anywhere in DFW, hand you the cash, and tow it free."
+                  ? "Confirm a pickup window with your assigned partner. They collect the vehicle and handle payment at pickup, with free towing across DFW."
                   : "Save your offer now. We are not scheduling pickups yet. We will contact you before arranging collection and payment." },
             ].map(({ icon: Icon, n, t, b }) => (
               <div key={n} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">
