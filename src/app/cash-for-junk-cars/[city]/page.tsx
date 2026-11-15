@@ -23,7 +23,7 @@ export async function generateMetadata(
   return {
     title: `Cash for Junk Cars in ${c.name}, TX | Free Towing`,
     description:
-      `Junkerz buys junk, wrecked and non-running cars in ${c.name}, ${c.county}. Guaranteed offer in about a minute, free towing, cash at pickup. Call ${SITE.phone}.`,
+      `Connect with buyers for junk, wrecked and non-running cars in ${c.name}, ${c.county} through Junkerz. Guaranteed offer, free towing and cash at pickup. Call ${SITE.phone}.`,
     alternates: { canonical: `${SITE.url}/cash-for-junk-cars/${c.slug}` },
     openGraph: {
       title: `Cash for Junk Cars in ${c.name}, TX | Junkerz`,
@@ -92,8 +92,9 @@ export default async function CityPage(
               Cash for junk cars in {c.name}, TX
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-lg text-zinc-600">
-              Junkerz buys junk, wrecked and non-running vehicles across {c.name} and
-              the rest of {c.county}. Free towing, cash in your hand at pickup.
+              Junkerz connects sellers of junk, wrecked and non-running vehicles
+              with buyers across {c.name} and the rest of {c.county}.
+              Free towing, cash in your hand at pickup.
             </p>
           </div>
           <HeroQuoteForm />
@@ -113,7 +114,7 @@ export default async function CityPage(
         <div className="space-y-10 text-[17px] leading-relaxed text-zinc-700">
           <section>
             <h2 className="text-2xl font-extrabold tracking-tight text-zinc-900">
-              What we buy in {c.name}
+              Vehicles you can sell in {c.name}
             </h2>
             <p className="mt-3">
               Condition is not a barrier. If the vehicle is sitting in {c.name} and you
@@ -182,10 +183,10 @@ export default async function CityPage(
               Do I need the title in Texas?
             </h2>
             <p className="mt-3">
-              Often, no. In many {c.county} cases we can complete the purchase with your
+              Often, no. In many {c.county} cases a buyer can complete the purchase with your
               vehicle registration and a photo ID instead of the title. Tell us your
               situation while you are getting the quote and we will say exactly what is
-              needed before anyone drives out to you. We handle this paperwork every day.
+              needed before anyone drives out to you. Your assigned buyer or pickup partner handles the transfer paperwork.
             </p>
           </section>
         </div>

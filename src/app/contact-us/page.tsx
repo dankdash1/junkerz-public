@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     ? "Contact Junkerz | Get a Junk-Car Offer in DFW"
     : "Contact Junkerz | Get a Car Offer in DFW — Opening Soon",
   description:
-    "Call Junkerz on 817-420-9180 or start an online quote. We buy junk and wrecked cars across Dallas–Fort Worth with free towing and cash at pickup.",
+    "Call Junkerz on 817-420-9180 or start an online quote. Connect with junk-car buyers across Dallas–Fort Worth, with free towing and cash at pickup.",
   alternates: { canonical: `${SITE.url}/contact-us` },
 };
 

@@ -66,6 +66,8 @@ for (const live of [false, true]) {
       const removedPromises = /same.day|cash today|24 (?:to|a|y) 48 (?:hours|horas)|mismo d[ií]a|nuestro patio/i;
       expect(text).not.toMatch(removedPromises);
       expect(metadata).not.toMatch(removedPromises);
+      const imageAltText = Array.from(document.querySelectorAll('img')).map(image => image.alt).join(' ');
+      expect(`${text} ${metadata} ${imageAltText}`).not.toMatch(/Junkerz (?:buys|compra)\b|\bwe buy\b|\bcompramos\b/i);
       // Search engines must see the same timing qualification as visitors.
       for (const script of Array.from(document.querySelectorAll('script[type="application/ld+json"]'))) {
         const data = JSON.parse(script.textContent || '{}');
@@ -118,6 +120,8 @@ it('city pages describe the marketplace service without inventing a local yard o
   expect(text).toContain('There is no public yard to visit');
   expect(text).toContain('Confirm the window with your assigned pickup partner');
   expect(text).not.toMatch(/our drivers|our routes|our yard|Skyfrost/i);
+  const metadata = await page.generateMetadata({params: Promise.resolve({city: 'dallas'})});
+  expect(`${text} ${JSON.stringify(metadata)}`).not.toMatch(/Junkerz buys|\bwe buy\b/i);
   const graph = JSON.parse(document.querySelector('script[type="application/ld+json"]')!.textContent!)['@graph'];
   const service = graph.find((entry: Record<string, unknown>) => entry['@type'] === 'Service');
   expect(service.provider).toMatchObject({'@type': 'Organization'});

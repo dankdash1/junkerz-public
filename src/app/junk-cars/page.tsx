@@ -15,8 +15,8 @@ export default function JunkCars() {
   return (
     <PageShell
       eyebrow="Wrecked & junk cars"
-      title="We buy your wrecked vehicle, damage and all"
-      lede="Junkerz buys wrecked cars right across Dallas–Fort Worth. A junk car in the driveway is an inconvenience for everyone. Ours is the team that proves it is still worth real money."
+      title="Sell your wrecked vehicle, damage and all"
+      lede="Junkerz connects wrecked-car sellers with buyers across Dallas–Fort Worth. A junk car in the driveway can still be worth real money. Start an instant quote and arrange pickup through your assigned partner."
     >
       <div className="space-y-10 text-[17px] leading-relaxed text-zinc-700">
         <section>
@@ -38,7 +38,7 @@ export default function JunkCars() {
 
         <section>
           <h2 className="text-2xl font-extrabold tracking-tight text-zinc-900">
-            Why sell your car to us
+            Why sell your car through Junkerz
           </h2>
           <p className="mt-3">
             Plenty of outfits buy wrecked cars around DFW. Here is what you get with us.
@@ -64,7 +64,7 @@ export default function JunkCars() {
             What counts as a wrecked car
           </h2>
           <p className="mt-3">
-            More than people think. We buy collision write-offs, cars with deployed
+            More than people think. Buyers accept collision write-offs, cars with deployed
             airbags, flood and hail damage, fire damage, vehicles stripped for parts,
             and cars an insurer has already declared a total loss. If it is sitting
             on your property and you want it gone, start a quote and we will price it.

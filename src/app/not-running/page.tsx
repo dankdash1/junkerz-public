@@ -16,7 +16,7 @@ export default function NotRunning() {
     <PageShell
       eyebrow="Cars that will not start"
       title="Getting rid of a car that no longer moves"
-      lede="Nobody wants a broken-down car outside the house or blocking a work bay. When it is time for that one to go, Junkerz buys it where it sits, anywhere in Dallas–Fort Worth."
+      lede="Nobody wants a broken-down car outside the house or blocking a work bay. When it is time for that one to go, Junkerz connects you with buyers across Dallas–Fort Worth. Arrange collection where it sits with your assigned pickup partner."
     >
       <div className="space-y-10 text-[17px] leading-relaxed text-zinc-700">
         <section>
@@ -30,7 +30,7 @@ export default function NotRunning() {
             body panels and interior all still sell. None of that needs the engine to run.
           </p>
           <p className="mt-3">
-            We price non-running cars every day and it is the bulk of what we buy.
+            Get a quote for your non-running car and connect with a buyer through Junkerz.
             Seized motors, blown transmissions, snapped timing belts, cars that have
             sat under a tarp for six years. All of it.
           </p>

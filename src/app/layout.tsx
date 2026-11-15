@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s | Junkerz",
   },
   description:
-    "Junkerz buys junk, wrecked and non-running cars across Dallas–Fort Worth. Guaranteed offer in about a minute, free towing, cash at pickup. Call 817-420-9180.",
+    "Connect with buyers for junk, wrecked and non-running cars across Dallas–Fort Worth through Junkerz. Guaranteed offer, free towing and cash at pickup. Call 817-420-9180.",
   applicationName: SITE.name,
   icons: {
     icon: [
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     "cash for junk cars",
     "junk car removal",
     "sell my junk car",
-    "we buy junk cars",
+    "junk car marketplace",
     "junk car buyers Dallas",
     "cash for cars Fort Worth",
     "scrap car removal DFW",
