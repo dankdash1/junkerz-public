@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     ? "Contact Junkerz | Get a Junk-Car Offer in DFW"
     : "Contact Junkerz | Get a Car Offer in DFW — Opening Soon",
   description:
-    "Call Junkerz on 817-420-9180 or start an online quote. Connect with junk-car buyers across Dallas–Fort Worth, with free towing and cash at pickup.",
+    "Call Junkerz on 817-420-9180 or request a quote online. Connect with independent vehicle buyers across Dallas–Fort Worth and confirm pickup and payment with your assigned partner.",
   alternates: { canonical: `${SITE.url}/contact-us` },
 };
 
@@ -72,9 +72,10 @@ export default function ContactUs() {
           Fastest way: get the number first
         </h2>
         <p className="mt-2 text-zinc-700">
-          The online quote asks a handful of questions about the car and gives you a
-          guaranteed offer at the end. It takes about a minute and does not commit you
-          to anything.
+          The online quote takes about a minute and does not commit you to a sale.
+          Your offer is guaranteed when the vehicle, condition, major parts and
+          ownership details match your description. Any difference must be explained
+          before you agree to a revised offer.
         </p>
         <Link href="/quote" className="mt-5 inline-block">
           <Button className="h-13 gap-2 px-7 text-base font-bold">
@@ -82,6 +83,19 @@ export default function ContactUs() {
           </Button>
         </Link>
       </div>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-extrabold tracking-tight text-zinc-900">
+          Help with an existing offer or pickup
+        </h2>
+        <p className="mt-2 text-zinc-600">
+          Junkerz generates your online offer and helps coordinate your sale. Your
+          assigned independent buyer purchases the vehicle and pays you; the pickup
+          partner collects it. Call or email Junkerz if an offer changes, a pickup is
+          delayed, or you have a payment or paperwork question. Include your offer
+          reference so we can work with the assigned partner on the issue.
+        </p>
+      </section>
 
       <div className="mt-10">
         <h2 className="text-xl font-extrabold tracking-tight text-zinc-900">

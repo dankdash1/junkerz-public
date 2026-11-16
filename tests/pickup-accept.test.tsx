@@ -2,7 +2,7 @@ import React from 'react';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import PickupPage from '@/app/pickup/[offer_id]/page';
+import PickupPage from '@/app/(site)/pickup/[offer_id]/page';
 import {readAcceptOtp} from '@/lib/pickup-accept';
 const nav=vi.hoisted(()=>({search:new URLSearchParams(),push:vi.fn()}));
 vi.mock('next/navigation',()=>({useParams:()=>({offer_id:'42'}),useSearchParams:()=>nav.search,useRouter:()=>({push:nav.push,replace:vi.fn()})}));

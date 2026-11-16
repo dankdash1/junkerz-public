@@ -8,10 +8,21 @@ const nextConfig = {
       {key: "Cache-Control", value: "no-store"},
       {key: "Content-Security-Policy", value: `default-src 'self'; script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}; style-src 'self' 'unsafe-inline'; connect-src 'self' ${apiOrigin}${process.env.NODE_ENV === "development" ? " ws://localhost:*" : ""}; img-src 'self' blob: data:; font-src 'self'; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'`},
     ];
-    return ["/pickup", "/yard-request", "/yard-reply"].map((source) => ({ source, headers: capabilityHeaders }));
+    const privateHeaders = [
+      {key: "X-Robots-Tag", value: "noindex, nofollow, noarchive"},
+      {key: "Referrer-Policy", value: "no-referrer"},
+    ];
+    return [
+      ...["/pickup", "/yard-request", "/yard-reply"].map((source) => ({ source, headers: capabilityHeaders })),
+      ...["/schedule/:path*", "/sign/:path*", "/vin/:path*", "/decline/:path*",
+        "/status/:path*", "/pickup/:offer_id", "/quote/result", "/buyers/:path*",
+        "/account/:path*", "/payments/:path*"].map((source) => ({ source, headers: privateHeaders })),
+    ];
   },
   async redirects() {
     return [
+      // Next preserves the requested path and query on this permanent redirect.
+      { source: "/:path*", has: [{ type: "host", value: "www.junkerz.com" }], destination: "https://junkerz.com/:path*", permanent: true },
       // The old WordPress site served every page with a trailing slash.
       // Next.js normalises those itself, so these only cover URLs that
       // changed shape or no longer exist on their own.

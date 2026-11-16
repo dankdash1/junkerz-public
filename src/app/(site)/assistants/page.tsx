@@ -3,25 +3,22 @@ import Link from "next/link";
 import PageShell from "@/components/PageShell";
 
 export const metadata: Metadata = {
-  title: "Find furniture and request a Junkerz offer with an AI assistant",
-  description: "Use a compatible connected assistant to search current Dwell Furniture inventory or request a Junkerz vehicle offer using the real quote system.",
+  title: "Request a vehicle offer with a connected assistant",
+  description: "Learn how a compatible connected assistant can request a Junkerz vehicle offer, protect your information and help you review pickup arrangements with an independent buyer.",
   alternates: { canonical: "https://junkerz.com/assistants" },
 };
 
 export default function AssistantsPage() {
-  return <PageShell eyebrow="Connected assistants" title="Ask about a car offer or a piece of furniture."
-    lede="A compatible connected assistant can check current furniture listings and request an offer from Junkerz using the same business systems as our websites.">
+  return <PageShell eyebrow="Connected assistants" title="Get help selling your vehicle."
+    lede="A compatible connected assistant can request a vehicle offer through Junkerz. Junkerz connects you with an independent buyer and pickup partner; the assigned buyer purchases your vehicle and pays at pickup.">
     <div className="space-y-10 text-zinc-700">
       <section className="space-y-3"><h2 className="text-2xl font-bold text-zinc-900">Sell a vehicle with Junkerz</h2>
         <p>Try: “I want to sell my non-running Ford F-150 in Dallas.” Your assistant will ask for the year, make, model, condition, title status, ZIP code and your contact details. After you confirm submission, Junkerz generates the quote.</p>
-        <p>An offer marked ready can be accepted under Junkerz’s terms. A quote marked reviewing still needs approval. The assistant must show that distinction and use the amount returned by Junkerz. Use your private offer link to review the details, accept and arrange pickup.</p>
-        <p>Junkerz serves Dallas–Fort Worth and surrounding North Texas. Pickup eligibility and scheduling are confirmed through Junkerz.</p>
+        <p>A ready offer without a human-approval requirement is guaranteed when the vehicle, condition, major parts and ownership details match your description. Any difference must be explained before you agree to a revised offer. A quote marked reviewing still needs approval. The assistant must show that distinction and use the amount returned by Junkerz.</p>
+        <p>You must own the vehicle or have legal authority to sell it. A missing title needs a review of acceptable documents before pickup. A vehicle being on your property does not by itself authorize its sale.</p>
+        <p>Use your private offer link to review the details, accept and arrange pickup. Confirm payment details, address access and the pickup window with your assigned buyer or pickup partner. Junkerz coordinates the request and helps with questions through our <Link href="/contact-us" className="underline">support channels</Link>.</p>
+        <p>Junkerz covers Dallas–Fort Worth and surrounding North Texas, with each pickup subject to address and partner confirmation. Check our <Link href="/service-areas" className="underline">service-area guide</Link>.</p>
         <Link className="font-semibold text-brand-700 underline" href="/quote">Get an offer directly on our website</Link>
-      </section>
-      <section className="space-y-3"><h2 className="text-2xl font-bold text-zinc-900">Find furniture at Dwell</h2>
-        <p>Try: “Find a used sectional under $1,500 at Dwell Furniture.” The connection checks currently published inventory and returns prices, photos and product links. Availability can change before checkout.</p>
-        <p>Ask about dimensions when they are listed in the product description. Missing dimensions are unknown. Confirm delivery coverage and charges on the furniture website before ordering.</p>
-        <a className="font-semibold text-brand-700 underline" href="https://furniture.dankdash.ai">Browse Dwell Furniture</a>
       </section>
       <section className="space-y-3"><h2 className="text-2xl font-bold text-zinc-900">Connect your assistant</h2>
         <p>In an assistant or developer tool that supports custom remote MCP connections, use the server address below. This public connection needs no Junkerz administrator account. Your assistant’s plan and connector settings determine whether it can connect and use actions.</p>

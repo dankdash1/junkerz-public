@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import QuotePage from "../src/app/quote/page";
+import QuotePage from "../src/app/(site)/quote/page";
 import HeroQuoteForm, { ES } from "../src/components/HeroQuoteForm";
 import TrimPicker from "../src/components/TrimPicker";
 import { getTrimOptions } from "../src/lib/vehicle-trims";
@@ -40,7 +40,31 @@ async function chooseCar() {
 function next() { fireEvent.click(screen.getByRole("button", { name: "Continue" })); }
 
 describe("simple seller quote", () => {
+  it.each([
+    ["", "en", "Guaranteed offer", "Your approved offer is guaranteed when the vehicle, condition, major parts and ownership details match your description."],
+    ["lang=es", "es", "Oferta garantizada", "Su oferta aprobada se garantiza si el vehículo, su condición, las piezas principales y los datos de propiedad coinciden con su descripción."],
+  ])("shows the guarantee condition beside the promise in the selected language (%s)", async (query, lang, badge, condition) => {
+    navigation.query = query;
+    render(<QuotePage />);
+    expect(screen.getByRole("main").getAttribute("lang")).toBe(lang);
+    const promise = screen.getByText(badge);
+    expect(promise.getAttribute("aria-describedby")).toBe("offer-guarantee-condition");
+    expect(document.getElementById("offer-guarantee-condition")?.textContent).toContain(condition);
+    await screen.findByRole("option", { name: "2023" });
+  });
+
+  it("explains legal authority and missing-title review before collecting title status", async () => {
+    render(<QuotePage />);
+    await chooseCar();
+    next();
+    expect(screen.getByText(/You must own the vehicle or have legal authority to sell it/)).toBeTruthy();
+    expect(screen.getByText(/Missing-title documents need your buyer's review before pickup/)).toBeTruthy();
+    expect(screen.getByRole("button", {name: "No title"})).toBeTruthy();
+  });
+
   it.each(["", "SRT Hellcat", "Custom / 6.2L V8"])("gets a quote without VIN, plate, mileage or address; optional trim: %s", async (selectedTrim) => {
+    const held = selectedTrim.startsWith("Custom");
+    if (held) submit.mockResolvedValue({ offer_id: 42, status: "reviewing", offer_cents: 45000, token: "test-token", requires_human_approval: true });
     render(<QuotePage />);
     await chooseCar();
     if (selectedTrim) {
@@ -77,7 +101,9 @@ describe("simple seller quote", () => {
     expect(payload.vin).toBeUndefined();
     expect(payload.license_plate).toBeUndefined();
     expect(payload.weight_lbs).toBeUndefined();
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/quote/result?id=42&status=quoted"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith(held
+      ? "/quote/result?id=42&status=reviewing&cents=45000&token=test-token&review=1"
+      : "/quote/result?id=42&status=quoted"));
   });
 
   it("requires all drivability answers and the flat-tire location when applicable", async () => {

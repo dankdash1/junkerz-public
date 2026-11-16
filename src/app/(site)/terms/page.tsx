@@ -16,14 +16,15 @@ const SECTIONS: [string, string[]][] = [
     "We may update these terms as our business changes. The version on this page is always the current one, and it applies from the moment it is posted.",
   ]],
   ["What we do", [
-    `${SITE.legal} is an online marketplace connecting sellers of junk, wrecked, damaged and non-running vehicles with buyers across ${SITE.areaLabel}. Pickup and payment are coordinated with the assigned buyer or pickup partner.`,
+    `${SITE.legal} is an online marketplace connecting sellers of junk, wrecked, damaged and non-running vehicles with independent buyers across ${SITE.areaLabel}. Junkerz generates the online offer and provides support to coordinate the sale.`,
+    "The assigned independent buyer purchases your vehicle and is responsible for paying you. The pickup partner collects the vehicle and may deliver payment on the buyer's behalf. Confirm the buyer's identity, the agreed amount and the payment method before collection and before signing the sale documents.",
     "We do not operate a public storefront or walk-in yard. We do not charge you a fee to use this site or to receive a quote.",
   ]],
   ["Quotes and offers", [
     "The price you see after filling in the online form is an offer based entirely on what you tell us: the year, make and model, the condition, the damage, and which major parts are still on the vehicle. We do not inspect the vehicle before making it.",
-    "An offer is valid only for the vehicle you described. If the vehicle the assigned buyer or pickup partner finds at pickup differs from that description, the buyer may revise the offer or decline the purchase. The most common reasons are a missing catalytic converter, a missing engine or transmission, missing wheels, fire or flood damage that was not mentioned, or a vehicle that has already been stripped.",
+    "Your offer is guaranteed when the vehicle, condition, major parts and ownership details match your description. If the vehicle or ownership details differ, the assigned buyer may revise the offer or decline the purchase. The buyer must explain the difference and any revised amount before you agree. Examples include a missing catalytic converter, engine, transmission or wheels, undisclosed fire or flood damage, a stripped vehicle, or missing authority to sell it.",
     "You are free to decline a revised offer. If you do, the vehicle stays where it is and neither side owes the other anything.",
-    "Offers are not held open indefinitely. Scrap metal and used parts prices move, so an offer may be re-quoted if a significant amount of time passes before pickup.",
+    "Confirm your offer and pickup arrangements with the assigned partner. If you request a new quote for a different vehicle or changed vehicle details, review and accept that quote before proceeding.",
   ]],
   ["Your promises to us", [
     "By accepting an offer you confirm that you are at least 18 years old, that you are the legal owner of the vehicle or are authorised by the owner to sell it, and that you have the right to transfer it to the buyer.",
@@ -33,12 +34,13 @@ const SECTIONS: [string, string[]][] = [
   ]],
   ["Title and paperwork", [
     "Texas law governs how a vehicle changes hands. Junkerz and your assigned buyer or pickup partner will confirm what your particular case needs before collection.",
-    "Buyers can purchase some vehicles without a title, but not all of them, and the rules depend on the age of the vehicle and how you came to own it. Whether a vehicle can be bought without a title is decided case by case, and we will tell you honestly if your buyer cannot buy yours.",
+    "Tell us if your title is missing or if you are selling on someone else's behalf. You must have documented ownership or legal authority to transfer the vehicle. Your assigned buyer must confirm acceptable documents before pickup. Registration and photo identification are not a blanket substitute for a title, and a quote is not approval of your paperwork.",
+    "A vehicle left on your property is not automatically yours to sell. Texas has a separate authority-to-dispose process for certain abandoned vehicles. Ownership or the required legal authority must be established before any purchase or removal through the marketplace.",
     "You must give the assigned buyer or pickup partner valid photo identification at pickup, and it must match the ownership records for the vehicle.",
-    "You are responsible for removing your licence plates and for cancelling your own registration and insurance after the sale. The buyer will submit the transfer paperwork required of a buyer.",
+    "Keep a copy of the sale paperwork with the buyer's contact details, sale date and VIN. Review TxDMV's seller guidance for your options when handling licence plates and submit a Vehicle Transfer Notification within 30 days. Confirm the title or disposal documents needed for your transaction with the assigned buyer, and contact your insurer about ending coverage after the sale.",
   ]],
   ["Pickup and towing", [
-    "Towing is free everywhere in our service area. There is no charge for collection whether the vehicle runs or not.",
+    "Towing is free for a confirmed pickup in our service area, whether the vehicle runs or not. The assigned partner must confirm the exact location, access requirements and pickup availability before collection.",
     "Pickup times are confirmed with the assigned buyer or pickup partner in a window, not to the minute, because traffic and earlier jobs move. Someone aged 18 or over must be present with the paperwork and identification.",
     "The vehicle must be accessible to a tow truck. If it is behind a locked gate, blocked in by other vehicles, buried, or otherwise cannot be reached safely, we may need to reschedule.",
     "The assigned pickup partner takes reasonable care during collection, but towing a non-running or damaged vehicle can mark the ground beneath it. We are not responsible for ordinary marks, fluid stains or wear to a driveway or parking surface caused by a vehicle that was already leaking or immobile.",
@@ -48,7 +50,7 @@ const SECTIONS: [string, string[]][] = [
     "Once the buyer takes the vehicle, anything left inside it becomes the buyer's property and is normally destroyed or recycled along with the vehicle. We cannot return items found after collection and we are not responsible for them.",
   ]],
   ["Payment", [
-    "The assigned buyer or pickup partner pays when they collect the vehicle, not before and not after. Payment is made to the seller named on the paperwork.",
+    "The assigned independent buyer is responsible for payment at pickup. The pickup partner may deliver that payment on the buyer's behalf. Payment is made to the seller named on the paperwork, in the agreed amount and by the method confirmed before collection.",
     "We do not pay deposits in advance of collection, and we will never ask you to send us money, gift cards or payment details in order to receive an offer. If anyone claiming to be from Junkerz asks you for money, it is not us.",
   ]],
   ["Contacting you", [
@@ -69,7 +71,7 @@ const SECTIONS: [string, string[]][] = [
   ]],
   ["Disputes and governing law", [
     `These terms are governed by the laws of the State of Texas. Any dispute will be handled in the state or federal courts serving ${SITE.city} County, Texas.`,
-    "Before anything formal, please call or email us. Almost everything is a misunderstanding about the vehicle's condition, and almost everything gets sorted out in one conversation.",
+    "Contact Junkerz by phone or email with your offer reference and a description of the issue. We provide support for offer, paperwork, payment and pickup questions and help coordinate a resolution with your assigned buyer or pickup partner.",
   ]],
 ];
 
@@ -87,6 +89,15 @@ export default function TermsOfService() {
             {paras.map((p, i) => <p key={i} className="mt-3">{p}</p>)}
           </section>
         ))}
+        <section>
+          <h2 className="text-xl font-extrabold tracking-tight text-zinc-900">Texas vehicle documents</h2>
+          <p className="mt-3">
+            Consult <a href="https://www.txdmv.gov/motorists/buying-or-selling-a-vehicle/abandoned-vehicles" className="underline">TxDMV abandoned-vehicle guidance</a>{" "}
+            for the authority-to-dispose process. If you lost your title, see{" "}
+            <a href="https://www.txdmv.gov/motorists/buying-or-selling-a-vehicle/get-a-copy-of-your-title" className="underline">TxDMV title-copy guidance</a>. For sale records, plates and the Vehicle Transfer Notification, see{" "}
+            <a href="https://www.txdmv.gov/motorists/buying-or-selling-a-vehicle" className="underline">TxDMV seller guidance</a>.
+          </p>
+        </section>
         <section>
           <h2 className="text-xl font-extrabold tracking-tight text-zinc-900">Contact us</h2>
           <p className="mt-3">

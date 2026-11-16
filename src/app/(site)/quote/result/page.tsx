@@ -15,6 +15,7 @@ type Offer = {
   status?: string;
   offer_cents?: number;
   tier?: string;
+  requires_human_approval?: boolean;
   token?: string | null;
 };
 
@@ -28,7 +29,7 @@ function ResultContent() {
   const es = sp.get("lang") === "es";
 
   const [offer, setOffer] = useState<Offer | null>(
-    centsFromUrl ? { offer_cents: centsFromUrl, status: sp.get("status") || "reviewing" } : null
+    centsFromUrl ? { offer_cents: centsFromUrl, status: sp.get("status") || "reviewing", requires_human_approval: sp.get("review") === "1" } : null
   );
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -37,6 +38,7 @@ function ResultContent() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
+    let requiresReview = sp.get("review") === "1";
     (async () => {
       // Poll for a while in case staff approve while the seller is still here,
       // but never block showing the number on it.
@@ -44,8 +46,9 @@ function ResultContent() {
         try {
           const o = (await getOffer(id)) as Offer;
           if (cancelled) return;
-          setOffer((prev) => ({ ...prev, ...o }));
-          if (o.status === "ready" || o.status === "seller_accepted") return;
+          if (typeof o.requires_human_approval === "boolean") requiresReview = o.requires_human_approval;
+          setOffer((prev) => ({ ...prev, ...o, requires_human_approval: requiresReview }));
+          if ((o.status === "ready" && !requiresReview) || o.status === "seller_accepted") return;
         } catch {
           if (!offer) setError(es ? "No pudimos cargar su oferta." : "We couldn't load your offer.");
           return;
@@ -59,21 +62,24 @@ function ResultContent() {
 
   const token = offer?.token || tokenFromUrl;
   const cents = offer?.offer_cents ?? (centsFromUrl || undefined);
-  const confirmed = offer?.status === "ready" || offer?.status === "seller_accepted";
+  const confirmed = !offer?.requires_human_approval && offer?.status === "ready";
+  const accepted = offer?.status === "seller_accepted";
 
   const t = es
     ? { head: "Su oferta", pending: "Un compañero está confirmando este número ahora.",
-        firm: "Oferta garantizada.", accept: "Aceptar y programar la grúa",
+        accepted: "Aceptó esta oferta. Su comprador confirmará los detalles del vehículo, los documentos y los arreglos de recogida.",
+        firm: "Oferta garantizada cuando el vehículo, su condición, piezas principales y datos de propiedad coinciden con lo que indicó. Cualquier diferencia debe explicarse antes de que acepte una oferta revisada.", accept: "Aceptar y programar la grúa",
         decline: "¿No le sirve? Díganos por qué", call: "O llámenos",
         free: "Grúa gratis", cash: "Efectivo al recoger", fast: "Sujeto a disponibilidad",
         wait: "Estamos calculando su oferta…",
-        paperwork: "Después de aceptar, el socio de recogida revisará el VIN y los documentos de propiedad con usted. Tenga su teléfono cerca y revise su correo. El socio le llamará una vez asignado para confirmar la recogida." }
+        paperwork: "Después de aceptar, su comprador independiente revisará el VIN y los documentos de propiedad. El comprador compra el carro y es responsable del pago; el socio de recogida lo recoge. Tenga su teléfono cerca y revise su correo. El socio le llamará una vez asignado para confirmar la recogida y los detalles del pago." }
     : { head: "Your offer", pending: "One of our team is confirming this number now.",
-        firm: "This is a guaranteed offer.", accept: "Accept & schedule pickup",
+        accepted: "You accepted this offer. Your buyer will confirm the vehicle details, paperwork and pickup arrangements.",
+        firm: "Your offer is guaranteed when the vehicle, condition, major parts and ownership details match your description. Any difference must be explained before you agree to a revised offer.", accept: "Accept & schedule pickup",
         decline: "Not right? Tell us why", call: "Or call us",
         free: "Free towing", cash: "Cash at pickup", fast: "Subject to availability",
         wait: "Working out your offer…",
-        paperwork: "After you accept, your pickup partner will review the VIN and ownership paperwork with you. Keep your phone nearby and check your email. Your pickup partner will call once assigned to confirm the pickup." };
+        paperwork: "After you accept, your independent buyer will review the VIN and ownership paperwork. The buyer purchases the vehicle and is responsible for payment; the pickup partner collects it. Keep your phone nearby and check your email. Your pickup partner will call once assigned to confirm the pickup and payment details." };
 
   if (error) {
     return (
@@ -109,7 +115,7 @@ function ResultContent() {
         </div>
 
         <p className={`mt-3 text-sm ${confirmed ? "text-brand-700" : "text-zinc-500"}`}>
-          {confirmed ? t.firm : t.pending}
+          {accepted ? t.accepted : confirmed ? t.firm : t.pending}
         </p>
 
         <div className="my-6 border-t border-dashed border-zinc-200" />

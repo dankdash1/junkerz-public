@@ -380,7 +380,7 @@ const es: BuyerText = {
     moreDetails: "Más datos (opcional): avisos por texto, sitio web, número de licencia, correo para avisos",
     smsBox:
       "Sí, mándenme mensajes de texto cuando gane un carro, cuando se programe o se cambie una recogida, y recordatorios de recogida (opcional).",
-    // Same approved Spanish wording as the seller quote form (src/app/quote/page.tsx),
+    // Same approved Spanish wording as the seller quote form (src/components/QuoteWizard.tsx),
     // with the buyer's message types and the buyer form's email-only sentence.
     smsConsent:
       "Al marcar esta casilla y darnos su teléfono, acepta recibir mensajes SMS de Junkerz sobre carros asignados, recogidas y recordatorios. La frecuencia de los mensajes puede variar. Pueden aplicar tarifas estándar de mensajes y datos. Responda STOP para cancelar. Responda HELP para recibir ayuda. No compartiremos su información móvil con terceros para fines promocionales o de marketing. Si deja la casilla sin marcar, solo le contactamos por correo electrónico. Vea nuestros",

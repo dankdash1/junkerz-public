@@ -1,7 +1,7 @@
 import React from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import Signup from '@/app/buyers/signup/page';
+import Signup from '@/app/(site)/buyers/signup/page';
 import OnboardingChecklist from '@/components/buyers/OnboardingChecklist';
 
 // George 2026-11-10: short sign-up (name + address up front, the rest folded),

@@ -2,7 +2,7 @@ import React from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import PaymentSettings from '@/app/buyers/settings/page';
+import PaymentSettings from '@/app/(site)/buyers/settings/page';
 import PickupStart from '@/components/junkerz/PickupStart';
 const api = vi.hoisted(() => ({ paymentMethod: vi.fn(), createPaymentSetup: vi.fn(), savePaymentMethod: vi.fn(), startPickup: vi.fn() }));
 const confirmSetup = vi.hoisted(() => vi.fn());

@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Logo from "@/components/Logo";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -22,14 +22,15 @@ const T = {
   en: {
     steps: [
       { title: "What are you selling?", subtitle: "Choose your vehicle. Your pickup partner reviews the paperwork after you accept." },
-      { title: "Do you have the title?", subtitle: "No title is often fine — just let us know." },
+      { title: "Do you have the title?", subtitle: "You must own the vehicle or have legal authority to sell it. Missing-title documents need your buyer's review before pickup." },
       { title: "Does it run?", subtitle: "Be honest — dead cars are still worth real cash." },
       { title: "What's still on it?", subtitle: "Engine, transmission and key parts drive the offer." },
       { title: "Any damage?", subtitle: "Tap any areas that are wrecked or missing." },
-      { title: "Where is it?", subtitle: "Your pickup partner tows from your location — always free." },
+      { title: "Where is it?", subtitle: "Towing is included for an accepted offer. Your pickup partner confirms address access and availability." },
       { title: "Where do we send the offer?", subtitle: "See your offer right here. We'll also email it to you." },
     ],
     guaranteed: "Guaranteed offer", step: "Step", of: "of",
+    guaranteeCondition: "Your approved offer is guaranteed when the vehicle, condition, major parts and ownership details match your description. Any difference must be explained before you agree to a revised offer.",
     back: "Back", cont: "Continue", submit: "Get my offer", submitting: "Getting your offer…",
     mileage: "Mileage (optional)",
     name: "Your name", nameHint: "So we know who to contact.",
@@ -50,7 +51,7 @@ const T = {
     smsBox: "Yes, text me about my quote, offer and pickup (optional).",
     smsConsent: "By checking this box and providing your phone number, you agree to receive SMS quote, offer and pickup updates from Junkerz. Message frequency may vary. Standard Message and Data Rates may apply. Reply STOP to opt out. Reply HELP for help. We will not share mobile information with third parties for promotional or marketing purposes. See our",
     termsLink: "Terms", privacyLink: "Privacy Policy", and: "and",
-    footer: "Free towing · No fees · Paid by your pickup partner at pickup",
+    footer: "Towing included with your accepted offer · Your assigned independent buyer pays at pickup · Junkerz coordinates and supports your sale",
     change: "Change",
     yes: "Yes", no: "No",
     choice: { intact: "intact", partial: "partial", missing: "missing" },
@@ -58,14 +59,15 @@ const T = {
   es: {
     steps: [
       { title: "¿Qué carro va a vender?", subtitle: "Elija su vehículo. Su socio de recogida revisa los documentos después de que acepte." },
-      { title: "¿Tiene el título?", subtitle: "Sin título casi siempre está bien — solo díganos." },
+      { title: "¿Tiene el título?", subtitle: "Debe ser dueño del vehículo o tener autoridad legal para venderlo. Su comprador revisa los documentos de un carro sin título antes de recogerlo." },
       { title: "¿Enciende?", subtitle: "Sea honesto — los carros muertos todavía valen dinero." },
       { title: "¿Qué le queda puesto?", subtitle: "El motor, la transmisión y las piezas mueven la oferta." },
       { title: "¿Tiene daño?", subtitle: "Toque las partes chocadas o que faltan." },
-      { title: "¿Dónde está?", subtitle: "Su socio de recogida lo recoge donde esté — la grúa siempre es gratis." },
+      { title: "¿Dónde está?", subtitle: "La grúa está incluida con una oferta aceptada. Su socio confirma el acceso y la disponibilidad." },
       { title: "¿A dónde le mandamos la oferta?", subtitle: "Vea su oferta aquí mismo. También se la mandamos por correo." },
     ],
     guaranteed: "Oferta garantizada", step: "Paso", of: "de",
+    guaranteeCondition: "Su oferta aprobada se garantiza si el vehículo, su condición, las piezas principales y los datos de propiedad coinciden con su descripción. Cualquier diferencia debe explicarse antes de que acepte una oferta revisada.",
     back: "Atrás", cont: "Continuar", submit: "Ver mi oferta", submitting: "Buscando su oferta…",
     mileage: "Millaje (opcional)",
     name: "Su nombre", nameHint: "Para saber con quién comunicarnos.",
@@ -86,7 +88,7 @@ const T = {
     smsBox: "Sí, mándenme mensajes de texto sobre mi cotización, oferta y recogida (opcional).",
     smsConsent: "Al marcar esta casilla y darnos su teléfono, acepta recibir mensajes SMS de Junkerz sobre su cotización, oferta y recogida. La frecuencia de los mensajes puede variar. Pueden aplicar tarifas estándar de mensajes y datos. Responda STOP para cancelar. Responda HELP para recibir ayuda. No compartiremos su información móvil con terceros para fines promocionales o de marketing. Vea nuestros",
     termsLink: "Términos", privacyLink: "Política de privacidad", and: "y nuestra",
-    footer: "Grúa gratis · Sin cargos · Su socio de recogida le paga al recoger",
+    footer: "Grúa incluida con su oferta aceptada · Su comprador independiente le paga al recoger · Junkerz coordina y le ayuda con la venta",
     change: "Cambiar",
     yes: "Sí", no: "No",
     choice: { intact: "completo", partial: "parcial", missing: "falta" },
@@ -154,7 +156,6 @@ function YesNo({ label, value, onChange }: {
     </div>
   );
 }
-
 function ChoiceRow({ options, value, onChange }: {
   options: readonly string[];
   value: string;
@@ -187,7 +188,7 @@ function isValidEmail(email: string) {
   return /\S+@\S+\.\S+/.test(email.trim());
 }
 
-function QuoteWizardInner() {
+export default function QuoteWizard() {
   const router = useRouter();
   const sp = useSearchParams();
   const lang: Lang = sp.get("lang") === "es" ? "es" : "en";
@@ -291,6 +292,7 @@ function QuoteWizardInner() {
       // instantly instead of a spinner waiting on a status that may never come.
       if (result.offer_cents) q.set("cents", String(result.offer_cents));
       if (result.token) q.set("token", String(result.token));
+      if (result.requires_human_approval === true) q.set("review", "1");
       if (lang === "es") q.set("lang", "es");
       router.push(`/quote/result?${q.toString()}`);
     } catch (e: unknown) {
@@ -328,17 +330,18 @@ function QuoteWizardInner() {
   const meta = t.steps[step];
 
   return (
-    <main className="min-h-screen bg-zinc-50 text-zinc-900">
+    <main lang={lang} className="min-h-screen bg-zinc-50 text-zinc-900">
       {/* header */}
       <header className="border-b border-zinc-200 bg-white">
         <div className="mx-auto flex h-16 max-w-lg items-center justify-between px-5">
           <Link href="/" className="flex items-center gap-2">
             <Logo height={30} />
           </Link>
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+          <span aria-describedby="offer-guarantee-condition" className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
             <ShieldCheck className="h-4 w-4 text-brand-600" /> {t.guaranteed}
           </span>
         </div>
+        <p id="offer-guarantee-condition" className="mx-auto max-w-lg px-5 pb-4 text-xs leading-relaxed text-zinc-600">{t.guaranteeCondition}</p>
       </header>
 
       <div className="mx-auto max-w-lg px-5 pb-16 pt-8">
@@ -621,19 +624,5 @@ function QuoteWizardInner() {
         </p>
       </div>
     </main>
-  );
-}
-
-export default function QuotePage() {
-  return (
-    <Suspense
-      fallback={
-        <main className="grid min-h-screen place-items-center bg-zinc-50 text-zinc-500">
-          Loading your quote…
-        </main>
-      }
-    >
-      <QuoteWizardInner />
-    </Suspense>
   );
 }

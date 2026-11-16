@@ -25,14 +25,14 @@ export default function JunkCars() {
           </h2>
           <p className="mt-3">
             {PICKUPS_LIVE
-              ? "Start with an instant quote for your wrecked car. After you accept an offer, confirm pickup availability and timing with your assigned buyer or pickup partner. Payment is made at pickup."
+              ? "Junkerz generates your online offer. Your assigned independent buyer purchases the vehicle and pays you at pickup; the pickup partner collects it. Confirm availability, timing and payment details before collection."
               : "Get a fair quote for your wrecked car now. We are not picking up cars yet. Save your offer and we will contact you when pickups start, before arranging collection and payment."}
           </p>
           <p className="mt-3">
-            Collision damage does not lower the offer as much as most people expect.
-            A caved-in front end leaves the catalytic converter, the transmission,
-            the wheels and the scrap weight untouched, and those are the parts that
-            carry most of the value.
+            Describe collision damage and any missing parts accurately. The catalytic
+            converter, transmission, wheels and scrap weight can contribute to value,
+            but an accident may damage those parts too. Tell us about an active
+            insurance claim or lien before agreeing to a sale.
           </p>
         </section>
 
@@ -46,10 +46,10 @@ export default function JunkCars() {
           <ul className="mt-5 space-y-3">
             {[
               "A fair price for your vehicle, quoted before anyone drives out",
-              "Cash on the spot, handed over at pickup and never posted later",
-              "Towing away at no cost, anywhere in our Dallas–Fort Worth area",
-              "Texas paperwork handled by people who do it every day",
-              "A straight answer when you have no title, not a runaround",
+              "Payment from your assigned buyer at pickup, with the amount and method confirmed beforehand",
+              "Free towing for confirmed pickups in our service area",
+              "Ownership and transfer documents checked with your assigned buyer before collection",
+              "Help with missing-title questions; a missing title does not automatically qualify for a sale",
             ].map((t) => (
               <li key={t} className="flex gap-3">
                 <Check className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
@@ -67,7 +67,9 @@ export default function JunkCars() {
             More than people think. Buyers accept collision write-offs, cars with deployed
             airbags, flood and hail damage, fire damage, vehicles stripped for parts,
             and cars an insurer has already declared a total loss. If it is sitting
-            on your property and you want it gone, start a quote and we will price it.
+            on your property and you own it or have documented authority to sell it,
+            start a quote. A vehicle left behind by someone else needs an ownership
+            or legal-authority review before removal.
           </p>
         </section>
       </div>
@@ -75,7 +77,7 @@ export default function JunkCars() {
       <div className="mt-14 -mx-5">
         <BottomCTA
           heading="Get an offer for that wreck today"
-          body="Tell us what you have and get a guaranteed number in about a minute. Free towing anywhere in DFW."
+          body="Get an offer in about a minute, guaranteed when the vehicle, condition, major parts and ownership details match your description. Any difference is explained before you agree to a revised offer."
         />
       </div>
     </PageShell>

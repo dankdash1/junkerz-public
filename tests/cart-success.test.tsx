@@ -1,7 +1,7 @@
 import React from 'react';
 import {afterEach,expect,it,vi} from 'vitest';
 import {cleanup,render,screen} from '@testing-library/react';
-import Success from '@/app/cart/success/page';
+import Success from '@/app/(site)/cart/success/page';
 vi.mock('@/components/PageShell',()=>({SiteHeader:()=><nav/>}));
 vi.mock('@/components/ShopCart',()=>({ClearPaidCart:()=><span data-testid="cart-cleared"/>}));
 const fetchMock=vi.fn();

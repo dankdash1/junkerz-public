@@ -24,11 +24,11 @@ for (const live of [false, true]) {
       vi.doMock('@/lib/site', async importOriginal => ({...await importOriginal<object>(), PICKUPS_LIVE: live}));
       // No network: homepage uses its normal fallback; catalog is unavailable.
       vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', {status: 503})));
-      const page = route === 'home' ? await import('@/app/page')
-        : route === 'spanish' ? await import('@/app/carro-viejos/page')
-        : route === 'junk' ? await import('@/app/junk-cars/page')
-        : route === 'contact' ? await import('@/app/contact-us/page')
-        : await import('@/app/not-running/page');
+      const page = route === 'home' ? await import('@/app/(site)/page')
+        : route === 'spanish' ? await import('@/app/(spanish)/carro-viejos/page')
+        : route === 'junk' ? await import('@/app/(site)/junk-cars/page')
+        : route === 'contact' ? await import('@/app/(site)/contact-us/page')
+        : await import('@/app/(site)/not-running/page');
       const html = renderToStaticMarkup(await resolveServer(await page.default()));
       const document = new DOMParser().parseFromString(html, 'text/html');
       const text = document.body.textContent || '';
@@ -41,16 +41,21 @@ for (const live of [false, true]) {
         expect(business).toMatchObject({ '@type': 'Organization' });
         expect(business).not.toHaveProperty('address');
         expect(business).not.toHaveProperty('openingHours');
-        expect(text.includes('Confirm a pickup window with your assigned partner.')).toBe(live);
+        expect(text.includes('Confirm a pickup window and payment details.')).toBe(live);
+        expect(text).toContain('Your guaranteed offer holds when the vehicle, condition, major parts and ownership details match your description.');
+        expect(text).toContain('registration and photo ID are not a blanket substitute for a title.');
+        expect(document.querySelector('a[href="https://www.txdmv.gov/motorists/buying-or-selling-a-vehicle/abandoned-vehicles"]')).not.toBeNull();
         if (!live) expect(text).toContain('We are not scheduling pickups yet');
       } else if (route === 'spanish') {
         expect(text.includes('Horario confirmado con su socio de recogida')).toBe(live);
         expect(text.includes('Confirme la recogida y el pago')).toBe(live);
-        expect(text).toContain('No tenemos local abierto al público.');
+        expect(text).toContain('sin un local abierto al público.');
+        expect(text).toContain('El comprador independiente asignado compra el carro y es responsable de pagarle al recogerlo.');
+        expect(document.querySelector('a[href="https://www.txdmv.gov/motorists/buying-or-selling-a-vehicle/abandoned-vehicles"]')).not.toBeNull();
         if (!live) expect(text).toContain('Todavía no programamos recogidas');
       } else if (route === 'junk') {
         expect(text).toContain('Get an offer for that wreck today');
-        expect(text.includes('confirm pickup availability and timing with your assigned buyer or pickup partner')).toBe(live);
+        expect(text.includes('Confirm availability, timing and payment details before collection.')).toBe(live);
         if (!live) expect(text).toContain('We are not picking up cars yet');
       } else if (route === 'contact') {
         expect(text.includes('Start your car sale with Junkerz')).toBe(live);
@@ -82,9 +87,9 @@ for (const route of ['terms', 'privacy-policy', 'returns'] as const) {
   it(`${route} offers real contact channels without publishing a storefront address`, async () => {
     vi.resetModules();
     vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', {status: 503})));
-    const page = route === 'terms' ? await import('@/app/terms/page')
-      : route === 'privacy-policy' ? await import('@/app/privacy-policy/page')
-      : await import('@/app/returns/page');
+    const page = route === 'terms' ? await import('@/app/(site)/terms/page')
+      : route === 'privacy-policy' ? await import('@/app/(site)/privacy-policy/page')
+      : await import('@/app/(site)/returns/page');
     const html = renderToStaticMarkup(await resolveServer(page.default()));
     const document = new DOMParser().parseFromString(html, 'text/html');
     const text = document.body.textContent || '';
@@ -94,7 +99,13 @@ for (const route of ['terms', 'privacy-policy', 'returns'] as const) {
     if (route === 'terms') {
       expect(text).toContain('online marketplace connecting sellers');
       expect(text).not.toContain('We are a vehicle buyer, not a broker');
-      expect(text).toContain('The assigned buyer or pickup partner pays when they collect the vehicle');
+      expect(text).toContain('The assigned independent buyer is responsible for payment at pickup.');
+      expect(text).toContain('Your offer is guaranteed when the vehicle, condition, major parts and ownership details match your description.');
+      expect(text).toContain('The buyer must explain the difference and any revised amount before you agree.');
+      expect(text).toContain('a quote is not approval of your paperwork.');
+      expect(text).toContain('submit a Vehicle Transfer Notification within 30 days.');
+      expect(text).not.toContain('The buyer will submit the transfer paperwork');
+      expect(document.querySelector('a[href="https://www.txdmv.gov/motorists/buying-or-selling-a-vehicle/abandoned-vehicles"]')).not.toBeNull();
       expect(text).toContain('You are free to decline a revised offer');
       expect(text).toContain('neither side owes the other anything');
       expect(text).toContain('our liability is limited to the amount of the offer');
@@ -113,12 +124,12 @@ for (const route of ['terms', 'privacy-policy', 'returns'] as const) {
 it('city pages describe the marketplace service without inventing a local yard or fleet', async () => {
   vi.resetModules();
   vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', {status: 503})));
-  const page = await import('@/app/cash-for-junk-cars/[city]/page');
+  const page = await import('@/app/(site)/cash-for-junk-cars/[city]/page');
   const html = renderToStaticMarkup(await resolveServer(await page.default({params: Promise.resolve({city: 'dallas'})})));
   const document = new DOMParser().parseFromString(html, 'text/html');
   const text = document.body.textContent || '';
-  expect(text).toContain('There is no public yard to visit');
-  expect(text).toContain('Confirm the window with your assigned pickup partner');
+  expect(text).toContain('there is no public yard to visit');
+  expect(text).toContain('Agree on the window, paperwork and payment method before collection');
   expect(text).not.toMatch(/our drivers|our routes|our yard|Skyfrost/i);
   const metadata = await page.generateMetadata({params: Promise.resolve({city: 'dallas'})});
   expect(`${text} ${JSON.stringify(metadata)}`).not.toMatch(/Junkerz buys|\bwe buy\b/i);

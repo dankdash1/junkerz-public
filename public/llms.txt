@@ -1,16 +1,16 @@
-# Junkerz LLC and Dwell Furniture
+# Junkerz LLC
 
 Public information and supported assistant connections. This file is a navigation aid, not a requirement for search inclusion.
 
-- [Junkerz](https://junkerz.com): Cash for junk cars in Dallas–Fort Worth and surrounding North Texas.
+- [Junkerz](https://junkerz.com): An online marketplace connecting vehicle sellers with independent buyers and pickup partners in Dallas–Fort Worth and surrounding North Texas. The assigned buyer purchases and pays at pickup. Junkerz coordinates and provides support; it has no public storefront or walk-in salvage yard.
 - [Request an offer](https://junkerz.com/quote): Vehicle details and customer contact information are required. Existing approval rules apply.
 - [Assistant connection guide](https://junkerz.com/assistants): Current capabilities and customer flow.
-- [Public API description](https://junkerz.com/assistants/openapi.json): Live inventory and keyed quote requests.
-- [Dwell Furniture](https://furniture.dankdash.ai): Current pre-owned furniture catalog, prices, availability and delivery information.
+- [Public API description](https://junkerz.com/assistants/openapi.json): Customer-confirmed, keyed vehicle quote requests.
+- [Service areas](https://junkerz.com/service-areas): DFW and surrounding towns. Pickup eligibility, address access and scheduling require confirmation with the assigned partner.
 - [Junkerz terms](https://junkerz.com/terms)
 - [Junkerz privacy](https://junkerz.com/privacy-policy)
 
 Remote MCP endpoint: https://junkerz.com/api/mcp
-Tools: dwell_search_products, dwell_get_product, junkerz_get_quote_requirements, junkerz_create_quote.
+Tools: junkerz_get_quote_requirements, junkerz_create_quote.
 
-Only an offer marked ready is firm. Reviewing is pending approval. Use current tool results rather than remembered prices. Never fabricate dimensions, quotes or pickup slots. The customer reviews and accepts through the returned private link. Quote submission may send an email. Keep private quote links and customer information out of public search indexes.
+Only a ready offer without a human-approval requirement may be described as approved or guaranteed. That offer is guaranteed when the vehicle, condition, major parts and ownership details match the seller's description. Any difference must be explained before the seller agrees to a revised offer. Reviewing is pending approval; the customer may still accept and request scheduling through their private link while final confirmation remains pending. A missing title requires review of ownership and acceptable documents; possession or property ownership alone does not establish authority to sell a vehicle. Use current tool results rather than remembered prices. Never fabricate quotes, coverage or pickup slots. The customer confirms submission and contact consent, then reviews and accepts through the returned private link. Quote submission may send an email. Reuse the same request UUID and identical details after an uncertain outcome; never create a fresh request to retry. Keep private quote links and customer information out of public search indexes.

@@ -27,7 +27,7 @@ const AI_AGENTS = [
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
-      { userAgent: ["*", ...AI_AGENTS], allow: "/", disallow: ["/api/", "/buyers/", "/pickup/", "/status/", "/schedule/", "/sign/", "/vin/", "/decline/", "/quote/result"] },
+      { userAgent: ["*", ...AI_AGENTS], allow: "/", disallow: ["/api/", "/buyers", "/account", "/pickup", "/yard-request", "/yard-reply", "/status/", "/schedule/", "/sign/", "/vin/", "/decline/", "/quote/result", "/payments/test"] },
     ],
     sitemap: `${SITE.url}/sitemap.xml`,
     host: SITE.url,

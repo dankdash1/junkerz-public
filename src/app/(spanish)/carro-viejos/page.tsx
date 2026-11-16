@@ -15,24 +15,26 @@ const mono = "font-[family-name:var(--font-geist-mono)]";
 export const metadata: Metadata = {
   title: "Carros Viejos | Vende Tu Auto Viejo por Dinero en Dallas",
   description:
-    "Junkerz conecta vendedores y compradores de carros viejos, chocados y que no arrancan en Dallas–Fort Worth. Oferta en un minuto, grúa gratis y pago al recoger. Llame al 817-420-9180.",
+    "Junkerz conecta vendedores de carros viejos con compradores independientes en Dallas–Fort Worth. Solicite una oferta y confirme la recogida y el pago con su socio asignado. Llame al 817-420-9180.",
   alternates: {
     canonical: `${SITE.url}/carro-viejos`,
-    languages: { "es-US": `${SITE.url}/carro-viejos`, "en-US": SITE.url },
+    languages: { "es-US": `${SITE.url}/carro-viejos`, "en-US": SITE.url, "x-default": SITE.url },
   },
   openGraph: {
     title: "Vende tu carro viejo por dinero en efectivo | Junkerz",
-    description: "Oferta garantizada en un minuto. Grúa gratis en todo DFW. Su comprador coordina el pago al recoger el carro.",
+    description: "Junkerz conecta vendedores con compradores independientes en DFW. Una oferta aprobada se garantiza si el vehículo y los datos de propiedad coinciden con su descripción.",
+    url: `${SITE.url}/carro-viejos`,
     locale: "es_US",
+    alternateLocale: ["en_US"],
     type: "website",
   },
 };
 
 const FAQ_ES: [string, string][] = [
   ["¿Necesito el título para vender mi carro?",
-   "No siempre. En Texas muchas veces un comprador puede comprarlo con el registro y su identificación con foto. Díganos su caso cuando pida la cotización y confirmamos qué necesita su comprador antes de que salga la grúa."],
+   "Avísenos si falta el título. Debe ser el dueño o tener autorización documentada para vender el vehículo. Su comprador debe confirmar los documentos aceptables antes de la recogida; el registro y una identificación no siempre sustituyen al título."],
   ["¿La grúa de verdad es gratis?",
-   "Sí, en toda nuestra área. No descontamos nada por la grúa ni por el papeleo. El número que usted acepta es el dinero que recibe en la mano."],
+   "La grúa es gratis para las recogidas confirmadas dentro del área de servicio. Avise si hay portones, ruedas faltantes o acceso difícil antes de programar. La oferta se garantiza cuando el vehículo, su condición, piezas principales y datos de propiedad coinciden con lo que indicó. Cualquier diferencia debe explicarse antes de que acepte otra oferta."],
   ["Mi carro no enciende. ¿Todavía vale algo?",
    "Casi siempre sí. El valor está en el peso del metal, el convertidor catalítico y las piezas que aún sirven. Nada de eso necesita que el motor arranque. Puede cotizar un carro que no enciende a través de Junkerz."],
   ["¿Qué tan rápido lo pueden recoger?",
@@ -40,9 +42,11 @@ const FAQ_ES: [string, string][] = [
      ? "La disponibilidad depende de su ubicación y del socio de recogida asignado. Confirme la fecha y la hora con ese socio antes de hacer planes. Si tiene una fecha límite del apartamento o de la ciudad, díganos al pedir su cotización."
      : "Todavía no programamos recogidas. Reciba su oferta ahora y le contactaremos cuando empecemos. No podemos prometer una fecha de recogida mientras preparamos la apertura."],
   ["¿Cómo me pagan?",
-   "En efectivo, en el momento de recoger el carro, antes de subirlo a la grúa. Nunca un cheque por correo que usted tenga que perseguir."],
+   "El comprador independiente asignado compra el carro y es responsable de pagarle al recogerlo. El socio de recogida recoge el vehículo y puede entregar el pago por cuenta del comprador. Confirme el nombre del comprador, el monto y la forma de pago antes de la recogida. Contacte a Junkerz si necesita ayuda con la oferta, el pago o la recogida."],
+  ["¿Mi oferta está garantizada?",
+   "Sí, cuando el vehículo, su condición, piezas principales y datos de propiedad coinciden con lo que indicó. Una pieza faltante, daño no declarado o datos de propiedad diferentes pueden cambiar la oferta o impedir la venta. El comprador debe explicar la diferencia antes de que usted acepte una oferta revisada; puede rechazarla."],
   ["¿Hasta dónde llegan?",
-   "Alrededor de dos horas desde el centro de Dallas–Fort Worth. Llegamos hasta Gainesville por el norte, Midlothian y Ennis por el sur, Weatherford por el oeste y Greenville por el este."],
+   "Puede solicitar una cotización en Dallas–Fort Worth y el norte de Texas, incluyendo Terrell, Midlothian, Ennis, Gainesville, Weatherford y Greenville. La dirección exacta y la disponibilidad del socio determinan si se puede confirmar la recogida y cuándo."],
   ["¿Qué tipo de vehículos puedo vender?",
    "Carros, camionetas, vans y SUV. Chocados, inundados, quemados, desarmados, con el motor pegado o simplemente acabados. Los compradores también aceptan vehículos que llevan años parados y no se mueven solos."],
 ];
@@ -104,16 +108,17 @@ export default function CarroViejos() {
           </div>
 
           <p className="mx-auto mt-7 max-w-xl text-lg text-zinc-600">
-            Conectamos vendedores y compradores de carros chatarra en línea en
-            Dallas–Fort Worth. Díganos qué tiene, reciba su oferta y confirme
-            la recogida con su socio asignado. No tenemos local abierto al público.
+            Junkerz genera su oferta en línea y ayuda a coordinar la venta.
+            El comprador independiente asignado compra el carro y le paga;
+            el socio de recogida recoge el vehículo. Servimos Dallas–Fort Worth
+            sin un local abierto al público.
           </p>
 
           <ul className="mx-auto mt-8 grid max-w-2xl gap-3 text-[15px] text-zinc-700 sm:grid-cols-2">
             {[
-              [Truck, "Grúa gratis, siempre"],
-              [BadgeDollarSign, "Efectivo al recoger el carro"],
-              [FileText, "Muchas veces sin título"],
+              [Truck, "Grúa gratis para recogidas confirmadas"],
+              [BadgeDollarSign, "Su comprador paga al recoger"],
+              [FileText, "Documentos revisados antes de recoger"],
               [Clock, PICKUPS_LIVE ? "Horario confirmado con su socio de recogida" : "Abrimos pronto — aún no recogemos carros"],
             ].map(([Icon, t]) => {
               const I = Icon as typeof Truck;
@@ -152,10 +157,10 @@ export default function CarroViejos() {
               { icon: ClipboardList, n: "01", t: "Cuéntenos del carro",
                 b: "Año, marca, modelo y en qué condición está. Como un minuto. Sin crear cuenta y sin buscar el número de serie." },
               { icon: BadgeDollarSign, n: "02", t: "Reciba su número real",
-                b: "Una oferta garantizada, calculada con el precio del metal, el convertidor catalítico y las piezas que todavía se venden." },
+                b: "Oferta garantizada cuando el vehículo, su condición, piezas principales y datos de propiedad coinciden con lo que indicó. Cualquier diferencia se explica antes de que acepte una oferta revisada." },
               { icon: Truck, n: "03", t: PICKUPS_LIVE ? "Confirme la recogida y el pago" : "Le contactamos cuando empecemos",
                 b: PICKUPS_LIVE
-                  ? "Confirme la fecha y la hora con su socio de recogida asignado. Ese socio recoge el carro y coordina el pago al recogerlo, con grúa gratis."
+                  ? "Confirme la fecha, la hora y los detalles del pago. Su comprador independiente compra y paga el carro; su socio de recogida lo recoge con grúa gratis."
                   : "Guarde su oferta ahora. Todavía no programamos recogidas. Le contactaremos antes de coordinar la recogida y el pago." },
             ].map(({ icon: Icon, n, t, b }) => (
               <div key={n} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">
@@ -177,17 +182,18 @@ export default function CarroViejos() {
           Venda carros en cualquier condición
         </h2>
         <p className="mt-3 max-w-2xl text-zinc-600">
-          No importa si el carro está chocado, quemado, inundado, sin motor o si
-          lleva años parado en el patio. Conecte con compradores de carros, camionetas, vans y SUV.
+          Solicite una oferta para un carro chocado, quemado, inundado, sin motor o
+          parado desde hace años. Debe ser el dueño o tener autorización documentada
+          para venderlo. Conecte con compradores de carros, camionetas, vans y SUV.
         </p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
             [Wrench, "Chocados y pérdidas totales", "Daño de frente, atrás o de lado, bolsas de aire activadas, pérdidas totales del seguro."],
             [Truck, "Que no encienden", "Motor pegado, transmisión quemada, años parados en la entrada."],
-            [FileText, "Sin título o título perdido", "Manejamos el papeleo de Texas todos los días y le decimos qué necesita su caso."],
+            [FileText, "Título faltante o perdido", "Avise antes de programar. Su comprador debe confirmar los documentos de propiedad aceptables antes de recoger."],
             [ShieldCheck, "Daño de agua o fuego", "El agua y el humo no le quitan el valor del metal ni de las piezas."],
-            [BadgeDollarSign, "Mucho millaje", "Valen más con nosotros que lo que le ofreció el dealer de cambio."],
-            [Check, "Abandonados en su propiedad", "Inquilinos y vecinos dejan carros atrás. Nosotros los sacamos."],
+            [BadgeDollarSign, "Mucho millaje", "Compare su oferta con un cambio en el dealer según la condición real y las piezas del vehículo."],
+            [Check, "Vehículo dejado en su propiedad", "Estar en su propiedad no lo hace suyo para vender. Necesita demostrar propiedad o autoridad legal."],
           ].map(([Icon, t, b]) => {
             const I = Icon as typeof Truck;
             return (
@@ -199,6 +205,12 @@ export default function CarroViejos() {
             );
           })}
         </div>
+        <p className="mt-5 max-w-2xl text-sm text-zinc-600">
+          Texas tiene un proceso separado de autorización para disponer de ciertos
+          vehículos abandonados. Consulte la{" "}
+          <a href="https://www.txdmv.gov/motorists/buying-or-selling-a-vehicle/abandoned-vehicles" className="font-semibold text-brand-700 underline">guía de TxDMV</a>{" "}
+          antes de pedir la remoción de un vehículo que no le pertenece.
+        </p>
       </section>
 
       {/* clientes */}
@@ -231,7 +243,7 @@ export default function CarroViejos() {
               <div className="flex items-center gap-2 text-brand-100">
                 <ShieldCheck className="h-5 w-5" />
                 <span className={`text-xs font-semibold uppercase tracking-[0.18em] ${mono}`}>
-                  ¿Sin título? ¿Motor muerto? Todavía vale dinero.
+                  ¿Motor muerto? ¿Carro dañado? Consulte su valor.
                 </span>
               </div>
               <h2 className="mt-3 text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
@@ -255,12 +267,13 @@ export default function CarroViejos() {
       {/* ciudades */}
       <section id="ciudades" className="mx-auto max-w-6xl px-5 pb-16">
         <h2 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
-          Ciudades donde recogemos
+          Áreas para solicitar recogida
         </h2>
         <p className="mt-3 max-w-2xl text-zinc-600">
-          Cubrimos Dallas–Fort Worth y unas dos horas alrededor, desde
-          Gainesville hasta Ennis y desde Weatherford hasta Greenville. La grúa
-          es gratis en todas estas ciudades.
+          Solicite recogida en Dallas–Fort Worth y el norte de Texas, incluyendo
+          Terrell y Midlothian. Comparta la dirección exacta y los detalles de acceso
+          para que su socio asignado confirme disponibilidad. La grúa es gratis
+          para las recogidas confirmadas dentro del área de servicio.
         </p>
         <div className="mt-7 flex flex-wrap gap-2">
           {CITIES.map((x) => (
@@ -299,9 +312,9 @@ export default function CarroViejos() {
             <div>
               <Link href="/carro-viejos"><Logo height={28} /></Link>
               <p className="mt-3 text-sm leading-relaxed text-zinc-600">
-                Conectamos vendedores y compradores de carros viejos, chocados
-                y que no arrancan en Dallas–Fort Worth. Grúa gratis y pago en
-                efectivo al recoger con su socio asignado.
+                Junkerz conecta vendedores con compradores independientes en
+                Dallas–Fort Worth. Su comprador compra y paga el vehículo;
+                su socio de recogida lo recoge.
               </p>
               <a href={telHref} className={`mt-4 inline-flex items-center gap-1.5 font-bold text-zinc-900 hover:text-brand-700 ${mono}`}>
                 <Phone className="h-4 w-4" /> {SITE.phone}

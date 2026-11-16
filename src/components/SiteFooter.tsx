@@ -23,8 +23,9 @@ export async function SiteFooter({ phone, catalogSettings }: { phone?: string; c
               <Logo height={28} />
             </div>
             <p className="mt-3 text-sm leading-relaxed text-zinc-600">
-              Buying junk, wrecked and non-running cars across Dallas–Fort Worth
-              since {SITE.founded}. Free towing, cash at pickup.
+              Junkerz connects vehicle sellers with independent buyers across
+              Dallas–Fort Worth. Your buyer purchases and pays for the vehicle;
+              your assigned pickup partner collects it.
             </p>
             <a href={telHref} className={`mt-4 inline-flex items-center gap-1.5 font-bold text-zinc-900 hover:text-brand-700 ${mono}`}>
               <Phone className="h-4 w-4" /> {p}
@@ -53,7 +54,7 @@ export async function SiteFooter({ phone, catalogSettings }: { phone?: string; c
               <li><Link href="/terms" className="hover:text-brand-700">Terms of service</Link></li>
               <li><Link href="/returns" className="hover:text-brand-700">Returns policy</Link></li>
               <li><Link href="/account" className="hover:text-brand-700">My Junkerz</Link></li>
-              <li><a href="/buyers/login" className="hover:text-brand-700">Salvage yard login</a></li>
+              <li><a href="/buyers/login" className="hover:text-brand-700">Buyer partner login</a></li>
             </ul>
           </div>
 

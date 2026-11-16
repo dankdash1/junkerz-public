@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import "./globals.css";
+import "@/app/globals.css";
 import { SITE } from "@/lib/site";
 import SiteExtras from "@/components/SiteExtras";
 import { NotLiveBanner } from "@/components/NotLive";
@@ -8,24 +8,24 @@ import { Analytics } from "@vercel/analytics/react";
 import { ShopCartProvider } from "@/components/ShopCart";
 
 const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
+  src: "../app/fonts/GeistVF.woff",
   variable: "--font-geist-sans",
   weight: "100 900",
 });
 const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
+  src: "../app/fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
 });
 
-export const metadata: Metadata = {
+export const siteMetadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
     default: "Cash for Junk Cars in Dallas–Fort Worth | Junkerz",
     template: "%s | Junkerz",
   },
   description:
-    "Connect with buyers for junk, wrecked and non-running cars across Dallas–Fort Worth through Junkerz. Guaranteed offer, free towing and cash at pickup. Call 817-420-9180.",
+    "Junkerz connects DFW vehicle sellers with independent buyers and pickup partners. Approved offers are guaranteed when vehicle and ownership details match your description.",
   applicationName: SITE.name,
   icons: {
     icon: [
@@ -67,19 +67,21 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 };
 
-export const viewport = {
+export const siteViewport = {
   themeColor: "#F90303",
   width: "device-width",
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default function RootDocument({
   children,
+  lang,
 }: Readonly<{
   children: React.ReactNode;
+  lang: "en" | "es";
 }>) {
   return (
-    <html lang="en">
+    <html lang={lang}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

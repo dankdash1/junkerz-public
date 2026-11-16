@@ -1,7 +1,7 @@
 import React from 'react';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {cleanup,fireEvent,render,screen} from '@testing-library/react';
-import VinUpdatePage from '@/app/vin/[token]/page';
+import VinUpdatePage from '@/app/(site)/vin/[token]/page';
 
 vi.mock('next/navigation',()=>({useParams:()=>({token:'restricted-vin-token'})}));
 const fetchMock=vi.fn();

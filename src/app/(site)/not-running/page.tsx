@@ -46,9 +46,9 @@ export default function NotRunning() {
           <ul className="mt-5 space-y-3">
             {[
               "You tell us the year, make, model and roughly what is wrong with it",
-              "We give you a guaranteed cash number, no inspection visit needed first",
+              "Junkerz generates your offer, guaranteed when the vehicle, condition, major parts and ownership details match your description",
               PICKUPS_LIVE ? "Confirm a pickup window with your assigned pickup partner" : "Save your offer; we are not scheduling pickups yet",
-              PICKUPS_LIVE ? "Your assigned pickup partner collects the vehicle and handles payment at pickup, with free towing" : "We will contact you when pickups start, before arranging collection and payment",
+              PICKUPS_LIVE ? "Your assigned independent buyer purchases and pays for the vehicle; your pickup partner collects it with free towing" : "We will contact you when pickups start, before arranging collection and payment",
             ].map((t) => (
               <li key={t} className="flex gap-3">
                 <Check className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
@@ -56,6 +56,11 @@ export default function NotRunning() {
               </li>
             ))}
           </ul>
+          <p className="mt-5">
+            Any difference in the vehicle or ownership details must be explained
+            before you agree to a revised offer. You can decline. Your buyer must
+            confirm acceptable ownership documents before pickup.
+          </p>
           <p className="mt-5">
             Tell your assigned pickup partner if the car cannot roll or steer,
             has flat tyres, or is on grass or blocks. They need those details to
@@ -68,7 +73,7 @@ export default function NotRunning() {
             On an apartment or city deadline?
           </h2>
           <p className="mt-3">
-            Tell us when you say. Apartment complexes and code enforcement across
+            Tell us about your deadline. Apartment complexes and code enforcement across
             DFW give short windows before they tow at your expense. We schedule around
             those dates with the assigned pickup partner. Availability and pickup times must be confirmed before you rely on them.
           </p>
@@ -78,7 +83,7 @@ export default function NotRunning() {
       <div className="mt-14 -mx-5">
         <BottomCTA
           heading="Get that dead car off your hands"
-          body="A guaranteed cash offer in about a minute, and a free tow whether it starts or not."
+          body="Get an offer in about a minute. It is guaranteed when the vehicle, condition, major parts and ownership details match your description. Confirm pickup access and timing with your assigned partner."
         />
       </div>
     </PageShell>
