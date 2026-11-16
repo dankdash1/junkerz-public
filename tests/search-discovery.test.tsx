@@ -27,8 +27,8 @@ it('serves a useful quote introduction when the interactive form cannot render y
   const html = renderToStaticMarkup(<QuotePage />);
   const doc = new DOMParser().parseFromString(html, 'text/html');
   expect(doc.querySelector('h1')?.textContent).toBe('Get a junk-car offer in Dallas–Fort Worth');
-  expect(doc.body.textContent).toContain('No VIN or license plate is needed');
-  expect(doc.body.textContent).toContain('ownership details match your description');
+  expect(doc.body.textContent).toContain('No VIN or license plate needed');
+  expect(doc.body.textContent).toContain('No obligation to accept.');
   expect(doc.querySelector('a[href="tel:+18174209180"]')).not.toBeNull();
   expect(quoteMetadata.title).not.toEqual(homeMetadata.title);
   expect(quoteMetadata.alternates?.canonical).toBe('https://junkerz.com/quote');

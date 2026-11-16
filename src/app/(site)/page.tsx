@@ -47,7 +47,7 @@ const DEFAULTS: HomeContent = {
   hero_eyebrow: `Cash for junk cars · ${SITE.areaLabel}`,
   hero_title: "Your junk car is worth real cash. Find out in a minute.",
   hero_subtitle:
-    "Connect with junk-car buyers across Dallas–Fort Worth. Tell us about your vehicle, get an instant quote, and confirm pickup arrangements with your assigned partner.",
+    "Sell your junk car across Dallas–Fort Worth. Get an online offer, arrange free pickup, and get paid.",
   hero_cta: "See what it's worth",
   phone: SITE.phone,
   sample_offer_amount: "620",
@@ -87,6 +87,8 @@ async function getContent(): Promise<HomeContent> {
     (Object.keys(DEFAULTS) as (keyof HomeContent)[]).forEach((k) => {
       if (typeof c[k] === "string" && c[k].trim() !== "") merged[k] = c[k];
     });
+    // Replace the retired CMS subtitle while preserving other custom content.
+    if (c.hero_subtitle === "Connect with junk-car buyers across Dallas–Fort Worth. Tell us about your vehicle, get an instant quote, and confirm pickup arrangements with your assigned partner.") merged.hero_subtitle = DEFAULTS.hero_subtitle;
     return merged;
   } catch {
     return DEFAULTS;
@@ -157,21 +159,16 @@ export default async function Landing() {
           </div>
 
           {/* and the promise underneath it */}
-          <p className="mx-auto mt-5 max-w-xl text-sm text-zinc-600">
-            Junkerz generates your online offer and helps coordinate your sale.
-            Your assigned independent buyer purchases the vehicle and pays you;
-            the pickup partner collects it. We do not have a public storefront.
-          </p>
           <p className="mx-auto mt-7 max-w-xl text-lg text-zinc-600">
             {c.hero_subtitle}
           </p>
 
           <ul className="mx-auto mt-8 grid max-w-2xl gap-3 text-[15px] text-zinc-700 sm:grid-cols-2">
             {[
-              [Truck, "Free towing for confirmed pickups"],
-              [BadgeDollarSign, "Your buyer pays at collection"],
-              [FileText, "Ownership documents checked before pickup"],
-              [Clock, PICKUPS_LIVE ? "Pickup timing confirmed with your partner" : "Opening soon — pickups have not started"],
+              [Truck, "Free pickup"],
+              [BadgeDollarSign, "Get paid at pickup"],
+              [FileText, "No obligation"],
+              [Clock, PICKUPS_LIVE ? "Convenient pickup scheduling" : "Opening soon — pickups have not started"],
             ].map(([Icon, t]) => {
               const I = Icon as typeof Truck;
               return (
@@ -209,10 +206,10 @@ export default async function Landing() {
               { icon: ClipboardList, n: "01", t: "Tell us about the car",
                 b: "Year, make, model, and how rough it is. About a minute. No VIN hunting and no account to create." },
               { icon: BadgeDollarSign, n: "02", t: "Get your real number",
-                b: "A guaranteed offer when the vehicle, condition, major parts and ownership details match your description. Any difference is explained before you agree to a revised offer." },
-              { icon: Truck, n: "03", t: PICKUPS_LIVE ? "Confirm pickup and payment" : "We contact you when pickups start",
+                b: "See your offer online and decide if it works for you. No pressure to accept." },
+              { icon: Truck, n: "03", t: PICKUPS_LIVE ? "Free pickup. Get paid." : "We contact you when pickups start",
                 b: PICKUPS_LIVE
-                  ? "Confirm a pickup window and payment details. Your assigned independent buyer purchases and pays for the vehicle; your pickup partner collects it with free towing."
+                  ? "Arrange a convenient time with our pickup partner and get paid when your car is collected."
                   : "Save your offer now. We are not scheduling pickups yet. We will contact you before arranging collection and payment." },
             ].map(({ icon: Icon, n, t, b }) => (
               <div key={n} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">

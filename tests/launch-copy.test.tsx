@@ -34,22 +34,22 @@ for (const live of [false, true]) {
       const text = document.body.textContent || '';
       const metadata = JSON.stringify(page.metadata);
       if (route === 'home') {
-        expect(text.includes('Pickup timing confirmed with your partner')).toBe(live);
-        expect(text).toContain('We do not have a public storefront.');
+        expect(text.includes('Convenient pickup scheduling')).toBe(live);
+        expect(document.querySelector('section')?.textContent).not.toMatch(/independent buyer|pickup partner|public storefront/);
         const graph = JSON.parse(document.querySelector('script[type="application/ld+json"]')!.textContent!)['@graph'];
         const business = graph.find((entry: Record<string, unknown>) => entry['@id'] === 'https://junkerz.com/#business');
         expect(business).toMatchObject({ '@type': 'Organization' });
         expect(business).not.toHaveProperty('address');
         expect(business).not.toHaveProperty('openingHours');
-        expect(text.includes('Confirm a pickup window and payment details.')).toBe(live);
+        expect(text.includes('Arrange a convenient time with our pickup partner')).toBe(live);
         expect(text).toContain('Your guaranteed offer holds when the vehicle, condition, major parts and ownership details match your description.');
         expect(text).toContain('registration and photo ID are not a blanket substitute for a title.');
         expect(document.querySelector('a[href="https://www.txdmv.gov/motorists/buying-or-selling-a-vehicle/abandoned-vehicles"]')).not.toBeNull();
         if (!live) expect(text).toContain('We are not scheduling pickups yet');
       } else if (route === 'spanish') {
-        expect(text.includes('Horario confirmado con su socio de recogida')).toBe(live);
+        expect(text.includes('Recogida a una hora conveniente')).toBe(live);
         expect(text.includes('Confirme la recogida y el pago')).toBe(live);
-        expect(text).toContain('sin un local abierto al público.');
+        expect(document.querySelector('section')?.textContent).not.toMatch(/comprador independiente|socio de recogida|local abierto/);
         expect(text).toContain('El comprador independiente asignado compra el carro y es responsable de pagarle al recogerlo.');
         expect(document.querySelector('a[href="https://www.txdmv.gov/motorists/buying-or-selling-a-vehicle/abandoned-vehicles"]')).not.toBeNull();
         if (!live) expect(text).toContain('Todavía no programamos recogidas');
@@ -139,4 +139,19 @@ it('city pages describe the marketplace service without inventing a local yard o
   expect(service.provider).not.toHaveProperty('address');
   expect(service.provider).not.toHaveProperty('geo');
   expect(service.provider).not.toHaveProperty('openingHours');
+});
+
+// Published CMS copy must not restore the retired disclosure beside the offer form.
+it('replaces the retired CMS subtitle without discarding custom homepage content', async () => {
+  vi.resetModules();
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({content: {
+    hero_title: 'A custom homepage title',
+    hero_subtitle: 'Connect with junk-car buyers across Dallas–Fort Worth. Tell us about your vehicle, get an instant quote, and confirm pickup arrangements with your assigned partner.',
+  }}))));
+  const page = await import('@/app/(site)/page');
+  const html = renderToStaticMarkup(await resolveServer(await page.default()));
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  expect(doc.querySelector('h1')?.textContent).toBe('A custom homepage title');
+  expect(doc.querySelector('section')?.textContent).toContain('arrange free pickup, and get paid');
+  expect(doc.querySelector('section')?.textContent).not.toContain('assigned partner');
 });

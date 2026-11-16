@@ -21,16 +21,15 @@ type Lang = "en" | "es";
 const T = {
   en: {
     steps: [
-      { title: "What are you selling?", subtitle: "Choose your vehicle. Your pickup partner reviews the paperwork after you accept." },
+      { title: "What are you selling?", subtitle: "Start with the year, make and model. No VIN needed." },
       { title: "Do you have the title?", subtitle: "You must own the vehicle or have legal authority to sell it. Missing-title documents need your buyer's review before pickup." },
       { title: "Does it run?", subtitle: "Be honest — dead cars are still worth real cash." },
       { title: "What's still on it?", subtitle: "Engine, transmission and key parts drive the offer." },
       { title: "Any damage?", subtitle: "Tap any areas that are wrecked or missing." },
-      { title: "Where is it?", subtitle: "Towing is included for an accepted offer. Your pickup partner confirms address access and availability." },
+      { title: "Where is it?", subtitle: "Tell us where the car is so we can arrange free pickup." },
       { title: "Where do we send the offer?", subtitle: "See your offer right here. We'll also email it to you." },
     ],
-    guaranteed: "Guaranteed offer", step: "Step", of: "of",
-    guaranteeCondition: "Your approved offer is guaranteed when the vehicle, condition, major parts and ownership details match your description. Any difference must be explained before you agree to a revised offer.",
+    guaranteed: "No obligation", step: "Step", of: "of",
     back: "Back", cont: "Continue", submit: "Get my offer", submitting: "Getting your offer…",
     mileage: "Mileage (optional)",
     name: "Your name", nameHint: "So we know who to contact.",
@@ -51,23 +50,22 @@ const T = {
     smsBox: "Yes, text me about my quote, offer and pickup (optional).",
     smsConsent: "By checking this box and providing your phone number, you agree to receive SMS quote, offer and pickup updates from Junkerz. Message frequency may vary. Standard Message and Data Rates may apply. Reply STOP to opt out. Reply HELP for help. We will not share mobile information with third parties for promotional or marketing purposes. See our",
     termsLink: "Terms", privacyLink: "Privacy Policy", and: "and",
-    footer: "Towing included with your accepted offer · Your assigned independent buyer pays at pickup · Junkerz coordinates and supports your sale",
+    footer: "Free pickup · Get paid at pickup · No obligation",
     change: "Change",
     yes: "Yes", no: "No",
     choice: { intact: "intact", partial: "partial", missing: "missing" },
   },
   es: {
     steps: [
-      { title: "¿Qué carro va a vender?", subtitle: "Elija su vehículo. Su socio de recogida revisa los documentos después de que acepte." },
+      { title: "¿Qué carro va a vender?", subtitle: "Empiece con el año, la marca y el modelo. No necesita el VIN." },
       { title: "¿Tiene el título?", subtitle: "Debe ser dueño del vehículo o tener autoridad legal para venderlo. Su comprador revisa los documentos de un carro sin título antes de recogerlo." },
       { title: "¿Enciende?", subtitle: "Sea honesto — los carros muertos todavía valen dinero." },
       { title: "¿Qué le queda puesto?", subtitle: "El motor, la transmisión y las piezas mueven la oferta." },
       { title: "¿Tiene daño?", subtitle: "Toque las partes chocadas o que faltan." },
-      { title: "¿Dónde está?", subtitle: "La grúa está incluida con una oferta aceptada. Su socio confirma el acceso y la disponibilidad." },
+      { title: "¿Dónde está?", subtitle: "Díganos dónde está el carro para organizar la recogida gratis." },
       { title: "¿A dónde le mandamos la oferta?", subtitle: "Vea su oferta aquí mismo. También se la mandamos por correo." },
     ],
-    guaranteed: "Oferta garantizada", step: "Paso", of: "de",
-    guaranteeCondition: "Su oferta aprobada se garantiza si el vehículo, su condición, las piezas principales y los datos de propiedad coinciden con su descripción. Cualquier diferencia debe explicarse antes de que acepte una oferta revisada.",
+    guaranteed: "Sin compromiso", step: "Paso", of: "de",
     back: "Atrás", cont: "Continuar", submit: "Ver mi oferta", submitting: "Buscando su oferta…",
     mileage: "Millaje (opcional)",
     name: "Su nombre", nameHint: "Para saber con quién comunicarnos.",
@@ -88,7 +86,7 @@ const T = {
     smsBox: "Sí, mándenme mensajes de texto sobre mi cotización, oferta y recogida (opcional).",
     smsConsent: "Al marcar esta casilla y darnos su teléfono, acepta recibir mensajes SMS de Junkerz sobre su cotización, oferta y recogida. La frecuencia de los mensajes puede variar. Pueden aplicar tarifas estándar de mensajes y datos. Responda STOP para cancelar. Responda HELP para recibir ayuda. No compartiremos su información móvil con terceros para fines promocionales o de marketing. Vea nuestros",
     termsLink: "Términos", privacyLink: "Política de privacidad", and: "y nuestra",
-    footer: "Grúa incluida con su oferta aceptada · Su comprador independiente le paga al recoger · Junkerz coordina y le ayuda con la venta",
+    footer: "Recogida gratis · Pago al recoger · Sin compromiso",
     change: "Cambiar",
     yes: "Sí", no: "No",
     choice: { intact: "completo", partial: "parcial", missing: "falta" },
@@ -337,11 +335,10 @@ export default function QuoteWizard() {
           <Link href="/" className="flex items-center gap-2">
             <Logo height={30} />
           </Link>
-          <span aria-describedby="offer-guarantee-condition" className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
             <ShieldCheck className="h-4 w-4 text-brand-600" /> {t.guaranteed}
           </span>
         </div>
-        <p id="offer-guarantee-condition" className="mx-auto max-w-lg px-5 pb-4 text-xs leading-relaxed text-zinc-600">{t.guaranteeCondition}</p>
       </header>
 
       <div className="mx-auto max-w-lg px-5 pb-16 pt-8">
