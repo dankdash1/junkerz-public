@@ -1,7 +1,7 @@
 import React from 'react';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
-import SellerSignPage from '@/app/sign/[token]/page';
+import SellerSignPage from '@/app/(site)/sign/[token]/page';
 
 vi.mock('next/navigation',()=>({useParams:()=>({token:'sign-token'})}));
 vi.mock('@/components/junkerz/SignaturePad',()=>({default:({onChange,disabled}:{onChange:(value:string|null)=>void;disabled:boolean})=>(

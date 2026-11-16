@@ -3,7 +3,7 @@ import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {cleanup,render,screen,waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {ShopCartProvider} from '@/components/ShopCart';
-import CartContents from '@/app/cart/CartContents';
+import CartContents from '@/app/(site)/cart/CartContents';
 const settings={sections:{parts:'live',cars_for_parts:'live',cars_for_sale:'live'} as const,parts_fulfillment:'delivery_only' as const,checkout_enabled:false as const};
 const product={key:'part:9',id:9,carId:8,href:'/parts-inventory/9',name:'Alternator',kind:'part' as const,section:'parts' as const,priceCents:12500,image:null,detail:'Good',maxQuantity:1};
 const fetchMock=vi.fn();

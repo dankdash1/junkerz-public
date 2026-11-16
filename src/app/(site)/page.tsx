@@ -18,7 +18,10 @@ export const metadata: Metadata = {
   title: "Cash for Junk Cars in Dallas–Fort Worth | Junkerz",
   description:
     "Connect with junk-car buyers across Dallas–Fort Worth through Junkerz. Get an instant quote online and arrange pickup with an assigned partner. Call 817-420-9180.",
-  alternates: { canonical: SITE.url },
+  alternates: {
+    canonical: SITE.url,
+    languages: { "en-US": SITE.url, "es-US": `${SITE.url}/carro-viejos`, "x-default": SITE.url },
+  },
   openGraph: {
     title: "Cash for Junk Cars in Dallas–Fort Worth",
     description:
@@ -53,11 +56,11 @@ const DEFAULTS: HomeContent = {
 
 const FAQ: [string, string][] = [
   ["Do I need the title to sell my car?",
-   "Not always. In Texas a buyer can often purchase a vehicle with your registration and photo ID instead. Tell us during the quote and we will confirm what your buyer needs before anyone drives out."],
+   "Tell us if the title is missing. You must own the vehicle or have documented authority to sell it. Your assigned buyer must confirm acceptable ownership documents before pickup; registration and photo ID are not a blanket substitute for a title."],
   ["Is the towing really free?",
-   "Yes, everywhere we serve. We do not deduct a tow fee, a paperwork fee, or anything else. The number you accept is the number you are handed."],
+   "Towing is free for a confirmed pickup in our service area. Tell us about gates, missing wheels or difficult access before scheduling. Your guaranteed offer holds when the vehicle, condition, major parts and ownership details match your description. Any difference must be explained before you agree to a revised offer."],
   ["How far out do you come?",
-   "Roughly two hours from the middle of Dallas–Fort Worth. That reaches Gainesville in the north, Midlothian and Ennis in the south, Weatherford in the west and Greenville in the east."],
+   "Request a quote across Dallas–Fort Worth and surrounding North Texas, including Terrell, Midlothian, Ennis, Gainesville, Weatherford and Greenville. Your exact address and the assigned partner's availability determine whether and when pickup can be confirmed."],
   ["My car does not run at all. Is it still worth something?",
    "Almost always. The value sits in the scrap weight, the catalytic converter and the reusable parts, none of which need the engine to start. You can get a quote for a non-running car through the marketplace."],
   ["How fast can you pick it up?",
@@ -65,7 +68,9 @@ const FAQ: [string, string][] = [
      ? "Pickup timing depends on your location and the assigned pickup partner. Confirm the date and time before making arrangements. Tell us about any apartment or city tow deadline when requesting your quote."
      : "We are not scheduling pickups yet. Get your offer now and we will contact you when pickups start. We cannot promise a pickup date while we are opening."],
   ["How do I get paid?",
-   "At pickup, through your assigned buyer or pickup partner, before the car goes on the truck. Never a cheque in the post that you have to chase."],
+   "The assigned independent buyer purchases your vehicle and is responsible for paying you at pickup. The pickup partner collects it and may deliver payment for the buyer. Confirm the buyer's name, the agreed amount and payment method before collection. Contact Junkerz if you need help with the offer, payment or pickup."],
+  ["Is my offer guaranteed?",
+   "Yes, when the vehicle, condition, major parts and ownership details match what you told us. A missing part, undisclosed damage or different ownership details can change the offer or prevent the sale. The buyer must explain any difference before you agree to a revised offer, and you can decline."],
   ["What kinds of vehicles can I sell?",
    "Cars, trucks, vans and SUVs. Wrecked, flooded, burned, stripped, seized, or simply worn out. Buyers also accept vehicles that have been sitting for years and will not move under their own power."],
 ];
@@ -153,8 +158,9 @@ export default async function Landing() {
 
           {/* and the promise underneath it */}
           <p className="mx-auto mt-5 max-w-xl text-sm text-zinc-600">
-            Junkerz connects junk-car sellers and buyers online. Pickup is coordinated
-            with your assigned partner. We do not have a public storefront.
+            Junkerz generates your online offer and helps coordinate your sale.
+            Your assigned independent buyer purchases the vehicle and pays you;
+            the pickup partner collects it. We do not have a public storefront.
           </p>
           <p className="mx-auto mt-7 max-w-xl text-lg text-zinc-600">
             {c.hero_subtitle}
@@ -162,9 +168,9 @@ export default async function Landing() {
 
           <ul className="mx-auto mt-8 grid max-w-2xl gap-3 text-[15px] text-zinc-700 sm:grid-cols-2">
             {[
-              [Truck, "Free towing, every pickup"],
-              [BadgeDollarSign, "Cash handed over at collection"],
-              [FileText, "Often no title needed"],
+              [Truck, "Free towing for confirmed pickups"],
+              [BadgeDollarSign, "Your buyer pays at collection"],
+              [FileText, "Ownership documents checked before pickup"],
               [Clock, PICKUPS_LIVE ? "Pickup timing confirmed with your partner" : "Opening soon — pickups have not started"],
             ].map(([Icon, t]) => {
               const I = Icon as typeof Truck;
@@ -203,10 +209,10 @@ export default async function Landing() {
               { icon: ClipboardList, n: "01", t: "Tell us about the car",
                 b: "Year, make, model, and how rough it is. About a minute. No VIN hunting and no account to create." },
               { icon: BadgeDollarSign, n: "02", t: "Get your real number",
-                b: "A guaranteed cash offer priced from live scrap weight, the catalytic converter and parts that still sell." },
+                b: "A guaranteed offer when the vehicle, condition, major parts and ownership details match your description. Any difference is explained before you agree to a revised offer." },
               { icon: Truck, n: "03", t: PICKUPS_LIVE ? "Confirm pickup and payment" : "We contact you when pickups start",
                 b: PICKUPS_LIVE
-                  ? "Confirm a pickup window with your assigned partner. They collect the vehicle and handle payment at pickup, with free towing across DFW."
+                  ? "Confirm a pickup window and payment details. Your assigned independent buyer purchases and pays for the vehicle; your pickup partner collects it with free towing."
                   : "Save your offer now. We are not scheduling pickups yet. We will contact you before arranging collection and payment." },
             ].map(({ icon: Icon, n, t, b }) => (
               <div key={n} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">
@@ -228,18 +234,18 @@ export default async function Landing() {
           Vehicles you can sell
         </h2>
         <p className="mt-3 max-w-2xl text-zinc-600">
-          If it has four wheels and a title problem, a dead engine or a caved-in
-          front end, it is still worth money. Connect with buyers for cars, trucks,
-          vans and SUVs in any condition.
+          A dead engine or a caved-in front end can still leave value in scrap and
+          reusable parts. Request an offer for your car, truck, van or SUV.
+          You must own it or have documented authority to sell it.
         </p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
             [Wrench, "Wrecked and collision cars", "Front, rear or side damage, deployed airbags, insurance write-offs."],
             [Truck, "Cars that will not start", "Seized engines, blown transmissions, dead for years in the driveway."],
-            [FileText, "No title, lost title", "We handle Texas paperwork daily and will tell you what your case needs."],
+            [FileText, "Missing or lost title", "Tell us before scheduling. Your buyer must confirm acceptable ownership documents before pickup."],
             [ShieldCheck, "Flood and fire damage", "Water and smoke do not stop a car being worth scrap and parts."],
-            [BadgeDollarSign, "High-mileage trade-ins", "Worth more to us than the dealer offered you on trade."],
-            [MapPin, "Abandoned on your property", "Tenants and neighbours leave cars behind. We remove them."],
+            [BadgeDollarSign, "High-mileage trade-ins", "Compare your offer with a trade-in using the vehicle's actual condition and remaining parts."],
+            [MapPin, "Vehicle left on your property", "Being on your property does not make it yours to sell. Documented ownership or legal authority is required."],
           ].map(([Icon, t, b]) => {
             const I = Icon as typeof Truck;
             return (
@@ -251,6 +257,11 @@ export default async function Landing() {
             );
           })}
         </div>
+        <p className="mt-5 max-w-2xl text-sm text-zinc-600">
+          For an abandoned vehicle, Texas has a separate authority-to-dispose process.
+          Review the <a href="https://www.txdmv.gov/motorists/buying-or-selling-a-vehicle/abandoned-vehicles" className="font-semibold text-brand-700 underline">TxDMV abandoned-vehicle guidance</a>{" "}
+          before requesting removal of a vehicle you do not own.
+        </p>
       </section>
 
       {/* testimonials — real customers carried over from junkerz.com */}
@@ -283,7 +294,7 @@ export default async function Landing() {
               <div className="flex items-center gap-2 text-brand-100">
                 <ShieldCheck className="h-5 w-5" />
                 <span className={`text-xs font-semibold uppercase tracking-[0.18em] ${mono}`}>
-                  No title? Dead motor? Still worth cash.
+                  Dead motor? Damaged car? Check its value.
                 </span>
               </div>
               <h2 className="mt-3 text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
@@ -309,9 +320,10 @@ export default async function Landing() {
           Pickup service area
         </h2>
         <p className="mt-3 max-w-2xl text-zinc-600">
-          We cover Dallas–Fort Worth and about two hours around it, from
-          Gainesville down to Ennis and from Weatherford across to Greenville.
-          Towing is free everywhere on this list.
+          Request pickup across Dallas–Fort Worth and surrounding North Texas,
+          including Terrell and Midlothian. Share the exact vehicle address and
+          access details so your assigned partner can confirm availability.
+          Towing is free for confirmed pickups in our service area.
         </p>
         <div className="mt-7 flex flex-wrap gap-2">
           {CITIES.map((x) => (

@@ -2,7 +2,7 @@ import React from 'react';
 import {afterEach,expect,it,vi} from 'vitest';
 import {cleanup,render,screen} from '@testing-library/react';
 import {ShopCartProvider} from '@/components/ShopCart';
-import ShopPage from '@/app/shop/page';
+import ShopPage from '@/app/(site)/shop/page';
 import CarPartsShop from '@/components/CarPartsShop';
 const flags=vi.hoisted(()=>({enabled:true}));
 const settings={sections:{parts:'live',cars_for_parts:'live',cars_for_sale:'live'} as const,parts_fulfillment:'delivery_only' as const,checkout_enabled:false as const};

@@ -5,6 +5,7 @@ const STATIC = [
   { path: "", priority: 1.0 },
   { path: "/quote", priority: 0.95 },
   { path: "/assistants", priority: 0.6 },
+  { path: "/service-areas", priority: 0.8 },
   { path: "/junk-cars", priority: 0.8 },
   { path: "/not-running", priority: 0.8 },
   { path: "/unwanted-cars", priority: 0.8 },
@@ -17,17 +18,16 @@ const STATIC = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
   return [
     ...STATIC.map((s) => ({
       url: `${SITE.url}${s.path}`,
-      lastModified: now,
+      // Omit lastModified until a real content revision date is tracked.
+      // Regenerating the sitemap is not a page-content modification.
       changeFrequency: "weekly" as const,
       priority: s.priority,
     })),
     ...CITIES.map((c) => ({
       url: `${SITE.url}/cash-for-junk-cars/${c.slug}`,
-      lastModified: now,
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),

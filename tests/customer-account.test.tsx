@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import Verify from '@/app/account/verify/page';
+import Verify from '@/app/(site)/account/verify/page';
 import { POST, GET } from '@/app/api/customer/[...path]/route';
 import { NextRequest } from 'next/server';
 afterEach(()=>{cleanup();vi.unstubAllGlobals();window.history.replaceState(null,'','/');});

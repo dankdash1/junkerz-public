@@ -1,7 +1,7 @@
 import React from 'react';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
-import DeclinePage from '@/app/decline/[token]/page';
+import DeclinePage from '@/app/(site)/decline/[token]/page';
 const api=vi.hoisted(()=>({getOfferForToken:vi.fn(),declineOffer:vi.fn()}));
 vi.mock('@/lib/api',()=>api);
 vi.mock('next/navigation',()=>({useParams:()=>({token:'offer-token'})}));

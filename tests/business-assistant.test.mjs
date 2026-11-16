@@ -25,13 +25,19 @@ test('official MCP handshake and tool list distinguish writes from reads', async
   const app = createBusinessAssistant({ fetchImpl: async () => { throw Error('unexpected network'); } });
   const init = await rpc(app, 'initialize', { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'test', version: '1' } });
   assert.equal(init.response.status, 200);
-  assert.equal(init.body.result.serverInfo.name, 'dankdash-business');
+  assert.equal(init.body.result.serverInfo.name, 'junkerz');
+  assert.doesNotMatch(JSON.stringify(init.body), /dwell|furniture/i);
+  assert.match(init.body.result.instructions, /customers may accept and request scheduling.*final confirmation remains pending/);
   const { body } = await rpc(app, 'tools/list');
   const write = body.result.tools.find(t => t.name === 'junkerz_create_quote');
   assert.equal(write.annotations.readOnlyHint, false);
   assert.equal(write.annotations.idempotentHint, true);
   assert.ok(write.inputSchema.required.includes('customer_confirmed'));
-  assert.ok(body.result.tools.find(t => t.name === 'dwell_search_products').annotations.readOnlyHint);
+  assert.deepEqual(body.result.tools.map(t => t.name).sort(), ['junkerz_create_quote', 'junkerz_get_quote_requirements']);
+  assert.doesNotMatch(JSON.stringify(body), /dwell|furniture/i);
+  assert.ok(body.result.tools.find(t => t.name === 'junkerz_get_quote_requirements').annotations.readOnlyHint);
+  const rejected = await call(app, 'dwell_search_products', {});
+  assert.ok(rejected.body.error || rejected.body.result?.isError);
   await app.close();
 });
 
@@ -49,7 +55,7 @@ test('current MCP discovery accepts the required per-request envelope', async ()
 
 test('search filters live tenant-pinned catalog by words and integer cents', async () => {
   const seen = [];
-  const app = createBusinessAssistant({ fetchImpl: async (url, opts) => { seen.push([url, opts]); return json({ success: true, products: catalog }); } });
+  const app = createBusinessAssistant({ includeFurniture: true, fetchImpl: async (url, opts) => { seen.push([url, opts]); return json({ success: true, products: catalog }); } });
   const { body } = await call(app, 'dwell_search_products', { query: 'sectional', max_price_cents: 150000 });
   assert.equal(body.result.structuredContent.products.length, 1);
   assert.equal(body.result.structuredContent.products[0].price_cents, 120000);
@@ -61,7 +67,7 @@ test('search filters live tenant-pinned catalog by words and integer cents', asy
 });
 
 test('unavailable inventory returns an actionable error, never a fake catalog', async () => {
-  const app = createBusinessAssistant({ fetchImpl: async () => json({ error: 'private database detail' }, 500) });
+  const app = createBusinessAssistant({ includeFurniture: true, fetchImpl: async () => json({ error: 'private database detail' }, 500) });
   const { body } = await call(app, 'dwell_search_products', {});
   assert.equal(body.result.isError, true);
   assert.doesNotMatch(JSON.stringify(body), /private database/);
@@ -69,7 +75,7 @@ test('unavailable inventory returns an actionable error, never a fake catalog', 
 });
 
 test('unknown product and invalid tenant input do not expose other inventory', async () => {
-  const app = createBusinessAssistant({ fetchImpl: async () => json({ success: true, products: catalog }) });
+  const app = createBusinessAssistant({ includeFurniture: true, fetchImpl: async () => json({ success: true, products: catalog }) });
   const missing = await call(app, 'dwell_get_product', { product_id: 99 });
   assert.equal(missing.body.result.isError, true);
   const injected = await call(app, 'dwell_search_products', { slug: 'cannaflame' });
@@ -116,11 +122,12 @@ test('ready offers use backend amount, preserve retry key, and provide private a
   await app.close();
 });
 
-test('reviewing is never described as firm even when backend includes an amount', async () => {
-  const app = createBusinessAssistant({ fetchImpl: async url => url.endsWith('/capabilities') ? json({ idempotency: 'v1', enabled: true }) : json({ offer_id: 38, status: 'reviewing', offer_cents: 48300, requires_human_approval: true }) });
+test('reviewing remains pending and preserves a private acceptance link when supplied', async () => {
+  const app = createBusinessAssistant({ fetchImpl: async url => url.endsWith('/capabilities') ? json({ idempotency: 'v1', enabled: true }) : json({ offer_id: 38, status: 'reviewing', offer_cents: 48300, requires_human_approval: true, token: 'pending-token' }) });
   const { body } = await call(app, 'junkerz_create_quote', quote);
   assert.equal(body.result.structuredContent.firm_offer, false);
   assert.match(body.result.structuredContent.message, /review/i);
+  assert.equal(body.result.structuredContent.accept_and_schedule_url, 'https://junkerz.com/schedule/pending-token');
   await app.close();
 });
 

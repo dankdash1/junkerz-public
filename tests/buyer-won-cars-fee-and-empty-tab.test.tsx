@@ -2,7 +2,7 @@ import React from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { cleanup, render, screen, fireEvent } from '@testing-library/react';
 afterEach(cleanup);
-import WonCars from '@/app/buyers/won-cars/page';
+import WonCars from '@/app/(site)/buyers/won-cars/page';
 
 // 2026-11-10 George: the company login sees bid = seller payout + finder fee
 // before pickup, and an empty tab must not say "No matches yet".

@@ -34,6 +34,18 @@ export default function AboutUs() {
             it runs. The vehicle details help buyers evaluate it and help the
             assigned pickup partner prepare for collection.
           </p>
+          <p className="mt-3">
+            Junkerz generates the online offer and provides support with your sale.
+            Your assigned independent buyer purchases the vehicle and is responsible
+            for paying you at pickup. The pickup partner collects the vehicle and
+            may deliver payment on behalf of the buyer. Confirm the buyer name and
+            payment details before signing the sale documents.
+          </p>
+          <p className="mt-3">
+            Your offer is guaranteed when the vehicle, condition, major parts and
+            ownership details match your description. If a detail differs, the buyer
+            must explain it before you agree to a revised offer. You can decline.
+          </p>
         </section>
 
         <section>
@@ -49,6 +61,11 @@ export default function AboutUs() {
             The sale starts online; there is no yard to visit. Pickup availability
             depends on the vehicle location and the assigned partner. Tell us about
             access restrictions or a removal deadline when requesting your quote.
+          </p>
+          <p className="mt-3">
+            Contact Junkerz at <a href={SITE.phoneHref} className="font-semibold text-brand-700 underline">{SITE.phone}</a>{" "}
+            if you have a question about the offer, paperwork, payment or pickup.
+            We help coordinate a resolution with your assigned buyer or pickup partner.
           </p>
         </section>
 
@@ -73,7 +90,7 @@ export default function AboutUs() {
       <div className="mt-14 -mx-5">
         <BottomCTA
           heading="Ready when you are"
-          body="Start a quote online or call and talk it through. Either way the towing is free."
+          body="Start a quote online or call and talk it through. Towing is free for confirmed pickups in our service area."
         />
       </div>
     </PageShell>

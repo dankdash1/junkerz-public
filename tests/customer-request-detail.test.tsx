@@ -1,6 +1,6 @@
 import {afterEach,expect,it,vi} from 'vitest';
 import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
-import Detail from '@/app/account/requests/[id]/page';
+import Detail from '@/app/(site)/account/requests/[id]/page';
 vi.mock('@/components/YardRequestQuote',()=>({default:()=> <section>Approved quote details</section>}));
 vi.mock('@/components/YardRequestConversation',()=>({default:()=> <label>Message to Junkerz<textarea/></label>}));
 afterEach(()=>{cleanup();vi.unstubAllGlobals()});

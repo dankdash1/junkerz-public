@@ -2,7 +2,7 @@ import React from 'react';
 import {afterEach,beforeEach,expect,test,vi} from 'vitest';
 import {cleanup,render,screen,waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Detail from '@/app/buyers/won-cars/[match_id]/page';
+import Detail from '@/app/(site)/buyers/won-cars/[match_id]/page';
 import {sellerAgreement} from './fixtures/seller-agreement';
 const api=vi.hoisted(()=>({pickupDetail:vi.fn(),pickupSignature:vi.fn(),pickupComplete:vi.fn()}));
 vi.mock('@/lib/buyer-api',()=>({buyerApi:api}));

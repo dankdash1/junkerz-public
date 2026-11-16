@@ -53,45 +53,46 @@ export const TESTIMONIALS = [
 export type City = {
   slug: string;
   name: string;
+  /** County orientation; city guides cite sources and use the actual pickup address. */
   county: string;
-  /** Neighbouring towns we also tow from, used for genuinely local copy. */
+  /** Nearby places for navigation; pickup availability is confirmed by address. */
   near: string[];
 };
 
 /**
- * Service area: roughly a two-hour drive from the centre of DFW,
- * north to Gainesville, south past Midlothian, per the owner's radius.
+ * Editorial city guides, not a list of branches or a promise of pickup slots.
+ * Broader DFW and outer-town discovery lives in service-areas.ts.
  */
 export const CITIES: City[] = [
-  { slug: "dallas", name: "Dallas", county: "Dallas County", near: ["Mesquite", "Garland", "Irving"] },
-  { slug: "fort-worth", name: "Fort Worth", county: "Tarrant County", near: ["Arlington", "Haltom City", "White Settlement"] },
+  { slug: "dallas", name: "Dallas", county: "Dallas, Collin, Denton, Kaufman and Rockwall counties", near: ["Mesquite", "Garland", "Irving"] },
+  { slug: "fort-worth", name: "Fort Worth", county: "Tarrant, Denton, Parker and Wise counties", near: ["Arlington", "Haltom City", "White Settlement"] },
   { slug: "arlington", name: "Arlington", county: "Tarrant County", near: ["Grand Prairie", "Mansfield", "Pantego"] },
-  { slug: "plano", name: "Plano", county: "Collin County", near: ["Richardson", "Allen", "Frisco"] },
-  { slug: "irving", name: "Irving", county: "Dallas County", near: ["Coppell", "Grand Prairie", "Las Colinas"] },
-  { slug: "garland", name: "Garland", county: "Dallas County", near: ["Rowlett", "Sachse", "Mesquite"] },
-  { slug: "grand-prairie", name: "Grand Prairie", county: "Dallas County", near: ["Arlington", "Irving", "Cedar Hill"] },
+  { slug: "plano", name: "Plano", county: "Collin and Denton counties", near: ["Richardson", "Allen", "Frisco"] },
+  { slug: "irving", name: "Irving", county: "Dallas County", near: ["Coppell", "Grand Prairie", "Dallas"] },
+  { slug: "garland", name: "Garland", county: "Dallas, Collin and Rockwall counties", near: ["Rowlett", "Sachse", "Mesquite"] },
+  { slug: "grand-prairie", name: "Grand Prairie", county: "Dallas, Tarrant and Ellis counties", near: ["Arlington", "Irving", "Cedar Hill"] },
   { slug: "mckinney", name: "McKinney", county: "Collin County", near: ["Allen", "Frisco", "Princeton"] },
-  { slug: "frisco", name: "Frisco", county: "Collin County", near: ["Plano", "The Colony", "Little Elm"] },
-  { slug: "mesquite", name: "Mesquite", county: "Dallas County", near: ["Garland", "Balch Springs", "Sunnyvale"] },
-  { slug: "carrollton", name: "Carrollton", county: "Dallas County", near: ["Farmers Branch", "Addison", "Lewisville"] },
+  { slug: "frisco", name: "Frisco", county: "Collin and Denton counties", near: ["Plano", "The Colony", "Little Elm"] },
+  { slug: "mesquite", name: "Mesquite", county: "Dallas and Kaufman counties", near: ["Garland", "Balch Springs", "Sunnyvale"] },
+  { slug: "carrollton", name: "Carrollton", county: "Dallas, Denton and Collin counties", near: ["Farmers Branch", "Addison", "Lewisville"] },
   { slug: "denton", name: "Denton", county: "Denton County", near: ["Corinth", "Sanger", "Argyle"] },
-  { slug: "richardson", name: "Richardson", county: "Dallas County", near: ["Plano", "Garland", "Addison"] },
-  { slug: "lewisville", name: "Lewisville", county: "Denton County", near: ["Flower Mound", "Highland Village", "The Colony"] },
+  { slug: "richardson", name: "Richardson", county: "Dallas and Collin counties", near: ["Plano", "Garland", "Addison"] },
+  { slug: "lewisville", name: "Lewisville", county: "Denton and Dallas counties", near: ["Flower Mound", "Highland Village", "The Colony"] },
   { slug: "allen", name: "Allen", county: "Collin County", near: ["McKinney", "Plano", "Fairview"] },
-  { slug: "flower-mound", name: "Flower Mound", county: "Denton County", near: ["Lewisville", "Highland Village", "Grapevine"] },
+  { slug: "flower-mound", name: "Flower Mound", county: "Denton and Tarrant counties", near: ["Lewisville", "Highland Village", "Grapevine"] },
   { slug: "north-richland-hills", name: "North Richland Hills", county: "Tarrant County", near: ["Hurst", "Watauga", "Keller"] },
-  { slug: "mansfield", name: "Mansfield", county: "Tarrant County", near: ["Arlington", "Burleson", "Midlothian"] },
-  { slug: "rowlett", name: "Rowlett", county: "Dallas County", near: ["Garland", "Sachse", "Wylie"] },
-  { slug: "grapevine", name: "Grapevine", county: "Tarrant County", near: ["Colleyville", "Southlake", "Euless"] },
+  { slug: "mansfield", name: "Mansfield", county: "Tarrant, Johnson and Ellis counties", near: ["Arlington", "Burleson", "Midlothian"] },
+  { slug: "rowlett", name: "Rowlett", county: "Dallas and Rockwall counties", near: ["Garland", "Sachse", "Wylie"] },
+  { slug: "grapevine", name: "Grapevine", county: "Tarrant, Dallas and Denton counties", near: ["Colleyville", "Southlake", "Euless"] },
   { slug: "euless", name: "Euless", county: "Tarrant County", near: ["Bedford", "Hurst", "Irving"] },
   { slug: "bedford", name: "Bedford", county: "Tarrant County", near: ["Hurst", "Euless", "Colleyville"] },
   { slug: "hurst", name: "Hurst", county: "Tarrant County", near: ["Bedford", "North Richland Hills", "Fort Worth"] },
   { slug: "keller", name: "Keller", county: "Tarrant County", near: ["Southlake", "Watauga", "Roanoke"] },
-  { slug: "coppell", name: "Coppell", county: "Dallas County", near: ["Irving", "Carrollton", "Grapevine"] },
-  { slug: "cedar-hill", name: "Cedar Hill", county: "Dallas County", near: ["Duncanville", "DeSoto", "Midlothian"] },
+  { slug: "coppell", name: "Coppell", county: "Dallas and Denton counties", near: ["Irving", "Carrollton", "Grapevine"] },
+  { slug: "cedar-hill", name: "Cedar Hill", county: "Dallas and Ellis counties", near: ["Duncanville", "DeSoto", "Midlothian"] },
   { slug: "duncanville", name: "Duncanville", county: "Dallas County", near: ["Cedar Hill", "DeSoto", "Grand Prairie"] },
   { slug: "desoto", name: "DeSoto", county: "Dallas County", near: ["Duncanville", "Lancaster", "Cedar Hill"] },
-  { slug: "wylie", name: "Wylie", county: "Collin County", near: ["Sachse", "Murphy", "Lavon"] },
+  { slug: "wylie", name: "Wylie", county: "Collin, Dallas and Rockwall counties", near: ["Sachse", "Murphy", "Lavon"] },
   { slug: "midlothian", name: "Midlothian", county: "Ellis County", near: ["Waxahachie", "Mansfield", "Cedar Hill"] },
   { slug: "waxahachie", name: "Waxahachie", county: "Ellis County", near: ["Midlothian", "Ennis", "Red Oak"] },
   { slug: "ennis", name: "Ennis", county: "Ellis County", near: ["Waxahachie", "Palmer", "Corsicana"] },
@@ -100,9 +101,18 @@ export const CITIES: City[] = [
   { slug: "denison", name: "Denison", county: "Grayson County", near: ["Sherman", "Pottsboro", "Bells"] },
   { slug: "weatherford", name: "Weatherford", county: "Parker County", near: ["Aledo", "Willow Park", "Springtown"] },
   { slug: "cleburne", name: "Cleburne", county: "Johnson County", near: ["Burleson", "Joshua", "Alvarado"] },
-  { slug: "burleson", name: "Burleson", county: "Johnson County", near: ["Cleburne", "Crowley", "Mansfield"] },
+  { slug: "burleson", name: "Burleson", county: "Johnson and Tarrant counties", near: ["Cleburne", "Crowley", "Mansfield"] },
   { slug: "greenville", name: "Greenville", county: "Hunt County", near: ["Royse City", "Commerce", "Caddo Mills"] },
   { slug: "terrell", name: "Terrell", county: "Kaufman County", near: ["Forney", "Kaufman", "Crandall"] },
+  { slug: "wilmer", name: "Wilmer", county: "Dallas County", near: ["Hutchins", "Ferris", "Lancaster"] },
+  { slug: "seagoville", name: "Seagoville", county: "Dallas and Kaufman counties", near: ["Balch Springs", "Combine", "Crandall"] },
+  { slug: "hutchins", name: "Hutchins", county: "Dallas County", near: ["Wilmer", "Lancaster", "Dallas"] },
+  { slug: "lancaster", name: "Lancaster", county: "Dallas County", near: ["DeSoto", "Hutchins", "Red Oak"] },
+  { slug: "balch-springs", name: "Balch Springs", county: "Dallas County", near: ["Mesquite", "Seagoville", "Dallas"] },
+  { slug: "forney", name: "Forney", county: "Kaufman County", near: ["Terrell", "Mesquite", "Talty"] },
+  { slug: "red-oak", name: "Red Oak", county: "Ellis County", near: ["Lancaster", "Waxahachie", "Glenn Heights"] },
+  { slug: "ferris", name: "Ferris", county: "Ellis and Dallas counties", near: ["Wilmer", "Palmer", "Red Oak"] },
+  { slug: "azle", name: "Azle", county: "Tarrant and Parker counties", near: ["Springtown", "Lakeside", "Pelican Bay"] },
 ];
 
 export const CITY_SLUGS = CITIES.map((c) => c.slug);

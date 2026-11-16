@@ -1,7 +1,7 @@
 import React from 'react';
 import { expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import WonCars from '@/app/buyers/won-cars/page';
+import WonCars from '@/app/(site)/buyers/won-cars/page';
 vi.mock('@/lib/buyer-api',()=>({buyerApi:{wonCars:async()=>[{match_id:42,status:'won',bid_cents:70000,year:2010,make:'Honda',model:'Civic'}]}}));
 test('won-car action leads to signature and pickup workflow instead of submitting collection',async()=>{
  render(<WonCars/>);
