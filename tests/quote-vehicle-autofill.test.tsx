@@ -19,10 +19,11 @@ const DECODED = { vin: "3VWFE21C04M000004", year: 2004, make: "VOLKSWAGEN", mode
 let lookupEnabled = false;
 let lookupFails = false;
 let lookups: unknown[] = [];
+let holdLookup: Promise<void> | null = null;   // set to delay the lookup reply (race case)
 
 beforeEach(() => {
   navigation.query = "";
-  lookupEnabled = false; lookupFails = false; lookups = [];
+  lookupEnabled = false; lookupFails = false; lookups = []; holdLookup = null;
   push.mockReset();
   submit.mockReset().mockResolvedValue({ offer_id: 42, status: "quoted" });
   vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
@@ -31,6 +32,7 @@ beforeEach(() => {
     }
     if (url.includes("/vehicle-lookup")) {
       lookups.push(JSON.parse(String(init?.body)));
+      if (holdLookup) await holdLookup;
       return lookupFails
         ? { ok: false, json: async () => ({ status: "not_found" }) }
         : { ok: true, json: async () => ({ status: "ok", vehicle: DECODED, vehicle_lookup_token: "signed-token" }) };
@@ -54,6 +56,26 @@ async function chooseCarByHand() {
   fireEvent.change(screen.getByRole("combobox", { name: "Vehicle make" }), { target: { value: "1" } });
   await screen.findByRole("option", { name: "Challenger" });
   fireEvent.change(screen.getByRole("combobox", { name: "Vehicle model" }), { target: { value: "10" } });
+}
+
+function next() { fireEvent.click(continueButton()); }
+
+// Remaining steps exactly as tests/seller-easy-quote.test.tsx walks them; returns the submitted payload.
+async function finishAndSubmit() {
+  await waitFor(() => expect(continueButton().disabled).toBe(false));
+  next();
+  fireEvent.click(screen.getByRole("button", { name: "Clean title" })); next();
+  screen.getAllByRole("button", { name: "Yes" }).forEach((b) => fireEvent.click(b)); next();
+  screen.getAllByRole("button", { name: "intact" }).forEach((b) => fireEvent.click(b));
+  screen.getAllByRole("button", { name: "Yes" }).forEach((b) => fireEvent.click(b)); next();
+  next(); // Damage is optional.
+  fireEvent.change(screen.getByLabelText("Zip code"), { target: { value: "75201" } }); next();
+  fireEvent.change(screen.getByLabelText(/Your name/), { target: { value: "Jane Seller" } });
+  fireEvent.change(screen.getByLabelText(/^Phone/), { target: { value: "8175550123" } });
+  fireEvent.change(screen.getByLabelText(/^Email/), { target: { value: "jane@example.com" } });
+  fireEvent.click(screen.getByRole("button", { name: "Get my offer" }));
+  await waitFor(() => expect(submit).toHaveBeenCalledOnce());
+  return submit.mock.calls[0][0];
 }
 
 async function lookUpVin() {
@@ -100,5 +122,43 @@ describe("optional vehicle lookup on the quote form", () => {
     fireEvent.change(screen.getByRole("combobox", { name: "Vehicle year" }), { target: { value: "2023" } });
     await waitFor(() => expect(screen.queryByText("Vehicle found. Confirm the details below.")).toBeNull());
     expect((screen.getByRole("combobox", { name: "Vehicle make" }) as HTMLSelectElement).value).not.toBe("decoded");
+  });
+
+  it("submits the VIN and the signed token together, with the decoded vehicle unchanged", async () => {
+    lookupEnabled = true;
+    render(<QuotePage />);
+    await lookUpVin();
+    await screen.findByText("Vehicle found. Confirm the details below.");
+    const payload = await finishAndSubmit();
+    expect(payload).toMatchObject({ vin: DECODED.vin, vehicle_lookup_token: "signed-token",
+      year: DECODED.year, make: DECODED.make, model: DECODED.model, trim: DECODED.trim });
+  });
+
+  it("submits neither VIN nor token after a manual correction", async () => {
+    lookupEnabled = true;
+    render(<QuotePage />);
+    await lookUpVin();
+    await screen.findByText("Vehicle found. Confirm the details below.");
+    await chooseCarByHand();
+    const payload = await finishAndSubmit();
+    expect(payload).toMatchObject({ year: 2023, make: "Dodge", model: "Challenger" });
+    expect(payload).not.toHaveProperty("vin");
+    expect(payload).not.toHaveProperty("vehicle_lookup_token");
+  });
+
+  it("a slow lookup that answers after a manual pick does not overwrite it", async () => {
+    lookupEnabled = true;
+    let release!: () => void;
+    holdLookup = new Promise<void>((resolve) => { release = resolve; });
+    render(<QuotePage />);
+    await lookUpVin();                      // request is now in flight and held
+    await chooseCarByHand();                // manual change aborts it (revision bump)
+    release();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(screen.queryByText("Vehicle found. Confirm the details below.")).toBeNull();
+    expect((screen.getByRole("combobox", { name: "Vehicle make" }) as HTMLSelectElement).value).toBe("1");
+    const payload = await finishAndSubmit();
+    expect(payload).toMatchObject({ make: "Dodge", model: "Challenger" });
+    expect(payload).not.toHaveProperty("vehicle_lookup_token");
   });
 });
