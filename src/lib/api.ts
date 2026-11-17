@@ -8,6 +8,8 @@ export async function submitQuote(payload: {
   zip_code: string; photo_count?: number;
   trim?: string; mileage?: number;
   make_id?: number | null; model_id?: number | null;
+  /** Signed specs from the optional VIN/plate lookup; valid only while vin/year/make/model/trim match. */
+  vehicle_lookup_token?: string;
   runs?: boolean; starts?: boolean;
   all_wheels_attached?: boolean; all_tires_inflated?: boolean;
   // Which axle is flat — decides wheel-lift vs flatbed.

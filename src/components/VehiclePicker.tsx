@@ -92,6 +92,8 @@ export default function VehiclePicker({
         }}
       >
         <option value="">{makeFirst ? "Any year" : "Select year"}</option>
+        {/* A looked-up (decoded) year may be outside the catalog list; keep it selectable. */}
+        {value.year && !years.includes(value.year) && <option value={value.year}>{value.year}</option>}
         {years.map((y) => <option key={y} value={y}>{y}</option>)}
       </select>
     </div>
@@ -103,9 +105,10 @@ export default function VehiclePicker({
       <select
         aria-label="Vehicle make"
         className="w-full border rounded h-10 px-2"
-        value={value.make_id ?? ""}
+        value={value.make_id ?? (value.make_name ? "decoded" : "")}
         disabled={!makeFirst && !value.year}
         onChange={(e) => {
+          if (e.target.value === "decoded") return;   // the looked-up name, already selected
           const id = e.target.value ? parseInt(e.target.value, 10) : null;
           const name = makes.find((m) => m.id === id)?.name ?? null;
           onChange({ ...value, make_id: id, make_name: name,
@@ -115,6 +118,7 @@ export default function VehiclePicker({
         <option value="">
           {makeFirst || value.year ? "Select make" : "Pick a year first"}
         </option>
+        {!value.make_id && value.make_name && <option value="decoded">{value.make_name}</option>}
         {makes.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
       </select>
     </div>
@@ -132,15 +136,17 @@ export default function VehiclePicker({
       <select
         aria-label="Vehicle model"
         className="w-full border rounded h-10 px-2"
-        value={value.model_id ?? ""}
-        disabled={!value.make_id || !value.year}
+        value={value.model_id ?? (value.model_name ? "decoded" : "")}
+        disabled={(!value.make_id && !value.model_name) || !value.year}
         onChange={(e) => {
+          if (e.target.value === "decoded") return;
           const id = e.target.value ? parseInt(e.target.value, 10) : null;
           const name = models.find((m) => m.id === id)?.name ?? null;
           onChange({ ...value, model_id: id, model_name: name, trim: "" });
         }}
       >
         <option value="">{modelHint}</option>
+        {!value.model_id && value.model_name && <option value="decoded">{value.model_name}</option>}
         {models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
       </select>
     </div>

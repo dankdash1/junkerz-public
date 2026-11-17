@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { submitQuote } from "@/lib/api";
 import { trackLeadSubmission } from "@/components/Analytics";
 import VehiclePicker, { VehicleSelection } from "@/components/VehiclePicker";
+import VehicleAutofill from "@/components/VehicleAutofill";
 import ConditionGrid, { DamageZones } from "@/components/ConditionGrid";
 
 const STEPS = ["vehicle", "title", "drivability", "components", "damage", "zip", "contact"] as const;
@@ -117,6 +118,9 @@ type Form = {
   phone: string;
   sms_consent: boolean;
   email: string;
+  // Optional VIN/plate lookup (flag junkerz_public_vehicle_lookup, default off). No VIN is asked for.
+  vin: string;
+  vehicle_lookup_token?: string;
 };
 
 const EMPTY_VEHICLE: VehicleSelection = {
@@ -207,7 +211,9 @@ export default function QuoteWizard() {
     damage_zones: EMPTY_DAMAGE,
     zip_code: "", pickup_address: "", phone: "", email: "",
     sms_consent: false,
+    vin: "",
   });
+  const [vehicleRevision, setVehicleRevision] = useState(0);
   const [touched, setTouched] = useState<{ phone: boolean; email: boolean }>({
     phone: false,
     email: false,
@@ -265,6 +271,8 @@ export default function QuoteWizard() {
         trim: v.trim.trim() || undefined,
         mileage: form.mileage ? parseInt(form.mileage, 10) : undefined,
         make_id: v.make_id, model_id: v.model_id,
+        // Only together: the backend honours the token only while vin/year/make/model/trim match.
+        ...(form.vehicle_lookup_token ? { vin: form.vin, vehicle_lookup_token: form.vehicle_lookup_token } : {}),
         runs: form.runs ?? undefined,
         starts: form.starts ?? undefined,
         all_wheels_attached: form.all_wheels_attached ?? undefined,
@@ -303,7 +311,8 @@ export default function QuoteWizard() {
   }
 
   const canAdvance = (() => {
-    if (step === 0) return !!(form.vehicle.year && form.vehicle.make_id && form.vehicle.model_id);
+    // Names, not catalog ids: a looked-up vehicle may not be in the catalog. Manual picks set both.
+    if (step === 0) return !!(form.vehicle.year && form.vehicle.make_name && form.vehicle.model_name);
     if (step === 1) return !!form.title_status;
     if (step === 2) return form.runs !== null && form.starts !== null
                            && form.all_wheels_attached !== null
@@ -383,10 +392,19 @@ export default function QuoteWizard() {
         <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
           {step === 0 && (
             <div className="space-y-4">
+              <VehicleAutofill lang={lang} revision={vehicleRevision}
+                onResolved={(v, token) => setForm((current) => ({ ...current, vin: v.vin,
+                  vehicle_lookup_token: token,
+                  vehicle: { year: v.year, make_id: null, make_name: v.make,
+                    model_id: null, model_name: v.model, trim: v.trim || "" } }))} />
               <VehiclePicker
                 lang={lang}
                 value={form.vehicle}
-                onChange={(v) => setForm({ ...form, vehicle: v })}
+                onChange={(v) => {
+                  // A manual change invalidates the looked-up specs and VIN.
+                  setVehicleRevision((n) => n + 1);
+                  setForm({ ...form, vehicle: v, vin: "", vehicle_lookup_token: undefined });
+                }}
               />
               <div>
                 <Label>{t.mileage}</Label>
