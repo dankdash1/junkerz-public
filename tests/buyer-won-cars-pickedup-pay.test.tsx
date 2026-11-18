@@ -20,4 +20,5 @@ test('only the unpaid Picked Up car gets Mark complete & pay', async () => {
   expect(buttons).toHaveLength(1);
   const links = screen.getAllByRole('link', { name: 'Open pickup checklist' });
   expect(links.map((l) => l.getAttribute('href'))).toEqual(['/buyers/won-cars/1']);
+  expect(screen.getByText('✓ Paid')).toBeTruthy();
 });

@@ -233,6 +233,11 @@ export default function WonCars() {
                     {r.created_at ? new Date(r.created_at).toLocaleString() : ""}
                   </td>
                   <td className="p-3 space-x-2 whitespace-nowrap">
+                    {r.picked_up_charge_status === "paid" && (
+                      <span className="inline-flex items-center rounded-md bg-green-100 px-3 py-2 font-medium text-green-800">
+                        ✓ Paid
+                      </span>
+                    )}
                     {/* George 11-18: Picked Up cars get the same buttons until the fee is paid.
                         The server never charges twice (paid = skipped, one-time charge key). */}
                     {(r.status === "won" ||
