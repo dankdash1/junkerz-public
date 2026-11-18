@@ -108,18 +108,15 @@ export default function CarroViejos() {
           </div>
 
           <p className="mx-auto mt-7 max-w-xl text-lg text-zinc-600">
-            Junkerz genera su oferta en línea y ayuda a coordinar la venta.
-            El comprador independiente asignado compra el carro y le paga;
-            el socio de recogida recoge el vehículo. Servimos Dallas–Fort Worth
-            sin un local abierto al público.
+            Venda su carro viejo en Dallas–Fort Worth. Reciba una oferta en línea, programe la recogida gratis y reciba su pago.
           </p>
 
           <ul className="mx-auto mt-8 grid max-w-2xl gap-3 text-[15px] text-zinc-700 sm:grid-cols-2">
             {[
-              [Truck, "Grúa gratis para recogidas confirmadas"],
-              [BadgeDollarSign, "Su comprador paga al recoger"],
-              [FileText, "Documentos revisados antes de recoger"],
-              [Clock, PICKUPS_LIVE ? "Horario confirmado con su socio de recogida" : "Abrimos pronto — aún no recogemos carros"],
+              [Truck, "Recogida gratis"],
+              [BadgeDollarSign, "Pago al recoger"],
+              [FileText, "Sin compromiso"],
+              [Clock, PICKUPS_LIVE ? "Recogida a una hora conveniente" : "Abrimos pronto — aún no recogemos carros"],
             ].map(([Icon, t]) => {
               const I = Icon as typeof Truck;
               return (
@@ -157,10 +154,10 @@ export default function CarroViejos() {
               { icon: ClipboardList, n: "01", t: "Cuéntenos del carro",
                 b: "Año, marca, modelo y en qué condición está. Como un minuto. Sin crear cuenta y sin buscar el número de serie." },
               { icon: BadgeDollarSign, n: "02", t: "Reciba su número real",
-                b: "Oferta garantizada cuando el vehículo, su condición, piezas principales y datos de propiedad coinciden con lo que indicó. Cualquier diferencia se explica antes de que acepte una oferta revisada." },
+                b: "Vea su oferta en línea y decida si le conviene. Sin presión para aceptar." },
               { icon: Truck, n: "03", t: PICKUPS_LIVE ? "Confirme la recogida y el pago" : "Le contactamos cuando empecemos",
                 b: PICKUPS_LIVE
-                  ? "Confirme la fecha, la hora y los detalles del pago. Su comprador independiente compra y paga el carro; su socio de recogida lo recoge con grúa gratis."
+                  ? "Programe una hora conveniente con nuestro socio de recogida y reciba el pago cuando recojan su carro."
                   : "Guarde su oferta ahora. Todavía no programamos recogidas. Le contactaremos antes de coordinar la recogida y el pago." },
             ].map(({ icon: Icon, n, t, b }) => (
               <div key={n} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">

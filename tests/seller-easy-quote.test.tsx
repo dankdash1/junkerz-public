@@ -41,15 +41,14 @@ function next() { fireEvent.click(screen.getByRole("button", { name: "Continue" 
 
 describe("simple seller quote", () => {
   it.each([
-    ["", "en", "Guaranteed offer", "Your approved offer is guaranteed when the vehicle, condition, major parts and ownership details match your description."],
-    ["lang=es", "es", "Oferta garantizada", "Su oferta aprobada se garantiza si el vehículo, su condición, las piezas principales y los datos de propiedad coinciden con su descripción."],
-  ])("shows the guarantee condition beside the promise in the selected language (%s)", async (query, lang, badge, condition) => {
+    ["", "en", "No obligation"],
+    ["lang=es", "es", "Sin compromiso"],
+  ])("keeps the quote introduction simple (%s)", async (query, lang, badge) => {
     navigation.query = query;
     render(<QuotePage />);
     expect(screen.getByRole("main").getAttribute("lang")).toBe(lang);
-    const promise = screen.getByText(badge);
-    expect(promise.getAttribute("aria-describedby")).toBe("offer-guarantee-condition");
-    expect(document.getElementById("offer-guarantee-condition")?.textContent).toContain(condition);
+    expect(screen.getAllByText(badge).length).toBeGreaterThan(0);
+    expect(document.getElementById("offer-guarantee-condition")).toBeNull();
     await screen.findByRole("option", { name: "2023" });
   });
 
