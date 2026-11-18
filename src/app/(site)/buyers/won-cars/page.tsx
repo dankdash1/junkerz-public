@@ -30,6 +30,7 @@ export default function WonCars() {
   const [filter, setFilter] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
 
   async function reload() {
     try {
@@ -46,18 +47,45 @@ export default function WonCars() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
-  async function decline(matchId: number) {
-    if (!confirm("Decline this match? Reliability score drops by 5.")) return;
+  // George 11-18: a won car is like an auction win. The buyer must pick it up;
+  // there is no Decline. The buyer can finish and pay right from this list.
+  async function completeAndPay(r: any) {
+    const fee =
+      typeof r.finder_fee_cents === "number" && r.finder_fee_cents > 0
+        ? `$${(r.finder_fee_cents / 100).toFixed(2)}`
+        : "the finder fee";
+    const car = `${r.year ?? ""} ${r.make ?? ""} ${r.model ?? ""}`.trim() || `match #${r.match_id}`;
+    if (
+      !confirm(
+        `Mark the ${car} picked up and pay ${fee} now?\n\n` +
+          "Only do this after your driver has the car. " +
+          "If the seller did not sign, you can still complete — the missing signature is your responsibility."
+      )
+    )
+      return;
     setBusy(true);
+    setErr(null);
+    setMsg(null);
     try {
-      const r = await buyerApi.declineMatch(matchId);
-      alert(
-        `Declined. ${r.promoted_backup ? "Backup buyer promoted." : "No backup available."} ` +
-          `New reliability: ${r.new_reliability_score?.toFixed(0)}`
-      );
+      const res = await buyerApi.pickupComplete(r.match_id);
+      const paid = typeof res.spread_cents === "number" ? `$${(res.spread_cents / 100).toFixed(2)}` : fee;
+      const payLine =
+        res.charge_status === "paid"
+          ? `Finder fee paid: ${paid}.`
+          : res.charge_status === "declined"
+          ? `Your card was declined for ${paid}. Open the car to update your card and retry payment.`
+          : "Finder fee payment is pending.";
+      setMsg(`✓ ${car} marked complete. ${payLine}`);
       reload();
     } catch (e: unknown) {
-      setErr((e as Error)?.message ?? "decline failed");
+      const m = (e as Error)?.message;
+      setErr(
+        m === "wrong_status"
+          ? `${car} cannot be completed from here. Open the car or contact Junkerz.`
+          : m === "not_found"
+          ? `${car} has no pickup on file yet. Open the pickup checklist or contact Junkerz.`
+          : m ?? "Could not mark complete. Please try again."
+      );
     } finally {
       setBusy(false);
     }
@@ -85,6 +113,11 @@ export default function WonCars() {
       </div>
 
       {err && <p className="text-red-600 mb-4">{err}</p>}
+      {msg && (
+        <p role="status" className="mb-4 rounded border border-brand-200 bg-brand-50 p-3 text-brand-800">
+          {msg}
+        </p>
+      )}
 
       {rows === null ? (
         <p>Loading…</p>
@@ -200,22 +233,17 @@ export default function WonCars() {
                     {r.created_at ? new Date(r.created_at).toLocaleString() : ""}
                   </td>
                   <td className="p-3 space-x-2 whitespace-nowrap">
-                    {r.status === "won" && (
+                    {(r.status === "won" || r.status === "disputed") && (
                       <>
-                        <Button
-                          variant="outline"
-                          size="default"
-                          onClick={() => decline(r.match_id)}
-                          disabled={busy}
-                        >
-                          Decline
-                        </Button>
                         <Link
                           href={`/buyers/won-cars/${r.match_id}`}
-                          className="inline-flex items-center rounded-md bg-brand-600 px-4 py-2 text-white hover:bg-brand-700"
+                          className="inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-slate-800 hover:bg-slate-50"
                         >
                           Open pickup checklist
                         </Link>
+                        <Button size="default" onClick={() => completeAndPay(r)} disabled={busy}>
+                          Mark complete &amp; pay
+                        </Button>
                       </>
                     )}
                   </td>

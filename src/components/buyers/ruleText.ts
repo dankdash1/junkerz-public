@@ -58,9 +58,9 @@ const en = {
   maxWeek: "Max / week",
   maxMonth: "Max / month",
   capsHelpNew:
-    "Leave blank to take as many as you win. Counts reset nightly, Monday morning and on the 1st. A car you decline gives its count back.",
+    "Leave blank to take as many as you win. Counts reset nightly, Monday morning and on the 1st. Every car you win counts, and you must pick it up.",
   capsUsed: (d: number, w: number, m: number) =>
-    `Used so far: ${d} today, ${w} this week, ${m} this month. A car you decline gives its count back.`,
+    `Used so far: ${d} today, ${w} this week, ${m} this month. Every car you win counts, and you must pick it up.`,
   whoPays: "Who pays pickup",
   payorNames: { buyer: "buyer", junkerz: "Junkerz", split: "split" } as Record<string, string>,
 
@@ -211,9 +211,9 @@ const es: RuleText = {
   maxWeek: "Máx. / semana",
   maxMonth: "Máx. / mes",
   capsHelpNew:
-    "Déjelo en blanco para tomar todos los que gane. Los conteos se reinician cada noche, el lunes en la mañana y el día 1. Un carro que usted rechaza se le devuelve al conteo.",
+    "Déjelo en blanco para tomar todos los que gane. Los conteos se reinician cada noche, el lunes en la mañana y el día 1. Cada carro que gana cuenta, y usted debe recogerlo.",
   capsUsed: (d: number, w: number, m: number) =>
-    `Usados hasta ahora: ${d} hoy, ${w} esta semana, ${m} este mes. Un carro que usted rechaza se le devuelve al conteo.`,
+    `Usados hasta ahora: ${d} hoy, ${w} esta semana, ${m} este mes. Cada carro que gana cuenta, y usted debe recogerlo.`,
   whoPays: "Quién paga la recogida",
   payorNames: { buyer: "comprador", junkerz: "Junkerz", split: "mitad y mitad" },
 

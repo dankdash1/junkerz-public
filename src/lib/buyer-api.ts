@@ -175,8 +175,6 @@ export const buyerApi = {
     const qs = q.toString()
     return _fetch(`/api/buyers/marketplace${qs ? `?${qs}` : ""}`).then(_json)
   },
-  declineMatch: (matchId: number) =>
-    _fetch(`/api/buyers/won-cars/${matchId}/decline`, { method: "POST" }).then(_json),
   markPickedUp: (matchId: number) =>
     _fetch(`/api/buyers/won-cars/${matchId}/mark-picked-up`, { method: "POST" }).then(_json),
   ledger: () => _fetch("/api/buyers/ledger").then(_json),
