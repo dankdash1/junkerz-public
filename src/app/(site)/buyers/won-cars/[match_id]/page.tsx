@@ -184,13 +184,19 @@ export default function BuyerPickupDetail() {
   };
 
   const markComplete = async () => {
+    // George 11-17: a missing seller signature is the buyer's risk and never
+    // blocks completion. Ask once, the same way the won-cars list confirms.
+    if (!sellerSigned && !confirm("Mark complete without the seller's signature?")) return;
     setCompleting(true);
     setCompleteMsg(null);
     try {
       const r = await buyerApi.pickupComplete(matchId);
-      const emailLine = r.email_result?.sent
-        ? `Seller copy emailed to ${r.email_result.sent_to}.`
-        : `Pickup marked complete. Seller email could not be sent (${r.email_result?.reason || "no detail"}).`;
+      const unsigned = r.seller_signed === false || r.email_result?.reason === "no_seller_signature";
+      const emailLine = unsigned
+        ? "Pickup marked complete. No seller signature was on file."
+        : r.email_result?.sent
+          ? `Seller copy emailed to ${r.email_result.sent_to}.`
+          : `Pickup marked complete. Seller email could not be sent (${r.email_result?.reason || "no detail"}).`;
       const fee = typeof r.spread_cents === "number" ? `$${(r.spread_cents / 100).toFixed(2)}` : "the finder fee";
       const paymentLine = r.charge_status === "paid"
         ? `Finder fee paid: ${fee}.`
@@ -200,7 +206,11 @@ export default function BuyerPickupDetail() {
       setCompleteMsg(`✓ Pickup completed. ${paymentLine} ${emailLine}`);
       await load();
     } catch (e) {
-      setCompleteMsg((e as Error)?.message ?? "complete failed");
+      const msg = (e as Error)?.message;
+      // An older backend may still answer 412 seller_signature_required.
+      setCompleteMsg(msg === "seller_signature_required" || msg === "HTTP 412"
+        ? "The server still requires the seller's signature. Please try again shortly."
+        : msg ?? "complete failed");
     } finally {
       setCompleting(false);
     }
@@ -398,12 +408,17 @@ export default function BuyerPickupDetail() {
           <section className="bg-white border rounded-lg p-4 space-y-3">
             <h2 className="font-semibold">Mark complete</h2>
             <p className="text-xs text-slate-600">
-              Complete this step after collecting the vehicle. It requires the seller&apos;s signature on file and charges your saved card the finder fee
+              Complete this step after collecting the vehicle. It charges your saved card the finder fee
               {d.bid_cents != null && d.offer_cents != null ? ` of $${(Math.max(0, d.bid_cents - d.offer_cents) / 100).toFixed(2)}` : ""}.
             </p>
+            {!sellerSigned && (
+              <p className="text-xs text-amber-800">
+                No seller signature on file. You can still mark complete — the missing signature is your responsibility.
+              </p>
+            )}
             <Button
               onClick={() => void markComplete()}
-              disabled={!sellerSigned || completing}
+              disabled={completing}
               className="w-full h-12"
             >
               {completing ? "Completing…" : "Complete pickup & pay finder fee"}

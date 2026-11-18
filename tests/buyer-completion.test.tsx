@@ -19,3 +19,43 @@ test('completion preserves declined-fee notice when pickup moves to completed vi
  expect(screen.getAllByRole('status').map(el=>el.textContent).join(' ')).toContain('Payment needs attention: $370.00 was declined');
  expect(screen.getByRole('link',{name:'Payment settings'}).getAttribute('href')).toBe('/buyers/settings');
 });
+// George 11-17: a buyer can always complete; a missing seller signature is the buyer's risk.
+const unsignedDetail={match_id:42,match_status:'won',purchase_status:'arrived',po_status:'arrived',bid_cents:45000,offer_cents:35000,signatures:[],photos:[],completion:{buyer_completed_at:null}};
+test('buyer can complete without a seller signature after one confirm',async()=>{
+ const ask=vi.spyOn(window,'confirm').mockReturnValue(true);
+ api.pickupDetail.mockReset().mockResolvedValueOnce(unsignedDetail).mockResolvedValueOnce({...unsignedDetail,completion:{buyer_completed_at:'2026-11-17T11:00:00Z'}});
+ api.pickupComplete.mockReset().mockResolvedValue({charge_status:'paid',spread_cents:10000,seller_signed:false,email_result:{sent:false,reason:'no_seller_signature'}});
+ render(<Detail/>);
+ await userEvent.click(await screen.findByRole('button',{name:/at the car/}));
+ expect(screen.getByText(/No seller signature on file\. You can still mark complete/)).toBeTruthy();
+ const button=screen.getByRole('button',{name:'Complete pickup & pay finder fee'});
+ expect(button).toHaveProperty('disabled',false);
+ await userEvent.click(button);
+ expect(ask).toHaveBeenCalledWith("Mark complete without the seller's signature?");
+ expect(api.pickupComplete).toHaveBeenCalledWith(42);
+ const status=(await screen.findAllByRole('status')).map(el=>el.textContent).join(' ');
+ expect(status).toContain('No seller signature was on file.');
+ expect(status).not.toContain('Seller copy emailed');
+ ask.mockRestore();
+});
+test('declining the unsigned confirm sends nothing',async()=>{
+ const ask=vi.spyOn(window,'confirm').mockReturnValue(false);
+ api.pickupDetail.mockReset().mockResolvedValue(unsignedDetail);
+ api.pickupComplete.mockReset();
+ render(<Detail/>);
+ await userEvent.click(await screen.findByRole('button',{name:/at the car/}));
+ await userEvent.click(screen.getByRole('button',{name:'Complete pickup & pay finder fee'}));
+ expect(ask).toHaveBeenCalled();
+ expect(api.pickupComplete).not.toHaveBeenCalled();
+ ask.mockRestore();
+});
+test('old backend 412 shows a plain retry message',async()=>{
+ const ask=vi.spyOn(window,'confirm').mockReturnValue(true);
+ api.pickupDetail.mockReset().mockResolvedValue(unsignedDetail);
+ api.pickupComplete.mockReset().mockRejectedValue(new Error('seller_signature_required'));
+ render(<Detail/>);
+ await userEvent.click(await screen.findByRole('button',{name:/at the car/}));
+ await userEvent.click(screen.getByRole('button',{name:'Complete pickup & pay finder fee'}));
+ expect(await screen.findByText(/The server still requires the seller's signature\. Please try again shortly\./)).toBeTruthy();
+ ask.mockRestore();
+});

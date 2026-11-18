@@ -21,7 +21,7 @@ test('driver can open one pickup without buyer login and must identify before de
  await userEvent.click(screen.getByRole('button',{name:"I'm on my way"}));
  expect(api.start).toHaveBeenCalledWith('Test Driver',30);
 });
-test('driver cannot complete before seller signature and collection confirmation',async()=>{
+test('driver cannot complete before collection confirmation',async()=>{
  api.detail.mockResolvedValue({...detail,status:'arrived',seller_signature:{signer_name:'Test Seller',signed_at:'2026-09-13T12:00:00Z'}});
  render(<PickupMobile/>);await screen.findByText('2010 Honda Civic');
  await userEvent.type(screen.getByLabelText('Your name'),'Test Driver');
@@ -33,6 +33,22 @@ test('driver cannot complete before seller signature and collection confirmation
  await waitFor(()=>expect(api.complete).toHaveBeenCalledWith('Test Driver'));
  expect(await screen.findByText('Pickup completed')).toBeTruthy();
  expect(screen.queryByRole('button',{name:"I'm on my way"})).toBeNull();
+});
+test('driver can complete without a seller signature after one confirm',async()=>{
+ const ask=vi.spyOn(window,'confirm').mockReturnValue(true);
+ api.detail.mockResolvedValue({...detail,status:'arrived',arrived_at:'2026-09-13T11:50:00Z'});
+ render(<PickupMobile/>);await screen.findByText('2010 Honda Civic');
+ expect(screen.getByText(/No seller signature on file\. You can still mark complete/)).toBeTruthy();
+ await userEvent.type(screen.getByLabelText('Your name'),'Test Driver');
+ await userEvent.click(screen.getByLabelText('The vehicle has been collected.'));
+ const button=screen.getByRole('button',{name:'Pickup complete'});
+ expect(button).toHaveProperty('disabled',false);
+ api.complete.mockResolvedValue({ok:true});
+ api.detail.mockResolvedValue({...detail,status:'completed',completed_at:'2026-09-13T12:30:00Z'});
+ await userEvent.click(button);
+ expect(ask).toHaveBeenCalledWith('Mark complete without the seller’s signature?');
+ await waitFor(()=>expect(api.complete).toHaveBeenCalledWith('Test Driver'));
+ ask.mockRestore();
 });
 test('missing capability shows recovery instructions without calling API',async()=>{
  window.history.replaceState({},'','/pickup');render(<PickupMobile/>);

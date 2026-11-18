@@ -53,7 +53,7 @@ export default function PickupMobile(){
     if(busy || !driver.trim())return;
     setBusy(key);setError('');setNotice('');
     try{await work();await refresh();setNotice(message);}
-    catch(e){if(e instanceof PickupAccessError && [401,403].includes(e.status))setDetail(null);if(key==='signature' && (e as Error).message==='document_changed'){setAgreementChanged(true);setError('The agreement changed. Reload this page and review the updated details before signing.');}else setError((e as Error).message || 'Could not save. Try again.');}
+    catch(e){if(e instanceof PickupAccessError && [401,403].includes(e.status))setDetail(null);if(key==='signature' && (e as Error).message==='document_changed'){setAgreementChanged(true);setError('The agreement changed. Reload this page and review the updated details before signing.');}else if(key==='complete' && (e as Error).message==='seller_signature_required')setError('The server still requires the seller’s signature. Please try again shortly.');else setError((e as Error).message || 'Could not save. Try again.');}
     finally{setBusy(null);}
   };
   if(loading)return <main className="min-h-screen bg-stone-50 px-6 py-16 text-center"><Truck className="mx-auto mb-4 h-8 w-8"/><p>Opening your pickup…</p></main>;
@@ -122,8 +122,12 @@ export default function PickupMobile(){
           <p className="mb-4 text-sm leading-relaxed text-slate-600">Complete this step after collecting the vehicle. This records collection and processes the buyer’s finder fee under their account agreement.</p>
           <label className="mb-4 flex min-h-12 items-center gap-3 text-sm font-medium"><input type="checkbox" className="h-5 w-5 accent-slate-950" checked={collected} onChange={e=>setCollected(e.target.checked)}/>The vehicle has been collected.</label>
           {!arrived && <p className="mb-3 text-sm text-amber-800">Confirm your arrival before completing pickup.</p>}
-          {!detail.seller_signature && <p className="mb-3 text-sm text-amber-800">Save the seller’s signature before completing pickup.</p>}
-          <button className={`${actionClass} !bg-brand-600 hover:!bg-brand-700 disabled:!bg-slate-200`} disabled={!identified || !!busy || !arrived || !detail.seller_signature || !collected} onClick={()=>void run('complete',()=>api.complete(driver.trim()),'Pickup completed. The buyer’s office has the record.')}><Check size={21}/>{busy==='complete'?'Completing…':'Pickup complete'}</button>
+          {!detail.seller_signature && <p className="mb-3 text-sm text-amber-800">No seller signature on file. You can still mark complete — the missing signature is the buyer’s responsibility.</p>}
+          <button className={`${actionClass} !bg-brand-600 hover:!bg-brand-700 disabled:!bg-slate-200`} disabled={!identified || !!busy || !arrived || !collected} onClick={()=>{
+            // George 11-17: an unsigned pickup can still be completed; ask once.
+            if(!detail.seller_signature && !confirm('Mark complete without the seller’s signature?'))return;
+            void run('complete',()=>api.complete(driver.trim()),detail.seller_signature?'Pickup completed. The buyer’s office has the record.':'Pickup completed. No seller signature was on file. The buyer’s office has the record.');
+          }}><Check size={21}/>{busy==='complete'?'Completing…':'Pickup complete'}</button>
         </Step>
       </>}
       {!!detail.photos.length && <Step number="↳" title={`Saved photos · ${detail.photos.length}`}><div className="grid grid-cols-2 gap-3">{detail.photos.map(photo=><PrivatePhoto key={photo.id} id={photo.id} label={photo.photo_kind==='id_document'?'seller ID · private':photo.photo_kind.replace(/_/g,' ')} load={api.photo}/>)}</div></Step>}
