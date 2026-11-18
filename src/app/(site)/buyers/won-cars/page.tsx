@@ -233,7 +233,12 @@ export default function WonCars() {
                     {r.created_at ? new Date(r.created_at).toLocaleString() : ""}
                   </td>
                   <td className="p-3 space-x-2 whitespace-nowrap">
-                    {(r.status === "won" || r.status === "disputed") && (
+                    {/* George 11-18: Picked Up cars get the same buttons until the fee is paid.
+                        The server never charges twice (paid = skipped, one-time charge key). */}
+                    {(r.status === "won" ||
+                      r.status === "disputed" ||
+                      (["delivered", "charged", "charge_failed"].includes(r.status) &&
+                        r.picked_up_charge_status !== "paid")) && (
                       <>
                         <Link
                           href={`/buyers/won-cars/${r.match_id}`}
