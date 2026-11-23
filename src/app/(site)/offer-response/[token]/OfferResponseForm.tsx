@@ -5,6 +5,7 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import { API_BASE } from "@/lib/api-base";
 import { PICKUPS_LIVE, SITE } from "@/lib/site";
+import { formatMB, largestFile, needsShrink, shrinkFormDataPhotos, UPLOAD_LIMIT_BYTES } from "@/lib/shrink-photo";
 
 type ResponseKind = "timing" | "callback" | "outside_offer" | "details";
 type Detail = "mileage" | "title_status" | "title_in_hand" | "odometer" | "vehicle" | "damage";
@@ -25,6 +26,7 @@ export default function OfferResponseForm({ token, es }: { token: string; es: bo
   const [saved, setSaved] = useState<ResponseKind | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [preparing, setPreparing] = useState(false);
   const requestKey = useRef<string | null>(null);
   const endpoint = `${API_BASE}/api/public/junkerz/seller/check-in/${encodeURIComponent(token)}`;
   const lang = es ? "?lang=es" : "";
@@ -74,6 +76,22 @@ export default function OfferResponseForm({ token, es }: { token: string; es: bo
       for (const [key, value] of Array.from(fields.entries())) {
         if (value === "" || (value instanceof File && !value.name)) fields.delete(key);
       }
+      if (Array.from(fields.values()).some((value) => value instanceof File && needsShrink(value))) {
+        setPreparing(true);
+        try {
+          await shrinkFormDataPhotos(fields);
+        } finally {
+          setPreparing(false);
+        }
+      }
+      const biggest = largestFile(fields);
+      const sizeError = (file: File) => tr(
+        `This file is ${formatMB(file.size)}; the limit is 8 MB. Use a smaller JPG, PNG, WebP, or PDF.`,
+        `Este archivo pesa ${formatMB(file.size)}; el límite es 8 MB. Use un JPG, PNG, WebP o PDF más pequeño.`);
+      if (biggest && biggest.size > UPLOAD_LIMIT_BYTES) {
+        setError(sizeError(biggest));
+        return;
+      }
       if (fields.get("callback_at")) {
         fields.set("callback_at", new Date(String(fields.get("callback_at"))).toISOString());
       }
@@ -86,8 +104,16 @@ export default function OfferResponseForm({ token, es }: { token: string; es: bo
           setLoadError(true);
           return;
         }
+        if (response.status === 413 && biggest) {
+          setError(tr(`This file is ${formatMB(biggest.size)} and was too large to send; the limit is 8 MB.`,
+            `Este archivo pesa ${formatMB(biggest.size)} y fue demasiado grande para enviarlo; el límite es 8 MB.`));
+          return;
+        }
         if (response.status === 413 || response.status === 415) {
-          setError(tr("Use a JPG, PNG, WebP, or permitted PDF of 8 MB or less.", "Use un JPG, PNG, WebP o PDF permitido de hasta 8 MB."));
+          setError(biggest
+            ? tr(`We couldn’t read this file (${formatMB(biggest.size)}). Use a JPG, PNG, WebP, or permitted PDF of 8 MB or less.`,
+              `No pudimos leer este archivo (${formatMB(biggest.size)}). Use un JPG, PNG, WebP o PDF permitido de hasta 8 MB.`)
+            : tr("Use a JPG, PNG, WebP, or permitted PDF of 8 MB or less.", "Use un JPG, PNG, WebP o PDF permitido de hasta 8 MB."));
           return;
         }
         if (response.status === 400) {
@@ -254,7 +280,7 @@ export default function OfferResponseForm({ token, es }: { token: string; es: bo
                   )}
                   {error && <p role="alert" className="text-sm font-semibold text-red-800">{error}</p>}
                   <button className={primaryClass} type="submit" disabled={busy}>
-                    {busy ? tr("Sending…", "Enviando…") : tr("Send to Junkerz", "Enviar a Junkerz")}
+                    {preparing ? tr("Preparing photo…", "Preparando foto…") : busy ? tr("Sending…", "Enviando…") : tr("Send to Junkerz", "Enviar a Junkerz")}
                   </button>
                 </form>
               )}

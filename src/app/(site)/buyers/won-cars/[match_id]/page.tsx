@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { buyerApi } from "@/lib/buyer-api";
+import { shrinkPhoto } from "@/lib/shrink-photo";
 import PickupShare from "@/components/junkerz/PickupShare";
 import PrivatePhoto from "@/components/junkerz/PrivatePhoto";
 import PaymentRecovery from "@/components/junkerz/PaymentRecovery";
@@ -148,7 +149,7 @@ export default function BuyerPickupDetail() {
     if (!f) return;
     setBusyKind(kind);
     try {
-      await buyerApi.pickupPhoto(matchId, kind, f);
+      await buyerApi.pickupPhoto(matchId, kind, await shrinkPhoto(f));
       await load();
     } catch (e) {
       setErr((e as Error)?.message ?? "photo upload failed");

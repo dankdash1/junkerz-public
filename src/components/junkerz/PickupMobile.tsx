@@ -4,6 +4,7 @@ import {Camera,Check,ChevronRight,Clock,MapPin,Phone,ShieldCheck,Truck} from "lu
 import PrivatePhoto from "@/components/junkerz/PrivatePhoto";
 import SignaturePad from "@/components/junkerz/SignaturePad";
 import SellerAgreement, {agreementReady} from "@/components/junkerz/SellerAgreement";
+import {shrinkPhoto} from "@/lib/shrink-photo";
 import {createPickupAccessApi,PickupAccessError,type PickupAccessDetail} from "@/lib/pickup-access-api";
 
 const actionClass="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-base font-semibold text-white transition-colors hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-500";
@@ -100,7 +101,7 @@ export default function PickupMobile(){
         </Step>
         <Step number="04" title="Document the pickup">
           <p className="mb-4 text-sm leading-relaxed text-slate-600">Photograph the vehicle and documents at pickup. Seller ID photos stay private to this pickup and the buyer’s office.</p>
-          <div className="grid grid-cols-2 gap-3">{kinds.map(([kind,label])=><label key={kind} className={`flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm font-semibold ${!identified || busy?'opacity-50':''}`}><Camera size={20} className="shrink-0 text-slate-500"/><span>{busy===kind?'Uploading…':label}</span><input type="file" accept="image/*" capture="environment" className="sr-only" aria-label={`Upload ${label}`} disabled={!identified || !!busy} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void run(kind,()=>api.upload(driver.trim(),kind,file),`${label} photo saved.`);}}/></label>)}</div>
+          <div className="grid grid-cols-2 gap-3">{kinds.map(([kind,label])=><label key={kind} className={`flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm font-semibold ${!identified || busy?'opacity-50':''}`}><Camera size={20} className="shrink-0 text-slate-500"/><span>{busy===kind?'Uploading…':label}</span><input type="file" accept="image/*" capture="environment" className="sr-only" aria-label={`Upload ${label}`} disabled={!identified || !!busy} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void run(kind,async()=>api.upload(driver.trim(),kind,await shrinkPhoto(file)),`${label} photo saved.`);}}/></label>)}</div>
         </Step>
         <Step number="05" title="Seller signature">
           {detail.seller_signature ? <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
