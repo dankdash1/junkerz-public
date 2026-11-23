@@ -88,3 +88,15 @@ it('preserves a legacy window returned by the server instead of relabeling an ol
  await userEvent.click(await screen.findByRole('button',{name:/Tomorrow morning/}));
  expect(await screen.findByText('Preferred window: 9am-11am CT')).toBeTruthy();
 });
+
+it('a funded counter offers only buyer-backed dated windows and saves the exact choice',async()=>{
+ fetchMock.mockImplementation(async(_url:string,init?:RequestInit)=>init?.method==='POST'
+  ? Response.json({ok:true,slot:'Sep 16 — 1pm-4pm',window:'1pm-4pm',eta_at:'2026-09-16T18:00:00Z'})
+  : Response.json({offer:{...offer,funded_pickup_windows:[{pickup_date:'2026-09-16',window:'1pm-4pm'}]},quick_picks:[{key:'tomorrow_am',label:'Tomorrow morning'}]}));
+ render(<SellerSchedulePage/>);
+ const backed = await screen.findByRole('button',{name:/Sep 16 · 1pm-4pm CT/});
+ expect(screen.queryByRole('button',{name:/Tomorrow morning|Pick a custom date/})).toBeNull();
+ await userEvent.click(backed);
+ expect(await screen.findByText('Pickup preference saved')).toBeTruthy();
+ expect(posted().body).toMatchObject({pickup_date:'2026-09-16',window:'1pm-4pm',pickup_address:offer.pickup_address});
+});

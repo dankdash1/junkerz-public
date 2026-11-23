@@ -24,6 +24,7 @@ export async function submitQuote(payload: {
   license_plate?: string; license_plate_state?: string;
   // Seller ticked the optional, unchecked-by-default "text me" box.
   sms_consent?: boolean;
+  language?: "en" | "es";
   pickup_address?: string;
 }) {
   // Attach where this seller came from, so the offer row can say

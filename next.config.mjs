@@ -13,7 +13,7 @@ const nextConfig = {
       {key: "Referrer-Policy", value: "no-referrer"},
     ];
     return [
-      ...["/pickup", "/yard-request", "/yard-reply"].map((source) => ({ source, headers: capabilityHeaders })),
+      ...["/pickup", "/yard-request", "/yard-reply", "/offer-response/:path*"].map((source) => ({ source, headers: capabilityHeaders })),
       ...["/schedule/:path*", "/sign/:path*", "/vin/:path*", "/decline/:path*",
         "/status/:path*", "/pickup/:offer_id", "/quote/result", "/buyers/:path*",
         "/account/:path*", "/payments/:path*"].map((source) => ({ source, headers: privateHeaders })),

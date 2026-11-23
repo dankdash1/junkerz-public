@@ -17,6 +17,7 @@ type Offer = {
   tier?: string;
   requires_human_approval?: boolean;
   token?: string | null;
+  seller_checkin_enabled?: boolean;
 };
 
 function ResultContent() {
@@ -29,7 +30,7 @@ function ResultContent() {
   const es = sp.get("lang") === "es";
 
   const [offer, setOffer] = useState<Offer | null>(
-    centsFromUrl ? { offer_cents: centsFromUrl, status: sp.get("status") || "reviewing", requires_human_approval: sp.get("review") === "1" } : null
+    centsFromUrl ? { offer_cents: centsFromUrl, status: sp.get("status") || "reviewing", requires_human_approval: sp.get("review") === "1", seller_checkin_enabled: sp.get("checkin") === "1" } : null
   );
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -64,22 +65,37 @@ function ResultContent() {
   const cents = offer?.offer_cents ?? (centsFromUrl || undefined);
   const confirmed = !offer?.requires_human_approval && offer?.status === "ready";
   const accepted = offer?.status === "seller_accepted";
+  const langQuery = es ? "?lang=es" : "";
+
 
   const t = es
     ? { head: "Su oferta", pending: "Un compañero está confirmando este número ahora.",
         accepted: "Aceptó esta oferta. Su comprador confirmará los detalles del vehículo, los documentos y los arreglos de recogida.",
         firm: "Oferta garantizada cuando el vehículo, su condición, piezas principales y datos de propiedad coinciden con lo que indicó. Cualquier diferencia debe explicarse antes de que acepte una oferta revisada.", accept: "Aceptar y programar la grúa",
-        decline: "¿No le sirve? Díganos por qué", call: "O llámenos",
+        share: "Compartir otra oferta", decline: "Rechazar oferta", call: "O llámenos",
         free: "Grúa gratis", cash: "Efectivo al recoger", fast: "Sujeto a disponibilidad",
         wait: "Estamos calculando su oferta…",
         paperwork: "Después de aceptar, su comprador independiente revisará el VIN y los documentos de propiedad. El comprador compra el carro y es responsable del pago; el socio de recogida lo recoge. Tenga su teléfono cerca y revise su correo. El socio le llamará una vez asignado para confirmar la recogida y los detalles del pago." }
     : { head: "Your offer", pending: "One of our team is confirming this number now.",
         accepted: "You accepted this offer. Your buyer will confirm the vehicle details, paperwork and pickup arrangements.",
         firm: "Your offer is guaranteed when the vehicle, condition, major parts and ownership details match your description. Any difference must be explained before you agree to a revised offer.", accept: "Accept & schedule pickup",
-        decline: "Not right? Tell us why", call: "Or call us",
+        share: "Share another offer", decline: "Decline offer", call: "Or call us",
         free: "Free towing", cash: "Cash at pickup", fast: "Subject to availability",
         wait: "Working out your offer…",
         paperwork: "After you accept, your independent buyer will review the VIN and ownership paperwork. The buyer purchases the vehicle and is responsible for payment; the pickup partner collects it. Keep your phone nearby and check your email. Your pickup partner will call once assigned to confirm the pickup and payment details." };
+
+  const responseLinks = token && !accepted && (
+    <div className="mt-4 space-y-2 text-center text-sm">
+      {offer?.seller_checkin_enabled && <Link prefetch={false} href={`/offer-response/${token}${langQuery}#outside-offer`}
+        className="block font-semibold text-zinc-800 underline underline-offset-2">
+        {t.share}
+      </Link>}
+      <Link prefetch={false} href={`/decline/${token}${langQuery}`}
+        className="block text-zinc-500 underline underline-offset-2 hover:text-zinc-800">
+        {t.decline}
+      </Link>
+    </div>
+  );
 
   if (error) {
     return (
@@ -111,7 +127,7 @@ function ResultContent() {
         </p>
         <div className={`mt-3 text-6xl font-bold tracking-tight tabular-nums ${mono}`}>
           <span className="align-top text-3xl text-brand-600">$</span>
-          {(cents / 100).toFixed(0)}
+          {(cents / 100).toLocaleString(es ? "es-US" : "en-US", { minimumFractionDigits: cents % 100 ? 2 : 0, maximumFractionDigits: 2 })}
         </div>
 
         <p className={`mt-3 text-sm ${confirmed ? "text-brand-700" : "text-zinc-500"}`}>
@@ -145,27 +161,17 @@ function ResultContent() {
             <Button className="mt-3 h-14 w-full gap-2 text-base font-bold" onClick={() => setSaved(true)}>
               <Check className="h-5 w-5" /> {notLive.save}
             </Button>
-            {token && (
-              <Link href={`/decline/${token}`} className="mt-3 block text-center">
-                <span className="text-sm font-semibold text-zinc-500 underline hover:text-zinc-800">
-                  {t.decline}
-                </span>
-              </Link>
-            )}
+            {responseLinks}
           </>
         )
       ) : token ? (
         <>
-          <Link href={`/schedule/${token}`} className="mt-6 block">
+          <Link prefetch={false} href={`/schedule/${token}${langQuery}`} className="mt-6 block">
             <Button className="h-14 w-full gap-2 text-base font-bold">
               <Check className="h-5 w-5" /> {t.accept}
             </Button>
           </Link>
-          <Link href={`/decline/${token}`} className="mt-3 block text-center">
-            <span className="text-sm font-semibold text-zinc-500 underline hover:text-zinc-800">
-              {t.decline}
-            </span>
-          </Link>
+          {responseLinks}
         </>
       ) : (
         <p className="mt-6 text-center text-sm text-zinc-500">
