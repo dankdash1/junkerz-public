@@ -39,6 +39,7 @@ export function createPickupAccessApi(token:string) {
     thirtyMinutes:(driverName:string)=>post('/thirty-minutes',{driver_name:driverName}),
     arrive:(driverName:string)=>post('/arrive',{driver_name:driverName}),
     complete:(driverName:string)=>post('/complete',{driver_name:driverName}),
+    vin:(driverName:string,vin:string)=>post('/vin',{driver_name:driverName,vin}),
     signature:(driverName:string,signerName:string,signature:string,documentRevision:string,sellerEmail?:string)=>post('/signature',{driver_name:driverName,signer_name:signerName,signature,document_revision:documentRevision,...(sellerEmail?{seller_email:sellerEmail}:{})}),
     upload:(driverName:string,kind:string,file:File)=>{
       const data=new FormData();data.append('driver_name',driverName);data.append('photo_kind',kind);data.append('file',file);

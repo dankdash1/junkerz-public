@@ -4,6 +4,7 @@ import {Camera,Check,ChevronRight,Clock,MapPin,Phone,ShieldCheck,Truck} from "lu
 import PrivatePhoto from "@/components/junkerz/PrivatePhoto";
 import SignaturePad from "@/components/junkerz/SignaturePad";
 import SellerAgreement, {agreementReady} from "@/components/junkerz/SellerAgreement";
+import PickupVinField from "@/components/junkerz/PickupVinField";
 import {shrinkPhoto} from "@/lib/shrink-photo";
 import {createPickupAccessApi,PickupAccessError,type PickupAccessDetail} from "@/lib/pickup-access-api";
 
@@ -100,6 +101,10 @@ export default function PickupMobile(){
           {arrived?<p className="text-sm text-emerald-800">You’re at the pickup. Record the vehicle and seller’s signature below.</p>:<><p className="mb-4 text-sm text-slate-600">Tap when you reach the seller’s pickup address.</p><button className={actionClass} disabled={!identified || !!busy || !departed} onClick={()=>void run('arrive',()=>api.arrive(driver.trim()),'Arrival saved. Document the vehicle and collect the seller’s signature.')}><MapPin size={20}/>{busy==='arrive'?'Saving…':"I've arrived"}</button></>}
         </Step>
         <Step number="04" title="Document the pickup">
+          {/* George 2026-11-23: a missing VIN never blocks the pickup or the bill of sale. */}
+          <div className="mb-4"><PickupVinField vin={detail.vehicle.vin} signed={!!detail.seller_signature} disabled={!identified}
+            onSave={async vin=>{if(!identified)throw new Error('driver_name_required');await api.vin(driver.trim(),vin);setAgreementChanged(false);await refresh();setNotice('VIN saved. The bill of sale now shows it.');}}/>
+            {!identified && <p className="mt-2 text-xs text-slate-500">Type your name in step 01 to add or edit the VIN.</p>}</div>
           <p className="mb-4 text-sm leading-relaxed text-slate-600">Photograph the vehicle and documents at pickup. Seller ID photos stay private to this pickup and the buyer’s office.</p>
           <div className="grid grid-cols-2 gap-3">{kinds.map(([kind,label])=><label key={kind} className={`flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm font-semibold ${!identified || busy?'opacity-50':''}`}><Camera size={20} className="shrink-0 text-slate-500"/><span>{busy===kind?'Uploading…':label}</span><input type="file" accept="image/*" capture="environment" className="sr-only" aria-label={`Upload ${label}`} disabled={!identified || !!busy} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void run(kind,async()=>api.upload(driver.trim(),kind,await shrinkPhoto(file)),`${label} photo saved.`);}}/></label>)}</div>
         </Step>
