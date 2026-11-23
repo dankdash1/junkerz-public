@@ -88,6 +88,7 @@ function SellerScheduleLive() {
   const [submitErr, setSubmitErr] = useState<string | null>(null);
   const [done, setDone] = useState<{ slot: string; eta_at: string | null; window: SavedTimeWindow | null } | null>(null);
   const [showCustom, setShowCustom] = useState(false);
+  const loadedOfferToken = useRef<string | null>(null);
   const autoSubmitted = useRef<string | null>(null);
 
   const loadOffer = useCallback(async () => {
@@ -116,9 +117,10 @@ function SellerScheduleLive() {
         return;
       }
       const data = await r.json();
+      loadedOfferToken.current = token;
       setOffer(data.offer);
       setQuickPicks(data.offer?.funded_pickup_windows == null ? data.quick_picks || [] : []);
-      if (data.offer?.pickup_address) setAddress(data.offer.pickup_address);
+      setAddress(data.offer?.pickup_address || "");
     } catch (e) {
       setLoadErr((e as Error)?.message ?? "Failed to load");
     } finally {
@@ -160,20 +162,20 @@ function SellerScheduleLive() {
     [token, address]
   );
 
-  // Auto-submit ONLY if email link has ?qp= AND we already have an address
-  // pre-filled from the quote. If address is blank, force seller to confirm
-  // it manually so we never schedule a pickup at an unknown location.
+  // An emailed quick pick can use the quote's saved address. An address the
+  // seller types on this page needs a deliberate quick-pick click.
   useEffect(() => {
-    if (!offer || done || busy || autoSubmitted.current === token) return;
+    if (loading || done || busy || loadedOfferToken.current !== token || autoSubmitted.current === token) return;
+    const savedAddress = offer?.pickup_address?.trim();
+    if (!savedAddress || address.trim() !== savedAddress) return;
     const qp = search.get("qp");
     if (!qp) return;
-    if (!address.trim()) return;  // wait for seller to enter / edit address
     const match = quickPicks.find((q) => q.key === qp);
     if (match) {
       autoSubmitted.current = token;
       void submitWithQuickPick(match);
     }
-  }, [offer, done, busy, search, quickPicks, submitWithQuickPick, address, token]);
+  }, [loading, offer, done, busy, search, quickPicks, submitWithQuickPick, address, token]);
 
   const submitCustom = async (selectedDate = date, selectedWindow = windowSlot) => {
     if (!offer) return;
