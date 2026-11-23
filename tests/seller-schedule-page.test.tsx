@@ -3,7 +3,8 @@ import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SellerSchedulePage from '@/app/(site)/schedule/[token]/page';
-vi.mock('next/navigation',()=>({useParams:()=>({token:'tok-123'}),useSearchParams:()=>new URLSearchParams(),useRouter:()=>({push:vi.fn(),replace:vi.fn()})}));
+const navigation=vi.hoisted(()=>({query:''}));
+vi.mock('next/navigation',()=>({useParams:()=>({token:'tok-123'}),useSearchParams:()=>new URLSearchParams(navigation.query),useRouter:()=>({push:vi.fn(),replace:vi.fn()})}));
 const offer={id:1,vin:null,year:2009,make:'Ford',model:'Focus',condition:'used',offer_cents:33000,contact_name:'Test Seller',contact_email:'seller@example.com',contact_phone:null,zip_code:'76107',pickup_address:'1 Main St, Fort Worth, TX 76107',seller_schedule_token_expires_at:null};
 // Flow fixtures set the pickup switch themselves (on by default; the pause test turns it off).
 const pickupState=vi.hoisted(()=>({live:true}));
@@ -13,7 +14,7 @@ vi.mock('@/lib/site',async(importOriginal)=>({
 }));
 const fetchMock=vi.fn();
 vi.stubGlobal('fetch',fetchMock);
-beforeEach(()=>{pickupState.live=true;
+beforeEach(()=>{pickupState.live=true;navigation.query='';
  Element.prototype.scrollIntoView=vi.fn();
  fetchMock.mockImplementation(async(url:string,init?:RequestInit)=>{
   if(init?.method==='POST'){
@@ -26,6 +27,37 @@ beforeEach(()=>{pickupState.live=true;
 });
 afterEach(()=>{cleanup();fetchMock.mockReset();});
 const posted=()=>{const call=fetchMock.mock.calls.find(([,init])=>init?.method==='POST');if(!call)throw new Error('no POST');return {url:call[0] as string,body:JSON.parse(String(call[1].body))};};
+const pickupPosts=()=>fetchMock.mock.calls.filter(([,init])=>init?.method==='POST');
+
+it('requires an explicit quick-pick click when the emailed quote has no address',async()=>{
+ navigation.query='qp=tomorrow_am';
+ fetchMock.mockResolvedValueOnce(Response.json({offer:{...offer,pickup_address:null},
+  quick_picks:[{key:'tomorrow_am',label:'Tomorrow morning'}]}));
+ render(<SellerSchedulePage/>);
+ const address=await screen.findByLabelText('Pickup address');
+ await userEvent.type(address,offer.pickup_address);
+ expect(pickupPosts()).toHaveLength(0);
+ await userEvent.click(screen.getByRole('button',{name:/Tomorrow morning/}));
+ await screen.findByText('Pickup preference saved');
+ expect(pickupPosts()).toHaveLength(1);
+ expect(posted().body).toMatchObject({quick_pick:'tomorrow_am',pickup_address:offer.pickup_address});
+});
+
+it.each([true,false])('submits a prefilled email quick pick once, accepted=%s',async(accepted)=>{
+ navigation.query='qp=tomorrow_am';
+ if(!accepted){
+  const fallback=fetchMock.getMockImplementation()!;
+  fetchMock.mockImplementation(async(url:string,init?:RequestInit)=>init?.method==='POST'
+   ? Response.json({error:'pickup_window_not_covered'},{status:409})
+   : fallback(url,init));
+ }
+ const view=render(<SellerSchedulePage/>);
+ await screen.findByText(accepted?'Pickup preference saved':/That pickup window is no longer available/);
+ view.rerender(<SellerSchedulePage/>);
+ expect(pickupPosts()).toHaveLength(1);
+ expect(posted().body).toMatchObject({quick_pick:'tomorrow_am',pickup_address:offer.pickup_address});
+});
+
 it('a custom pickup sends the chosen window label with pickup_date and eta_at, and confirms the hour in Central',async()=>{
  render(<SellerSchedulePage/>);
  await userEvent.click(await screen.findByRole('button',{name:/Pick a custom date/}));
@@ -87,4 +119,16 @@ it('preserves a legacy window returned by the server instead of relabeling an ol
  render(<SellerSchedulePage/>);
  await userEvent.click(await screen.findByRole('button',{name:/Tomorrow morning/}));
  expect(await screen.findByText('Preferred window: 9am-11am CT')).toBeTruthy();
+});
+
+it('a funded counter offers only buyer-backed dated windows and saves the exact choice',async()=>{
+ fetchMock.mockImplementation(async(_url:string,init?:RequestInit)=>init?.method==='POST'
+  ? Response.json({ok:true,slot:'Sep 16 — 1pm-4pm',window:'1pm-4pm',eta_at:'2026-09-16T18:00:00Z'})
+  : Response.json({offer:{...offer,funded_pickup_windows:[{pickup_date:'2026-09-16',window:'1pm-4pm'}]},quick_picks:[{key:'tomorrow_am',label:'Tomorrow morning'}]}));
+ render(<SellerSchedulePage/>);
+ const backed = await screen.findByRole('button',{name:/Sep 16 · 1pm-4pm CT/});
+ expect(screen.queryByRole('button',{name:/Tomorrow morning|Pick a custom date/})).toBeNull();
+ await userEvent.click(backed);
+ expect(await screen.findByText('Pickup preference saved')).toBeTruthy();
+ expect(posted().body).toMatchObject({pickup_date:'2026-09-16',window:'1pm-4pm',pickup_address:offer.pickup_address});
 });

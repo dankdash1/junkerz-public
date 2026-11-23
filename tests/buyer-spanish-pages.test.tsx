@@ -3,7 +3,7 @@
 // dashboard + checklist and the bid-rules list, in both languages.
 import React from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import BuyersLayout from '@/app/(site)/buyers/layout';
 import Signup from '@/app/(site)/buyers/signup/page';
@@ -19,6 +19,7 @@ const api = vi.hoisted(() => ({
   signupConfig: vi.fn(), signup: vi.fn(), login: vi.fn(), me: vi.fn(), setLanguage: vi.fn(),
   onboardingStatus: vi.fn(), listRules: vi.fn(), uploadDocument: vi.fn(), signTerms: vi.fn(),
   getRule: vi.fn(), createRule: vi.fn(), updateRule: vi.fn(), testRule: vi.fn(), zipLookup: vi.fn(), places: vi.fn(),
+  reviewRounds: vi.fn(), respondToReview: vi.fn(),
 }));
 const replace = vi.hoisted(() => vi.fn());
 const nav = vi.hoisted(() => ({ path: '/buyers/signup' }));
@@ -62,6 +63,7 @@ beforeEach(() => {
   api.setLanguage.mockResolvedValue({ ok: true });
   api.me.mockResolvedValue({ business_name: 'Yonke Fort Worth', active: false, balance_cents: 0 });
   api.onboardingStatus.mockResolvedValue(status);
+  api.reviewRounds.mockResolvedValue({ invites: [] });
   vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ makes: [], models: [] }))));
   at('/buyers/signup');
 });
@@ -229,6 +231,43 @@ test('dashboard + checklist + menu open in the account language (Spanish)', asyn
   expect(screen.getByRole('link', { name: 'Completar: Tarjeta registrada' }).getAttribute('href')).toBe('/buyers/settings');
   expect(screen.getByText('Aprobación del negocio pendiente')).toBeTruthy();
   expect(api.setLanguage).not.toHaveBeenCalled();
+  expect(api.reviewRounds).not.toHaveBeenCalled();
+});
+
+test('active buyer sends a firm bid from the Spanish dashboard and can pass another invitation', async () => {
+  store.buyer_token = 'tok';
+  at('/buyers/dashboard');
+  api.me.mockResolvedValue({ business_name: 'Yonke Fort Worth', active: true, balance_cents: 0, preferred_language: 'es' });
+  const base = {
+    response: null, expires_at: '2090-10-02T18:00:00Z', approved_photo_ids: [],
+    vehicle: { year: 2010, make: 'Toyota', model: 'Prius', offer_city: 'Dallas', offer_state: 'TX',
+      mileage: 155500, title_status: null, title_in_hand: 'no', has_catalytic: true, starts: true, runs: true },
+  };
+  api.reviewRounds.mockResolvedValue({ invites: [{ ...base, invite_id: 2 }, {
+    ...base, invite_id: 3, vehicle: { ...base.vehicle, year: 2012, make: 'Honda', model: 'Civic' },
+  }] });
+  api.respondToReview.mockImplementation(async (id, body) => ({ invite_id: id, ...body }));
+
+  render(<BuyersLayout><Dashboard /></BuyersLayout>);
+  expect(await screen.findByRole('heading', { name: 'Invitaciones privadas de vehículos' })).toBeTruthy();
+
+  const bidCard = screen.getByRole('heading', { name: '2010 Toyota Prius' }).closest('article')!;
+  const [price, expiry, start, end] = bidCard.querySelectorAll('input');
+  fireEvent.change(price, { target: { value: '650,50' } });
+  fireEvent.change(expiry, { target: { value: '2090-10-01T08:00' } });
+  fireEvent.change(start, { target: { value: '2090-10-03T08:00' } });
+  fireEvent.change(end, { target: { value: '2090-10-03T12:00' } });
+  await userEvent.click(bidCard.querySelector('button[type="submit"]')!);
+  expect(await screen.findByText(/Oferta firme registrada/)).toBeTruthy();
+  expect(api.respondToReview).toHaveBeenCalledWith(2, {
+    response: 'bid', bid_cents: 65050,
+    bid_expires_at: new Date('2090-10-01T08:00').toISOString(),
+    pickup_start_at: new Date('2090-10-03T08:00').toISOString(),
+    pickup_end_at: new Date('2090-10-03T12:00').toISOString(),
+  });
+  await userEvent.click(screen.getByRole('button', { name: 'Pasar' }));
+  expect(await screen.findByText('Respuesta registrada')).toBeTruthy();
+  expect(api.respondToReview).toHaveBeenCalledWith(3, { response: 'pass' });
 });
 
 test('on a logged-in page the switch changes everything and saves to the account', async () => {

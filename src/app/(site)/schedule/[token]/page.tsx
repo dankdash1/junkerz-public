@@ -3,7 +3,7 @@ import { API_BASE } from "@/lib/api-base";
 import { TIME_WINDOWS, WINDOW_START_HOUR, formatCentral, isTimeWindow, isSavedTimeWindow, quickPickDate, schedulePayload, windowForQuickPick, type TimeWindow, type SavedTimeWindow } from "@/lib/seller-schedule";
 import SellerPickupGuidance from "@/components/junkerz/SellerPickupGuidance";
 import { vinError } from "@/lib/seller-vin";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { NotLiveNotice } from "@/components/NotLive";
@@ -14,7 +14,9 @@ import { Label } from "@/components/ui/label";
 const BASE = API_BASE;
 
 type QuickPick = { key: string; label: string };
+type FundedWindow = { pickup_date: string; window: TimeWindow };
 type Offer = {
+  funded_pickup_windows?: FundedWindow[] | null;
   id: number;
   vin: string | null;
   year: number | null;
@@ -34,6 +36,14 @@ type Offer = {
 // so the tests and this page read the same list. Every window is Central time;
 // the backend derives the real pickup instant from pickup_date + window in
 // America/Chicago, so this page never does timezone math of its own.
+
+const scheduleError = (code?: string) => {
+  if (code === "pickup_window_not_covered") return "That pickup window is no longer available. Refresh to see current times or call Junkerz.";
+  if (code === "buyer_no_longer_eligible" || code === "active_firm_bid_required" || code === "confirmed_amount_changed" || code === "quote_closed") {
+    return "This offer needs a staff review before scheduling. Please call Junkerz.";
+  }
+  return "We couldn't save your pickup request. Please try again or call Junkerz.";
+};
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -78,6 +88,8 @@ function SellerScheduleLive() {
   const [submitErr, setSubmitErr] = useState<string | null>(null);
   const [done, setDone] = useState<{ slot: string; eta_at: string | null; window: SavedTimeWindow | null } | null>(null);
   const [showCustom, setShowCustom] = useState(false);
+  const loadedOfferToken = useRef<string | null>(null);
+  const autoSubmitted = useRef<string | null>(null);
 
   const loadOffer = useCallback(async () => {
     if (!token) return;
@@ -105,9 +117,10 @@ function SellerScheduleLive() {
         return;
       }
       const data = await r.json();
+      loadedOfferToken.current = token;
       setOffer(data.offer);
-      setQuickPicks(data.quick_picks || []);
-      if (data.offer?.pickup_address) setAddress(data.offer.pickup_address);
+      setQuickPicks(data.offer?.funded_pickup_windows == null ? data.quick_picks || [] : []);
+      setAddress(data.offer?.pickup_address || "");
     } catch (e) {
       setLoadErr((e as Error)?.message ?? "Failed to load");
     } finally {
@@ -138,7 +151,7 @@ function SellerScheduleLive() {
           }),
         });
         const data = await r.json();
-        if (!r.ok) throw new Error((data as { error?: string }).error || "submit failed");
+        if (!r.ok) throw new Error(scheduleError((data as { error?: string }).error));
         setDone({ slot: data.slot, eta_at: data.eta_at, window: isSavedTimeWindow(data.window) ? data.window : window ?? null });
       } catch (e) {
         setSubmitErr((e as Error)?.message ?? "submit failed");
@@ -149,19 +162,22 @@ function SellerScheduleLive() {
     [token, address]
   );
 
-  // Auto-submit ONLY if email link has ?qp= AND we already have an address
-  // pre-filled from the quote. If address is blank, force seller to confirm
-  // it manually so we never schedule a pickup at an unknown location.
+  // An emailed quick pick can use the quote's saved address. An address the
+  // seller types on this page needs a deliberate quick-pick click.
   useEffect(() => {
-    if (!offer || done || busy) return;
+    if (loading || done || busy || loadedOfferToken.current !== token || autoSubmitted.current === token) return;
+    const savedAddress = offer?.pickup_address?.trim();
+    if (!savedAddress || address.trim() !== savedAddress) return;
     const qp = search.get("qp");
     if (!qp) return;
-    if (!address.trim()) return;  // wait for seller to enter / edit address
     const match = quickPicks.find((q) => q.key === qp);
-    if (match) void submitWithQuickPick(match);
-  }, [offer, done, busy, search, quickPicks, submitWithQuickPick, address]);
+    if (match) {
+      autoSubmitted.current = token;
+      void submitWithQuickPick(match);
+    }
+  }, [loading, offer, done, busy, search, quickPicks, submitWithQuickPick, address, token]);
 
-  const submitCustom = async () => {
+  const submitCustom = async (selectedDate = date, selectedWindow = windowSlot) => {
     if (!offer) return;
     if (!address.trim()) {
       setSubmitErr("Please enter your pickup address first.");
@@ -175,20 +191,20 @@ function SellerScheduleLive() {
     // backend derives the real instant from date + window in America/Chicago.
     // `eta_at` (window start on the browser clock) is still sent for older
     // backends and is ignored once `window` is understood.
-    const startHour = WINDOW_START_HOUR[windowSlot] ?? 10;
-    const d = new Date(date + "T00:00:00");
+    const startHour = WINDOW_START_HOUR[selectedWindow] ?? 10;
+    const d = new Date(selectedDate + "T00:00:00");
     d.setHours(startHour, 0, 0, 0);
-    const slot = `${fmtDate(d)} — ${windowSlot}`;
+    const slot = `${fmtDate(d)} — ${selectedWindow}`;
     setBusy(true); setSubmitErr(null);
     try {
       const r = await fetch(`${BASE}/api/public/junkerz/seller/schedule/${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slot, ...schedulePayload(d, windowSlot), pickup_address: address.trim() }),
+        body: JSON.stringify({ slot, ...schedulePayload(d, selectedWindow), pickup_address: address.trim() }),
       });
       const data = await r.json();
-      if (!r.ok) throw new Error((data as { error?: string }).error || "submit failed");
-      setDone({ slot: data.slot, eta_at: data.eta_at, window: isSavedTimeWindow(data.window) ? data.window : windowSlot });
+      if (!r.ok) throw new Error(scheduleError((data as { error?: string }).error));
+      setDone({ slot: data.slot, eta_at: data.eta_at, window: isSavedTimeWindow(data.window) ? data.window : selectedWindow });
     } catch (e) {
       setSubmitErr((e as Error)?.message ?? "submit failed");
     } finally {
@@ -379,7 +395,9 @@ function SellerScheduleLive() {
     );
   }
 
-  const dollars = offer.offer_cents != null ? `$${(offer.offer_cents / 100).toFixed(0)}` : "—";
+  const dollars = offer.offer_cents != null ? `$${(offer.offer_cents / 100).toFixed(offer.offer_cents % 100 ? 2 : 0)}` : "—";
+
+  const fundedWindows = offer.funded_pickup_windows;
 
   return (
     <main className="max-w-md mx-auto pt-8 px-4 pb-16 space-y-6">
@@ -402,8 +420,9 @@ function SellerScheduleLive() {
       )}
 
       <section>
-        <Label className="text-sm font-semibold text-slate-700">Pickup address</Label>
+        <Label htmlFor="pickup-address" className="text-sm font-semibold text-slate-700">Pickup address</Label>
         <Input
+          id="pickup-address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           placeholder="123 Main St, City, State, ZIP"
@@ -415,7 +434,21 @@ function SellerScheduleLive() {
         </p>
       </section>
 
-      <section>
+      {fundedWindows != null ? (
+        <section aria-label="Available pickup windows">
+          <h2 className="mb-2 text-sm font-semibold text-slate-700">Available pickup windows</h2>
+          {fundedWindows.length ? (
+            <div className="grid gap-2">
+              {fundedWindows.map(({ pickup_date, window }) => (
+                <Button key={`${pickup_date}-${window}`} variant="outline" disabled={busy}
+                  onClick={() => void submitCustom(pickup_date, window)}>
+                  {fmtDate(new Date(`${pickup_date}T12:00:00`))} · {window} CT
+                </Button>
+              ))}
+            </div>
+          ) : <p className="text-sm text-slate-600">Call Junkerz to confirm your offer and pickup time.</p>}
+        </section>
+      ) : <section>
         <h2 className="text-sm font-semibold text-slate-700 mb-2">Quick picks</h2>
         <div className="grid grid-cols-1 gap-2">
           {quickPicks.map((q) => (
@@ -448,9 +481,9 @@ function SellerScheduleLive() {
             📆 Pick a custom date & time
           </Button>
         </div>
-      </section>
+      </section>}
 
-      {showCustom && (
+      {fundedWindows == null && showCustom && (
         <section id="custom-time">
           <h2 className="text-sm font-semibold text-slate-700 mb-2">Custom time</h2>
           <div className="grid grid-cols-2 gap-3">
@@ -476,7 +509,7 @@ function SellerScheduleLive() {
               </select>
             </div>
           </div>
-          <Button onClick={submitCustom} disabled={busy} className="w-full mt-3">
+          <Button onClick={() => void submitCustom()} disabled={busy} className="w-full mt-3">
             {busy ? "Saving…" : "Save pickup preference"}
           </Button>
         </section>

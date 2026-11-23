@@ -25,3 +25,35 @@ test('signature carries reviewed revision with buyer authentication',async()=>{
  expect(request.headers.Authorization).toBe('Bearer buyer-auth');
  expect(JSON.parse(request.body)).toEqual(body);
 });
+
+test('private review list, bid, pass and photos use buyer auth and no-store', async () => {
+  vi.stubGlobal('localStorage', { getItem: () => 'fixture-buyer' });
+  const fetcher = vi.fn(async (_url: string, _init: RequestInit) =>
+    new Response(JSON.stringify({ invites: [] })));
+  vi.stubGlobal('fetch', fetcher);
+  const signal = new AbortController().signal;
+  const bid = {
+    response: 'bid' as const,
+    bid_cents: 65050,
+    pickup_start_at: '2030-10-02T12:00:00Z',
+    pickup_end_at: '2030-10-02T15:00:00Z',
+    bid_expires_at: '2030-10-01T18:00:00Z',
+  };
+  await buyerApi.reviewRounds();
+  await buyerApi.respondToReview(12, bid);
+  await buyerApi.respondToReview(13, { response: 'pass' });
+  await buyerApi.reviewPhoto(12, 8, signal);
+
+  const requests = fetcher.mock.calls;
+  expect(requests.map(([url]) => new URL(url, 'https://junkerz.com').pathname)).toEqual([
+    '/api/buyers/review-rounds', '/api/buyers/review-rounds/12/response',
+    '/api/buyers/review-rounds/13/response', '/api/buyers/review-rounds/12/photos/8',
+  ]);
+  for (const [, init] of requests) {
+    expect(init.headers).toMatchObject({ Authorization: 'Bearer fixture-buyer' });
+    expect(init.cache).toBe('no-store');
+  }
+  expect(JSON.parse(String(requests[1][1].body))).toEqual(bid);
+  expect(JSON.parse(String(requests[2][1].body))).toEqual({ response: 'pass' });
+  expect(requests[3][1]).toMatchObject({ signal, referrerPolicy: 'no-referrer' });
+});

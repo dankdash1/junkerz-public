@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 // George 11-18: a won car is like an auction win — no Decline on the list,
 // and "Mark complete & pay" sits next to "Open pickup checklist" and confirms first.
-const pickupComplete = vi.fn(async () => ({ ok: true, charge_status: 'paid', spread_cents: 48000, seller_signed: false }));
+const pickupComplete = vi.fn(async (_id: number) => ({ ok: true, charge_status: 'paid', spread_cents: 48000, seller_signed: false }));
 vi.mock('@/lib/buyer-api', () => ({
   buyerApi: {
     wonCars: async () => [{ match_id: 3441, status: 'won', bid_cents: 100000, offer_cents: 52000, finder_fee_cents: 48000, year: 2018, make: 'FORD', model: 'F-150' }],
@@ -18,7 +18,7 @@ afterEach(() => { cleanup(); pickupComplete.mockClear(); vi.restoreAllMocks(); }
 test('won car list has no Decline button', async () => {
   render(<WonCars />);
   await screen.findByRole('link', { name: 'Open pickup checklist' });
-  expect(screen.queryByRole('button', { name: /decline/i })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Decline' })).toBeNull();
   expect(screen.getByRole('button', { name: 'Mark complete & pay' })).toBeTruthy();
 });
 

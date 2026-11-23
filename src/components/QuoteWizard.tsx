@@ -288,6 +288,7 @@ export default function QuoteWizard() {
         contact_email: form.email,
         contact_name: form.name.trim(),
         sms_consent: form.sms_consent,
+        language: lang,
       });
       trackLeadSubmission(result.offer_id);
       const q = new URLSearchParams({
@@ -298,6 +299,7 @@ export default function QuoteWizard() {
       // instantly instead of a spinner waiting on a status that may never come.
       if (result.offer_cents) q.set("cents", String(result.offer_cents));
       if (result.token) q.set("token", String(result.token));
+      if (result.seller_checkin_enabled === true) q.set("checkin", "1");
       if (result.requires_human_approval === true) q.set("review", "1");
       if (lang === "es") q.set("lang", "es");
       router.push(`/quote/result?${q.toString()}`);

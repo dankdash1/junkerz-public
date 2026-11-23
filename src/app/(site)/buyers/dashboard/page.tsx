@@ -4,6 +4,7 @@ import OnboardingChecklist from "@/components/buyers/OnboardingChecklist";
 import { buyerApi, OnboardingStatus } from "@/lib/buyer-api";
 import { useBuyerLang } from "@/lib/buyer-lang";
 import { buyerText, serverWords } from "@/components/buyers/buyerText";
+import ReviewInvites from "./ReviewInvites";
 
 interface BuyerMe {
   business_name: string;
@@ -62,6 +63,8 @@ export default function Dashboard() {
           </p>
         </div>
       )}
+
+      {me.active && <ReviewInvites lang={lang} />}
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Card label={t.balance} value={`$${(me.balance_cents / 100).toFixed(2)}`} />
