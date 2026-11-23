@@ -261,6 +261,11 @@ export const buyerApi = {
       method: "POST",
       body: JSON.stringify(body),
     }).then(_json),
+  pickupVin: (matchId: number, vin: string) =>
+    _fetch(`/api/buyers/pickup/${matchId}/vin`, {
+      method: "POST",
+      body: JSON.stringify({ vin }),
+    }).then(_json),
   pickupComplete: (matchId: number) =>
     _fetch(`/api/buyers/pickup/${matchId}/complete`, { method: "POST" }).then(_json),
 };

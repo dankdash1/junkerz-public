@@ -13,6 +13,7 @@ import PickupStart from "@/components/junkerz/PickupStart";
 import SignaturePad from "@/components/junkerz/SignaturePad";
 import SignedBillOfSaleDownload from "@/components/junkerz/SignedBillOfSaleDownload";
 import SellerAgreement, { agreementReady, type SellerAgreementData } from "@/components/junkerz/SellerAgreement";
+import PickupVinField from "@/components/junkerz/PickupVinField";
 
 type Detail = {
   agreement?: SellerAgreementData | null;
@@ -304,6 +305,10 @@ export default function BuyerPickupDetail() {
           </div>
         </div>
       </section>
+
+      {/* George 2026-11-23: the yard can type the VIN; a missing VIN never blocks the pickup. */}
+      {!isCompleted && <PickupVinField vin={d.vin} signed={sellerSigned}
+        onSave={async (vin) => { await buyerApi.pickupVin(matchId, vin); setAgreementChanged(false); setSigErr(null); await load(); }} />}
 
       <PickupShare matchId={matchId} completed={isCompleted} />
       {sellerSigned && <SignedBillOfSaleDownload matchId={matchId} />}
