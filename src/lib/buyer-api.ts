@@ -90,6 +90,36 @@ export type AreaCodeGroup = {
   towns: string[];
 };
 
+type ReviewBid = {
+  bid_cents: number;
+  pickup_start_at: string;
+  pickup_end_at: string;
+  bid_expires_at: string;
+};
+export type ReviewResponse = { response: "bid" } & ReviewBid | { response: "pass" };
+type ReviewReceipt = {
+  invite_id: number;
+  response: "bid" | "pass" | null;
+} & { [Field in keyof ReviewBid]: ReviewBid[Field] | null };
+export type ReviewInvite = ReviewReceipt & {
+  expires_at: string;
+  approved_photo_ids: number[];
+  vehicle: {
+    year: number | null;
+    make: string | null;
+    model: string | null;
+    mileage: number | null;
+    condition: string | null;
+    title_status: string | null;
+    title_in_hand: string | null;
+    runs: boolean | null;
+    starts: boolean | null;
+    has_catalytic: boolean | null;
+    offer_city: string | null;
+    offer_state: string | null;
+  };
+};
+
 export const buyerApi = {
   signup: (b: BuyerSignupBody) =>
     _fetch("/api/buyers/auth/signup", { method: "POST", body: JSON.stringify(b) }).then(_json),
@@ -162,6 +192,19 @@ export const buyerApi = {
     _fetch(`/api/buyers/bid-rules/${id}/test`, { method: "POST" }).then(_json),
   wonCars: (status?: string) =>
     _fetch(`/api/buyers/won-cars${status ? `?status=${status}` : ""}`).then(_json),
+  reviewRounds: () =>
+    _fetch("/api/buyers/review-rounds", { cache: "no-store" }).then(_json) as Promise<{ invites: ReviewInvite[] }>,
+  respondToReview: (inviteId: number, body: ReviewResponse) =>
+    _fetch(`/api/buyers/review-rounds/${inviteId}/response`, {
+      method: "POST", body: JSON.stringify(body), cache: "no-store",
+    }).then(_json) as Promise<ReviewReceipt>,
+  reviewPhoto: async (inviteId: number, photoId: number, signal: AbortSignal) => {
+    const response = await _fetch(`/api/buyers/review-rounds/${inviteId}/photos/${photoId}`, {
+      cache: "no-store", referrerPolicy: "no-referrer", signal,
+    });
+    if (!response.ok) throw new Error("Photo unavailable");
+    return response.blob();
+  },
   marketplace: (filters?: {
     year_min?: number; year_max?: number;
     make?: string; condition?: string; zip_prefix?: string;
