@@ -210,3 +210,21 @@ test('an ordered supplier request offers only the readiness transition', async (
   await userEvent.click(screen.getByRole('button', { name: 'Send yard response' }));
   expect(reply.mock.calls[0][1]).toMatchObject({ expected_revision: 6, status: 'ready_for_pickup' });
 });
+
+test('yard can reuse its prior quote or request details without a price', async () => {
+  window.location.hash = 'token=supplier-test';
+  const request = {reference:'YR-100',status:'awaiting_yard',revision:2,last_yard_price:{
+    supplier_price_cents:6000,condition:'used',part_number:'ALT-10',replied_at:'2026-10-11T12:00:00Z'
+  }};
+  const reply = vi.fn().mockResolvedValue({request:{...request,status:'need_details',revision:3}});
+  render(<SupplierReplyPanel loadSupplier={vi.fn().mockResolvedValue({request})} reply={reply}/>);
+  await userEvent.click(await screen.findByRole('button',{name:'Use my previous price'}));
+  const price = screen.getByLabelText('Supplier price (USD)') as HTMLInputElement;
+  expect(price.value).toBe('60.00');
+  await userEvent.type(screen.getByLabelText('Condition'),'cracked lens');
+  expect(price.value).toBe('');
+  await userEvent.type(price,'unfinished');
+  await userEvent.selectOptions(screen.getByLabelText('Response'),'need_details');
+  await userEvent.click(screen.getByRole('button',{name:'Send yard response'}));
+  expect(reply.mock.calls[0][1]).toMatchObject({status:'need_details',supplier_price_cents:null});
+});

@@ -86,6 +86,16 @@ export async function loadSupplierRequest(token: string, fetchImpl: typeof fetch
   }));
 }
 
+export type MarketPrices = { status: string; part_number?: string; listings: Array<{
+  title: string; url: string; item_cents: number; shipping_cents: number | null; condition?: string
+}> };
+
+export async function loadSupplierPrices(token: string): Promise<MarketPrices> {
+  return readResponse(await fetch(`${YARD_BASE}/yard-requests/supplier-market-prices`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store", body: JSON.stringify({ token }),
+  }));
+}
+
 export async function replyToSupplierRequest(token: string, reply: Record<string, unknown>, fetchImpl: typeof fetch = fetch) {
   return readResponse(await fetchImpl(`${YARD_BASE}/yard-requests/supplier-reply`, {
     method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store", body: JSON.stringify({ token, ...reply }),

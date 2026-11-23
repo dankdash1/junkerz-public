@@ -8,10 +8,12 @@ import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, Clock3, Loader2, PackageCheck, TriangleAlert } from "lucide-react";
 import YardRequestConversation from "@/components/YardRequestConversation";
 import { Button } from "@/components/ui/button";
-import { createYardPaymentSession, loadCustomerRequest, loadSupplierRequest, replyToSupplierRequest, tokenFromFragment } from "@/lib/yard-requests";
+import { loadSupplierPrices, type MarketPrices, createYardPaymentSession, loadCustomerRequest, loadSupplierRequest, replyToSupplierRequest, tokenFromFragment } from "@/lib/yard-requests";
 
 type CustomerProjection = { request: { reference: string; status: string; vehicle_label?: string; component?: string; customer_message?: string; updated_at?: string; order_id?: string | number; order_status?: string; payment_status?: string; payment_available?: boolean; retail_price_cents?: number; preparation?: {status:string}; refund_state?:string;refunded_cents?:number;payment_exception?:boolean } };
-type SupplierProjection = { request: { reference: string; status: string; revision: number; vehicle_label?: string; component?: string; target_vehicle?: string; part_number?: string; condition?: string; pickup_window?: string; supplier_notes?: string; supplier_price_cents?: number; car_id?: number; part_id?: number; vin?: string; yard_location?: string; preparation?:import('@/lib/yard-requests').Preparation } };
+
+type PriorYardPrice = { supplier_price_cents: number; part_number?: string; condition?: string; replied_at: string };
+type SupplierProjection = { request: { reference: string; status: string; revision: number; vehicle_label?: string; component?: string; target_vehicle?: string; part_number?: string; condition?: string; pickup_window?: string; supplier_notes?: string; supplier_price_cents?: number; last_yard_price?: PriorYardPrice | null; market_lookup_available?: boolean; car_id?: number; part_id?: number; vin?: string; yard_location?: string; preparation?:import('@/lib/yard-requests').Preparation } };
 
 const pretty = (value?: string) => (value || "Received").replace(/_/g, " ").replace(/^./, (letter) => letter.toUpperCase());
 const money = (cents?: number) => typeof cents === "number" ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100) : "Not provided";
@@ -84,33 +86,49 @@ export function SupplierReplyPanel({ loadSupplier = loadSupplierRequest, reply =
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [saving, setSaving] = useState(false);
+  const [market, setMarket] = useState<MarketPrices | null>(null);
+  const [yardPrice, setYardPrice] = useState("");
   const [status, setStatus] = useState("available");
   const token = typeof window === "undefined" ? "" : tokenFromFragment(window.location.hash);
   const load = useCallback(async () => {
     if (!token) { setError("This yard reply link is incomplete or expired."); return; }
     const value = await loadSupplier(token) as SupplierProjection;
     setStatus(value.request.status === "ordered" ? "ready_for_pickup" : ["available", "unavailable", "need_details", "ready_for_pickup"].includes(value.request.status) ? value.request.status : "available");
+    setYardPrice(value.request.supplier_price_cents == null ? "" : (value.request.supplier_price_cents / 100).toFixed(2));
     setData(value);
   }, [loadSupplier, token]);
   useEffect(() => { load().catch((reason) => setError(reason.message || "Could not load this request.")); }, [load]);
+
+  const marketNumber = data?.request.market_lookup_available && (data.request.part_number || data.request.last_yard_price?.part_number);
+  useEffect(() => {
+    let active = true;
+    setMarket(null);
+    if (marketNumber) loadSupplierPrices(token).then(value => { if (active) setMarket(value); })
+      .catch(() => { if (active) setMarket({status: "unavailable", listings: []}); });
+    return () => { active = false; };
+  }, [token, marketNumber]);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!data || saving) return;
     const form = new FormData(event.currentTarget);
+    const price = status === "need_details" || status === "unavailable" ? "" : yardPrice.trim();
+    if (price && !/^\d+(\.\d{1,2})?$/.test(price)) {
+      setError("Enter the yard price in dollars and cents."); return;
+    }
     setSaving(true); setError(""); setSuccess("");
-    const price = String(form.get("supplier_price") || "").trim();
     const body = {
       expected_revision: data.request.revision,
       status,
-      part_number: String(form.get("part_number") || "").trim() || undefined,
-      condition: String(form.get("condition") || "").trim() || undefined,
+      part_number: data.request.status === "ordered" ? undefined : String(form.get("part_number") || "").trim(),
+      condition: data.request.status === "ordered" ? undefined : String(form.get("condition") || "").trim(),
       pickup_window: String(form.get("pickup_window") || "").trim() || undefined,
       supplier_notes: String(form.get("supplier_notes") || "").trim() || undefined,
-      supplier_price_cents: price ? Math.round(Number(price) * 100) : undefined,
+      supplier_price_cents: data.request.status === "ordered" ? undefined : price ? Math.round(Number(price) * 100) : null,
     };
     try {
       const value = await reply(token, body) as SupplierProjection;
+      setYardPrice(value.request.supplier_price_cents == null ? "" : (value.request.supplier_price_cents / 100).toFixed(2));
       setData(value); setSuccess("Yard response saved. Junkerz can now review the request.");
     } catch (reason) {
       const requestError = reason as Error & { status?: number };
@@ -132,8 +150,20 @@ export function SupplierReplyPanel({ loadSupplier = loadSupplierRequest, reply =
       {data.request.preparation && <YardPreparationPanel item={data.request.preparation} token={token} onChange={()=>void load()}/>}
       {!data.request.preparation && <form key={`${data.request.reference}:${data.request.revision}`} onSubmit={submit} className="mt-7 space-y-4">
         <label className="block text-sm font-semibold">Response<select aria-label="Response" value={status} onChange={(event) => setStatus(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 font-normal">{data.request.status === "ordered" ? <option value="ready_for_pickup">Ready for pickup</option> : <><option value="available">Available</option><option value="unavailable">Unavailable</option><option value="need_details">Need details</option><option value="ready_for_pickup">Ready for pickup</option></>}</select></label>
-        <div className="grid gap-4 sm:grid-cols-2"><Field label="Actual part number" name="part_number" disabled={data.request.status === "ordered"} defaultValue={data.request.part_number} /><Field label="Condition" name="condition" disabled={data.request.status === "ordered"} defaultValue={data.request.condition} /></div>
-        <div className="grid gap-4 sm:grid-cols-2"><Field label="Supplier price (USD)" name="supplier_price" disabled={data.request.status === "ordered"} inputMode="decimal" defaultValue={data.request.supplier_price_cents == null ? "" : (data.request.supplier_price_cents / 100).toFixed(2)} /><Field label="Preparation / pickup window" name="pickup_window" defaultValue={data.request.pickup_window} /></div>
+        <div className="grid gap-4 sm:grid-cols-2"><Field label="Actual part number" name="part_number" onChange={() => setYardPrice("")} disabled={data.request.status === "ordered"} defaultValue={data.request.part_number} /><Field label="Condition" name="condition" onChange={() => setYardPrice("")} disabled={data.request.status === "ordered"} defaultValue={data.request.condition} /></div>
+        {"last_yard_price" in data.request && <section className="space-y-2 rounded-xl border p-4 text-sm">
+          <h2 className="font-semibold">Compare part prices</h2>
+          {market?.status === "ok" && <><p>Used eBay listings that mention {market.part_number}. Check side, lamp type, condition and assembly before using a price.</p>
+            {market.listings.length ? <ul>{market.listings.map(listing => <li key={listing.url}><a target="_blank" rel="noreferrer" className="underline" href={listing.url}>{listing.title}</a> · {money(listing.item_cents)} · {listing.shipping_cents == null ? "shipping unknown" : `${money(listing.shipping_cents)} shipping`}</li>)}</ul> : <p>No matching listings found.</p>}</>}
+          {market?.status === "unavailable" && <p>Live eBay prices are temporarily unavailable.</p>}
+          <div className="flex flex-wrap gap-4"><a rel="noreferrer" target="_blank" className="underline" href="https://www.ebay.com/b/Auto-Parts-and-Accessories/6028/bn_569479">Check eBay asking prices</a><a rel="noreferrer" target="_blank" className="underline" href="https://www.picknpull.com/part-pricing/">Check local Pick-n-Pull self-service prices and core charges</a></div>
+        </section>}
+        {data.request.last_yard_price && <div className="rounded-xl bg-zinc-100 p-4 text-sm">
+          <p>Your last quote for this part description on the same vehicle model was {money(data.request.last_yard_price.supplier_price_cents)} on {new Date(data.request.last_yard_price.replied_at).toLocaleDateString()}.</p>
+          <p>{[data.request.last_yard_price.part_number, data.request.last_yard_price.condition].filter(Boolean).join(" · ")}</p>
+          <button type="button" className="min-h-11 underline" onClick={() => setYardPrice((data.request.last_yard_price!.supplier_price_cents / 100).toFixed(2))}>Use my previous price</button>
+        </div>}
+        <div className="grid gap-4 sm:grid-cols-2"><Field label="Supplier price (USD)" name="supplier_price" disabled={data.request.status === "ordered"} inputMode="decimal" value={yardPrice} onChange={event => setYardPrice(event.target.value)} /><Field label="Preparation / pickup window" name="pickup_window" defaultValue={data.request.pickup_window} /></div>
         <label className="block text-sm font-semibold">Yard notes<textarea name="supplier_notes" rows={3} defaultValue={data.request.supplier_notes} className="mt-1.5 w-full rounded-xl border border-zinc-300 px-3 py-2 font-normal" /></label>
         {status === "available" && <p className="flex gap-2 rounded-xl bg-amber-50 p-4 text-sm text-amber-950"><TriangleAlert className="h-5 w-5 shrink-0" /> Available confirms stock only. Junkerz still confirms fitment, customer price, payment, and collection.</p>}
         {status === "ready_for_pickup" && <p className="flex gap-2 rounded-xl bg-green-50 p-4 text-sm text-green-900"><PackageCheck className="h-5 w-5 shrink-0" /> Ready for pickup tells Junkerz preparation is complete. Include the pickup window above.</p>}
