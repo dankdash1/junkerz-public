@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { vinError } from "@/lib/seller-vin";
+import { vinWarningLines } from "@/lib/pickup-vin";
+import VinCheckNote from "@/components/junkerz/VinCheckNote";
 
 const BASE = API_BASE;
 
@@ -169,6 +171,8 @@ export default function VinUpdatePage() {
           <p className="text-[11px] text-slate-500 mt-1">
             Dashboard near the windshield, or driver-side door jamb sticker.
           </p>
+          {/* George 2026-11-23: check digit / model year is a warning, never a block. */}
+          <div className="mt-2"><VinCheckNote vin={vin} year={offer.year} /></div>
         </div>
 
         <div>
@@ -207,7 +211,7 @@ export default function VinUpdatePage() {
         </div>
 
         <Button onClick={submit} disabled={saving} className="w-full">
-          {saving ? "Saving…" : "Save"}
+          {saving ? "Saving…" : vinWarningLines(vin, offer.year).length ? "Save anyway" : "Save"}
         </Button>
       </div>
     </main>

@@ -3,6 +3,8 @@ import { API_BASE } from "@/lib/api-base";
 import { TIME_WINDOWS, WINDOW_START_HOUR, formatCentral, isTimeWindow, isSavedTimeWindow, quickPickDate, schedulePayload, windowForQuickPick, type TimeWindow, type SavedTimeWindow } from "@/lib/seller-schedule";
 import SellerPickupGuidance from "@/components/junkerz/SellerPickupGuidance";
 import { vinError } from "@/lib/seller-vin";
+import { vinWarningLines } from "@/lib/pickup-vin";
+import VinCheckNote from "@/components/junkerz/VinCheckNote";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -323,6 +325,8 @@ function SellerScheduleLive() {
               <p className="text-[11px] text-slate-500 mt-1">
                 Look on the dashboard near the windshield, or the driver-side door jamb sticker.
               </p>
+              {/* George 2026-11-23: check digit / model year is a warning, never a block. */}
+              <div className="mt-2"><VinCheckNote vin={vin} year={offer?.year} /></div>
             </div>
 
             <div>
@@ -366,7 +370,7 @@ function SellerScheduleLive() {
                 disabled={vinSaving || (!vin.trim() && !ownerName.trim() && !ownerAddress.trim() && !titleState)}
                 className="flex-1"
               >
-                {vinSaving ? "Saving…" : "Save"}
+                {vinSaving ? "Saving…" : vinWarningLines(vin, offer?.year).length ? "Save anyway" : "Save"}
               </Button>
               <Button
                 onClick={() => setVinSkipped(true)}
