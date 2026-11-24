@@ -19,7 +19,9 @@ async function _fetch(path: string, init: RequestInit = {}) {
       window.localStorage.removeItem("buyer_token");
       // Avoid redirect loops on the login page itself
       if (!window.location.pathname.endsWith("/buyers/login")) {
-        window.location.href = "/buyers/login";
+        const requestId = window.location.pathname === "/buyers/parts-requests"
+          && new URLSearchParams(window.location.search).get("request");
+        window.location.href = requestId ? `/buyers/login?request=${encodeURIComponent(requestId)}` : "/buyers/login";
       }
     }
   }
@@ -29,7 +31,7 @@ async function _fetch(path: string, init: RequestInit = {}) {
 async function _json(r: Response) {
   if (!r.ok) {
     const err = await r.json().catch(() => ({}));
-    throw new Error((err as { error?: string }).error || `HTTP ${r.status}`);
+    throw Object.assign(new Error((err as { error?: string }).error || `HTTP ${r.status}`), {status: r.status});
   }
   return r.json();
 }
@@ -121,6 +123,16 @@ export type ReviewInvite = ReviewReceipt & {
 };
 
 export const buyerApi = {
+  partReplyView: (id: string) => _fetch(`/api/buyers/parts-requests/${encodeURIComponent(id)}/reply`, {cache: "no-store"}).then(_json),
+  partMarketPrices: (id: string) => _fetch(`/api/buyers/parts-requests/${encodeURIComponent(id)}/market-prices`, {cache: "no-store"}).then(_json),
+  sendPartReply: (id: string, body: Record<string, unknown>) => _fetch(`/api/buyers/parts-requests/${encodeURIComponent(id)}/reply`, {
+    method: "POST", body: JSON.stringify(body),
+  }).then(_json),
+  yardDirectMessages: (before?: string) => _fetch("/api/buyers/yard-direct-messages" +
+    (before ? `?before=${encodeURIComponent(before)}` : ""), {cache:"no-store"}).then(_json),
+  sendYardDirectMessage: (text: string, idempotency_key: string) => _fetch("/api/buyers/yard-direct-messages",
+    {method: "POST", body: JSON.stringify({text, idempotency_key})}).then(_json),
+  partsRequests: () => _fetch("/api/buyers/parts-requests", {cache:"no-store"}).then(_json),
   signup: (b: BuyerSignupBody) =>
     _fetch("/api/buyers/auth/signup", { method: "POST", body: JSON.stringify(b) }).then(_json),
   signupConfig: () =>

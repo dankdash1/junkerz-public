@@ -28,7 +28,9 @@ export default function BuyerLogin() {
       const r = await buyerApi.login(email, pw);
       if (!r.token) throw new Error("login_failed");
       window.localStorage.setItem("buyer_token", r.token);
-      router.replace("/buyers/dashboard");
+      const query = new URLSearchParams(window.location.search);
+      const requestId = query.get("request");
+      router.replace(requestId ? `/buyers/parts-requests?request=${encodeURIComponent(requestId)}` : query.get("inbox") === "1" ? "/buyers/parts-requests" : "/buyers/dashboard");
     } catch (e: unknown) {
       setErr((e as Error)?.message || "login_failed");
     } finally {
