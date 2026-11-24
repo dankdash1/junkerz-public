@@ -25,6 +25,7 @@ export default function TaxExemptionPage(){
   const formEl=event.currentTarget;const form=new FormData(formEl);const file=form.get('file');
   const hasFile=file instanceof File && file.size>0;
   if(!hasFile) form.delete('file');
+  form.set('permit_number',String(form.get('permit_number')||'').trim().toUpperCase());
   if(!hasFile && !data?.certificate_on_file){setError('Attach the completed Texas resale certificate (Form 01-339). A permit number alone is not enough.');return;}
   if(hasFile && (file as File).size>MAX_BYTES){setError('The certificate must be at most 10 MB.');return;}
   setBusy(true);
