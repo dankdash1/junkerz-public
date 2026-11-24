@@ -231,6 +231,7 @@ export default function BuyerPickupDetail() {
       <header>
         <button onClick={() => router.push("/buyers/won-cars")}
                 className="text-brand-700 text-sm">← Won cars</button>
+        <a className="ml-4 text-brand-700 text-sm underline" href={`/buyers/parts-requests?match=${d.match_id}`}>Parts requests for this car</a>
         <h1 className="text-2xl font-bold mt-1">{vehicleStr || "Won car"}</h1>
         <p className="text-xs text-slate-500 mt-1 font-mono">VIN {d.vin || "—"}{d.license_plate ? ` · Plate ${d.license_plate}${d.license_plate_state ? ` (${d.license_plate_state})` : ""}` : ""} · match #{d.match_id}</p>
       </header>

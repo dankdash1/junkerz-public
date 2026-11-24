@@ -86,3 +86,22 @@ test('sending does not skip an earlier concurrent incoming reply on next poll', 
   fireEvent.click(screen.getByRole('button',{name:'Refresh messages'}));
   expect(await screen.findByText('Concurrent incoming reply')).toBeTruthy();
 });
+
+test('a saved yard reply refreshes the timeline in order and retains a chat draft', async () => {
+  let events: object[] = [];
+  const fetcher = vi.fn(async () => Response.json({
+    messages: [message], recipient_label: 'Walkthrough yard', yard_events: events, next_cursor: null,
+  }));
+  vi.stubGlobal('fetch', fetcher);
+  const view = render(<YardRequestConversation token="yard-token" audience="supplier" refreshRevision={1}/>);
+  await screen.findByText('Reviewed answer');
+  fireEvent.change(screen.getByLabelText('Message to Junkerz'), {target: {value: 'Still drafting'}});
+  events = [{id:'yard-reply-0', kind:'yard_reply', actor_role:'supplier', text:'Confirmed available · Yard cost $25.00',
+    sender_label:'Walkthrough yard', recipient_label:'Junkerz staff', created_at:'2026-09-15T09:00:00Z'}];
+  view.rerender(<YardRequestConversation token="yard-token" audience="supplier" refreshRevision={2}/>);
+  await screen.findByText('Walkthrough yard to Junkerz staff');
+  const list = screen.getByRole('list', {name:'Messages'});
+  expect(list.children[0].textContent).toContain('$25.00');
+  expect(list.children[1].textContent).toContain('Reviewed answer');
+  expect((screen.getByLabelText('Message to Junkerz') as HTMLTextAreaElement).value).toBe('Still drafting');
+});

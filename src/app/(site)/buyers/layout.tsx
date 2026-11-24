@@ -22,7 +22,8 @@ export default function BuyersLayout({
     const t = window.localStorage.getItem("buyer_token");
     const isPublic = PUBLIC_PATHS.includes(pathname);
     if (!t && !isPublic) {
-      router.replace("/buyers/login");
+      const id = pathname === "/buyers/parts-requests" && new URLSearchParams(window.location.search).get("request");
+      router.replace(id ? `/buyers/login?request=${encodeURIComponent(id)}` : pathname === "/buyers/parts-requests" ? "/buyers/login?inbox=1" : "/buyers/login");
       return;
     }
     setReady(true);
@@ -62,6 +63,7 @@ function Shell({ showNav, children }: { showNav: boolean; children: React.ReactN
           <Link href="/buyers/won-cars" className="hover:underline">
             {t.wonCars}
           </Link>
+          <Link href="/buyers/parts-requests" className="hover:underline">{lang === "es" ? "Solicitudes de piezas" : "Parts requests"}</Link>
           <Link href="/buyers/ledger" className="hover:underline">
             {t.ledger}
           </Link>

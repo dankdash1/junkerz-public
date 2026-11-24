@@ -1,7 +1,9 @@
 import { API_BASE, API_DIRECT } from "@/lib/api-base";
 export type ConversationAudience = 'customer' | 'supplier';
 export type RequestPhoto = { id: string; mime_type: string; size_bytes: number };
-export type RequestMessage = { id: number; thread_id: number; audience: string; actor_role: string; text: string; attachments: RequestPhoto[]; created_at: string };
+type TimelineEntry = { sender_label?: string; recipient_label?: string; actor_role: string; text: string; created_at: string; attachments?: RequestPhoto[] };
+export type RequestMessage = TimelineEntry & { id: number; thread_id: number; audience: string };
+export type YardReplyEvent = TimelineEntry & { id: string; kind: 'yard_reply' };
 export type ConversationScope = { requestId?: string; token?: string; audience?: ConversationAudience };
 export type MessageAttempt = { text: string; attachment_ids: string[]; idempotency_key: string };
 const PUBLIC_BASE = `${API_BASE}/api/junkyard-public/yard-requests`;
@@ -16,13 +18,16 @@ async function read(response: Response, binary = false) {
 
 export function conversationAPI(scope: ConversationScope) {
   const account = Boolean(scope.requestId);
-  const base = account ? `/api/customer/requests/${encodeURIComponent(scope.requestId!)}` : PUBLIC_BASE;
+  const yardAccount = account && scope.audience === 'supplier';
+  const yardHeaders = (): Record<string,string> => yardAccount
+    ? {Authorization: `Bearer ${window.localStorage.getItem('buyer_token') || ''}`} : {};
+  const base = yardAccount ? `${API_BASE}/api/buyers/parts-requests/${encodeURIComponent(scope.requestId!)}` : account ? `/api/customer/requests/${encodeURIComponent(scope.requestId!)}` : PUBLIC_BASE;
   const guest = { token: scope.token, audience: scope.audience || 'customer' };
-  const json = (body: object) => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(account ? body : {...guest, ...body}), cache: 'no-store' as const, credentials: 'same-origin' as const });
+  const json = (body: object) => ({ method: 'POST', headers: { 'Content-Type': 'application/json', ...yardHeaders() }, body: JSON.stringify(account ? body : {...guest, ...body}), cache: 'no-store' as const, credentials: 'same-origin' as const });
   return {
-    async list(afterId?: number, signal?: AbortSignal): Promise<{messages: RequestMessage[]; next_cursor: number | null}> {
+    async list(afterId?: number, signal?: AbortSignal): Promise<{messages: RequestMessage[]; yard_events?: YardReplyEvent[]; recipient_label?: string; next_cursor: number | null}> {
       const query = afterId ? `?after_id=${afterId}` : '';
-      const data = await read(await fetch(`${base}/messages${account ? query : ''}`, account ? {cache:'no-store',credentials:'same-origin',signal} : {...json({after_id:afterId}),signal}));
+      const data = await read(await fetch(`${base}/messages${account ? query : ''}`, account ? {cache:'no-store',credentials:'same-origin',headers:yardHeaders(),signal} : {...json({after_id:afterId}),signal}));
       if (!Array.isArray(data.messages)) throw new Error('The conversation could not be loaded.');
       return data;
     },
@@ -36,13 +41,13 @@ export function conversationAPI(scope: ConversationScope) {
       const body = new FormData(); body.set('file',file); body.set('idempotency_key',idempotencyKey);
       if (!account) { body.set('token',scope.token || '');body.set('audience',scope.audience || 'customer'); }
       // Guest photo uploads go straight to the backend (relay body-size limit unproven).
-      const uploadBase = account ? base : `${API_DIRECT}/api/junkyard-public/yard-requests`;
-      const data=await read(await fetch(`${uploadBase}/attachments`, {method:'POST',body,cache:'no-store',credentials:'same-origin'}));
+      const uploadBase = yardAccount ? `${API_DIRECT}/api/buyers/parts-requests/${encodeURIComponent(scope.requestId!)}` : account ? base : `${API_DIRECT}/api/junkyard-public/yard-requests`;
+      const data=await read(await fetch(`${uploadBase}/attachments`, {method:'POST',body,headers:yardHeaders(),cache:'no-store',credentials:'same-origin'}));
       if (!data.attachment?.id) throw new Error('Photo upload was not confirmed.');
       return data.attachment;
     },
     async download(id: string): Promise<Blob> {
-      return read(await fetch(`${base}/attachments/${encodeURIComponent(id)}${account ? '' : '/download'}`, account ? {cache:'no-store',credentials:'same-origin'} : json({})),true);
+      return read(await fetch(`${base}/attachments/${encodeURIComponent(id)}${account ? '' : '/download'}`, account ? {cache:'no-store',credentials:'same-origin',headers:yardHeaders()} : json({})),true);
     },
   };
 }

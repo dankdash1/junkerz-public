@@ -78,7 +78,10 @@ export function CustomerRequestStatus({ loadStatus = loadCustomerRequest, startP
   </TokenShell>;
 }
 
-export function SupplierReplyPanel({ loadSupplier = loadSupplierRequest, reply = replyToSupplierRequest }: {
+export function SupplierReplyPanel({ loadSupplier = loadSupplierRequest, reply = replyToSupplierRequest, loadPrices = loadSupplierPrices, requestId, onSaved }: {
+  requestId?: string;
+  onSaved?: () => void;
+  loadPrices?: (id: string) => Promise<MarketPrices>;
   loadSupplier?: (token: string) => Promise<unknown>;
   reply?: (token: string, body: Record<string, unknown>) => Promise<unknown>;
 }) {
@@ -89,24 +92,24 @@ export function SupplierReplyPanel({ loadSupplier = loadSupplierRequest, reply =
   const [market, setMarket] = useState<MarketPrices | null>(null);
   const [yardPrice, setYardPrice] = useState("");
   const [status, setStatus] = useState("available");
-  const token = typeof window === "undefined" ? "" : tokenFromFragment(window.location.hash);
+  const accessKey = requestId || (typeof window === "undefined" ? "" : tokenFromFragment(window.location.hash));
   const load = useCallback(async () => {
-    if (!token) { setError("This yard reply link is incomplete or expired."); return; }
-    const value = await loadSupplier(token) as SupplierProjection;
+    if (!accessKey) { setError("This yard reply link is incomplete or expired."); return; }
+    const value = await loadSupplier(accessKey) as SupplierProjection;
     setStatus(value.request.status === "ordered" ? "ready_for_pickup" : ["available", "unavailable", "need_details", "ready_for_pickup"].includes(value.request.status) ? value.request.status : "available");
     setYardPrice(value.request.supplier_price_cents == null ? "" : (value.request.supplier_price_cents / 100).toFixed(2));
     setData(value);
-  }, [loadSupplier, token]);
+  }, [loadSupplier, accessKey]);
   useEffect(() => { load().catch((reason) => setError(reason.message || "Could not load this request.")); }, [load]);
 
   const marketNumber = data?.request.market_lookup_available && (data.request.part_number || data.request.last_yard_price?.part_number);
   useEffect(() => {
     let active = true;
     setMarket(null);
-    if (marketNumber) loadSupplierPrices(token).then(value => { if (active) setMarket(value); })
+    if (marketNumber) loadPrices(accessKey).then(value => { if (active) setMarket(value); })
       .catch(() => { if (active) setMarket({status: "unavailable", listings: []}); });
     return () => { active = false; };
-  }, [token, marketNumber]);
+  }, [accessKey, marketNumber, loadPrices]);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -127,9 +130,9 @@ export function SupplierReplyPanel({ loadSupplier = loadSupplierRequest, reply =
       supplier_price_cents: data.request.status === "ordered" ? undefined : price ? Math.round(Number(price) * 100) : null,
     };
     try {
-      const value = await reply(token, body) as SupplierProjection;
+      const value = await reply(accessKey, body) as SupplierProjection;
       setYardPrice(value.request.supplier_price_cents == null ? "" : (value.request.supplier_price_cents / 100).toFixed(2));
-      setData(value); setSuccess("Yard response saved. Junkerz can now review the request.");
+      setData(value); onSaved?.(); setSuccess("Yard response saved. Junkerz can now review the request.");
     } catch (reason) {
       const requestError = reason as Error & { status?: number };
       if (requestError.status === 409) {
@@ -139,7 +142,7 @@ export function SupplierReplyPanel({ loadSupplier = loadSupplierRequest, reply =
     } finally { setSaving(false); }
   };
 
-  return <TokenShell eyebrow="Private yard reply">
+  const content = <>
     {!data && !error && <p role="status" className="mt-8 flex items-center gap-3 text-zinc-600"><Loader2 className="h-5 w-5 animate-spin" /> Loading request…</p>}
     {error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
     {success && <p role="status" className="mt-6 flex gap-2 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-900"><CheckCircle2 className="h-5 w-5 shrink-0" /> {success}</p>}
@@ -147,7 +150,8 @@ export function SupplierReplyPanel({ loadSupplier = loadSupplierRequest, reply =
       <div className="mt-5"><h1 className="text-3xl font-extrabold">Availability request {data.request.reference}</h1><p className="mt-3 text-lg text-zinc-700">{data.request.component || "Vehicle"} · {data.request.vehicle_label}</p>{data.request.target_vehicle && <p className="mt-2 text-sm text-zinc-500">Customer target: {data.request.target_vehicle}</p>}</div>
       {(data.request.vin || data.request.car_id || data.request.part_id || data.request.yard_location) && <div className="mt-5 grid gap-3 rounded-2xl border border-zinc-200 p-5 text-sm sm:grid-cols-2"><p><span className="block text-xs font-bold uppercase tracking-wider text-zinc-500">Stock identity</span>{data.request.vin || `Car #${data.request.car_id || '—'}`}{data.request.part_id ? ` · Part #${data.request.part_id}` : ''}</p><p><span className="block text-xs font-bold uppercase tracking-wider text-zinc-500">Yard location</span>{data.request.yard_location || 'Not recorded'}</p></div>}
       <div className="mt-6 grid gap-3 rounded-2xl bg-zinc-100 p-5 text-sm sm:grid-cols-2"><p><span className="block text-xs font-bold uppercase tracking-wider text-zinc-500">Current status</span>{pretty(data.request.status)}</p><p><span className="block text-xs font-bold uppercase tracking-wider text-zinc-500">Your quoted cost</span>{money(data.request.supplier_price_cents)}</p></div>
-      {data.request.preparation && <YardPreparationPanel item={data.request.preparation} token={token} onChange={()=>void load()}/>}
+      {data.request.preparation && requestId && <p>Preparation {pretty(data.request.preparation.status)} · Open your private preparation link to update this order.</p>}
+      {data.request.preparation && !requestId && <YardPreparationPanel item={data.request.preparation} token={accessKey} onChange={()=>void load()}/>}
       {!data.request.preparation && <form key={`${data.request.reference}:${data.request.revision}`} onSubmit={submit} className="mt-7 space-y-4">
         <label className="block text-sm font-semibold">Response<select aria-label="Response" value={status} onChange={(event) => setStatus(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 font-normal">{data.request.status === "ordered" ? <option value="ready_for_pickup">Ready for pickup</option> : <><option value="available">Available</option><option value="unavailable">Unavailable</option><option value="need_details">Need details</option><option value="ready_for_pickup">Ready for pickup</option></>}</select></label>
         <div className="grid gap-4 sm:grid-cols-2"><Field label="Actual part number" name="part_number" onChange={() => setYardPrice("")} disabled={data.request.status === "ordered"} defaultValue={data.request.part_number} /><Field label="Condition" name="condition" onChange={() => setYardPrice("")} disabled={data.request.status === "ordered"} defaultValue={data.request.condition} /></div>
@@ -169,10 +173,12 @@ export function SupplierReplyPanel({ loadSupplier = loadSupplierRequest, reply =
         {status === "ready_for_pickup" && <p className="flex gap-2 rounded-xl bg-green-50 p-4 text-sm text-green-900"><PackageCheck className="h-5 w-5 shrink-0" /> Ready for pickup tells Junkerz preparation is complete. Include the pickup window above.</p>}
         <Button type="submit" disabled={saving} className="min-h-12 w-full">{saving ? <><Loader2 className="animate-spin" /> Saving…</> : "Send yard response"}</Button>
       </form>}
-      <YardRequestConversation token={token} audience="supplier" />
+      {!requestId && <YardRequestConversation token={accessKey} audience="supplier" refreshRevision={data.request.revision} />}
       <p className="mt-7 text-xs leading-relaxed text-zinc-500">This link shows stock and preparation details only. Customer identity and retail pricing stay private with Junkerz.</p>
     </>}
-  </TokenShell>;
+  </>;
+  return requestId ? <section aria-label="Private availability and price reply" className="my-4">{content}</section>
+    : <TokenShell eyebrow="Private yard reply">{content}</TokenShell>;
 }
 
 function Field({ label, name, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string; name: string }) {
