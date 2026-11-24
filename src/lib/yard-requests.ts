@@ -15,6 +15,31 @@ export type YardRequestBody = {
   customer_phone?: string;
   target_vehicle?: string;
   message?: string;
+  // Sent only when the backend advertises request_options (older backends reject unknown fields).
+  part_category?: string;
+  part_side?: PartSide;
+  fulfillment_method?: FulfillmentMethod;
+  delivery_address?: DeliveryAddress;
+};
+
+export type FulfillmentMethod = "yard_pickup" | "junkerz_pickup" | "delivery";
+export type PartSide = "driver" | "passenger" | "front" | "rear" | "not_applicable";
+export type DeliveryAddress = { street: string; city: string; state: string; postal_code: string };
+export type RequestOptions = {
+  fulfillment_options: FulfillmentMethod[];
+  part_categories: { key: string; label: string }[];
+  deposit_basis_points: number;
+  hold_days: number;
+  deposit_refundable: boolean;
+  balance_methods?: string[];
+};
+export const FULFILLMENT_TEXT: Record<FulfillmentMethod, string> = {
+  yard_pickup: "I will collect it at the yard",
+  junkerz_pickup: "I will collect it from Junkerz",
+  delivery: "Deliver it to me",
+};
+export const SIDE_TEXT: Record<PartSide, string> = {
+  driver: "Driver side", passenger: "Passenger side", front: "Front", rear: "Rear", not_applicable: "Not applicable",
 };
 
 export type YardRequestAttempt = Readonly<{
@@ -58,6 +83,32 @@ export async function getYardRequestSettings(fetchImpl: typeof fetch = fetch): P
   const data = await readResponse(await fetchImpl(`${YARD_BASE}/yard-request-settings`, { cache: "no-store" }));
   if (!data || typeof (data as { enabled?: unknown }).enabled !== "boolean") throw new Error("Invalid request settings response");
   return { enabled: (data as { enabled: boolean }).enabled };
+}
+
+const METHODS: FulfillmentMethod[] = ["yard_pickup", "junkerz_pickup", "delivery"];
+
+// Customer-safe request options, or null when the backend does not offer them yet.
+export function parseRequestOptions(data: unknown): RequestOptions | null {
+  const value = (data as { request_options?: Partial<RequestOptions> } | null)?.request_options;
+  if (!value || typeof value !== "object") return null;
+  const fulfillment = Array.isArray(value.fulfillment_options) ? value.fulfillment_options.filter((m): m is FulfillmentMethod => METHODS.includes(m as FulfillmentMethod)) : [];
+  const categories = Array.isArray(value.part_categories) ? value.part_categories.filter(c => c && typeof c.key === "string" && typeof c.label === "string") : [];
+  if (!fulfillment.length || typeof value.deposit_basis_points !== "number" || typeof value.hold_days !== "number") return null;
+  return { fulfillment_options: fulfillment, part_categories: categories.map(c => ({ key: c.key, label: c.label })),
+    deposit_basis_points: value.deposit_basis_points, hold_days: value.hold_days, deposit_refundable: value.deposit_refundable === true,
+    balance_methods: Array.isArray(value.balance_methods) ? value.balance_methods.filter(m => typeof m === "string") : [] };
+}
+
+export async function getYardRequestOptions(fetchImpl: typeof fetch = fetch): Promise<RequestOptions | null> {
+  try { return parseRequestOptions(await readResponse(await fetchImpl(`${YARD_BASE}/yard-request-settings`, { cache: "no-store" }))); }
+  catch { return null; }
+}
+
+export function depositTerm(options: Pick<RequestOptions, "hold_days" | "deposit_refundable">) {
+  const days = `${options.hold_days} day${options.hold_days === 1 ? "" : "s"}`;
+  return options.deposit_refundable
+    ? `Your deposit holds the part for ${days}.`
+    : `Your deposit holds the part for ${days}. It is not refunded if you do not collect the part in that time.`;
 }
 
 export function tokenFromFragment(hash: string): string {
@@ -106,6 +157,9 @@ export type YardQuote = {
   id: string; request_id: string; version: number; status: string; part_id?: number|null; car_id?: number|null; quantity: number;
   item_price_cents: number; delivery_cents: number; tax_cents: number; fees_cents: number; total_cents: number; currency: string;
   condition: string; fitment: string; delivery_address: Record<string,string>; delivery_terms: string; return_terms: string; core_terms: string; expires_at: string; order_id?: string|null;
+  // Recorded at publish time by newer backends; absent on older quotes.
+  fulfillment_method?: FulfillmentMethod|null; deposit_basis_points?: number|null; deposit_cents?: number|null; balance_cents?: number|null;
+  hold_days?: number|null; deposit_refundable?: boolean|null; balance_methods?: string[]|null;
 };
 export type QuoteResult = {quote: YardQuote|null; order_id?: string|null};
 export async function loadCustomerQuote(token:string):Promise<QuoteResult> {

@@ -2,11 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Loader2, X } from "lucide-react";
-import { customerFetch, getCustomer, sendCustomerLink, submitCustomerRequest } from "@/lib/customer-api";
+import { customerFetch, getCustomer, sendCustomerLink, submitCustomerRequest, type CustomerProfile } from "@/lib/customer-api";
 import { Button } from "@/components/ui/button";
 import {
   createYardRequestAttempt,
+  depositTerm,
+  FULFILLMENT_TEXT,
+  getYardRequestOptions,
+  SIDE_TEXT,
   submitYardRequest,
+  type DeliveryAddress,
+  type FulfillmentMethod,
+  type PartSide,
+  type RequestOptions,
   type YardRequestAttempt,
   type YardRequestBody,
   type YardRequestReceipt,
@@ -25,15 +33,37 @@ export function requestActionLabel(kind: RequestTarget["kind"]) {
   return "Request this part";
 }
 
+const EMPTY_ADDRESS: DeliveryAddress = { street: "", city: "", state: "", postal_code: "" };
+const ADDRESS_FIELDS: [keyof DeliveryAddress, string, string][] = [["street", "Street address", "address-line1"], ["city", "City", "address-level2"], ["state", "State", "address-level1"], ["postal_code", "ZIP code", "postal-code"]];
+export const MIN_PART_TEXT = 3;
+
+function profileAddress(profile: CustomerProfile | null): DeliveryAddress {
+  const saved = profile?.delivery_address || {};
+  return { street: saved.line1 || "", city: saved.city || "", state: saved.region || "", postal_code: saved.postal_code || "" };
+}
+
 export default function YardRequestForm({
   target,
   submitRequest = submitYardRequest,
   triggerClassName = "",
+  requestOptions,
+  loadRequestOptions = getYardRequestOptions,
 }: {
   target: RequestTarget;
   submitRequest?: (attempt: YardRequestAttempt) => Promise<YardRequestReceipt>;
   triggerClassName?: string;
+  // undefined: load from the backend when using the live transport; null: older backend, no new fields.
+  requestOptions?: RequestOptions | null;
+  loadRequestOptions?: () => Promise<RequestOptions | null>;
 }) {
+  const [options, setOptions] = useState<RequestOptions | null>(requestOptions ?? null);
+  const [category, setCategory] = useState("");
+  const [side, setSide] = useState<PartSide | "">("");
+  const [fulfillment, setFulfillment] = useState<FulfillmentMethod | "">("");
+  const [address, setAddress] = useState<DeliveryAddress>(EMPTY_ADDRESS);
+  const [profile, setProfile] = useState<CustomerProfile | null>(null);
+  const [saveAddress, setSaveAddress] = useState(false);
+  const [profileNote, setProfileNote] = useState("");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -54,10 +84,23 @@ export default function YardRequestForm({
   }, [open]);
 
   useEffect(() => {
+    if (requestOptions !== undefined) { setOptions(requestOptions); return; }
+    if (!open || submitRequest !== submitYardRequest) return;
+    let active = true;
+    void loadRequestOptions().then(value => { if (active) setOptions(value); }).catch(() => {});
+    return () => { active = false; };
+  }, [open, submitRequest, requestOptions, loadRequestOptions]);
+
+  const methods = options?.fulfillment_options || [];
+  useEffect(() => { if (methods.length === 1) setFulfillment(methods[0]); }, [methods.length, methods[0]]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     if (!open || submitRequest !== submitYardRequest) return;
     let active = true;
     void getCustomer().then(customer => {
       if (!active) return;
+      setProfile(customer);
+      setAddress(current => (Object.values(current).some(Boolean) ? current : profileAddress(customer)));
       for (const [name,value] of Object.entries({customer_name:customer.name,customer_email:customer.normalized_email,customer_phone:customer.phone})) {
         const input=dialogRef.current?.querySelector<HTMLInputElement>(`input[name="${name}"]`);
         if (input && !input.value) input.value=value;
@@ -101,6 +144,13 @@ export default function YardRequestForm({
       } else result = await submitRequest(attempt);
       setReceipt(result);
       setPendingAttempt(null);
+      if (saveAddress && profile && attempt.body.delivery_address) {
+        const saved = attempt.body.delivery_address;
+        // Only with the customer's tick: the request itself never changes the profile.
+        customerFetch<CustomerProfile>("me", { method: "PATCH", body: JSON.stringify({ delivery_address: { line1: saved.street, line2: profile.delivery_address?.line2 || "", city: saved.city, region: saved.state, postal_code: saved.postal_code } }) })
+          .then(updated => { setProfile(updated); setProfileNote("Address saved to your Junkerz profile."); })
+          .catch(() => setProfileNote("Your request was sent, but the address could not be saved to your profile."));
+      }
     } catch (reason) {
       const requestError = reason as Error & { ambiguous?: boolean; status?: number };
       if (requestError.ambiguous || !requestError.status || requestError.status === 408 || requestError.status >= 500) setPendingAttempt(attempt);
@@ -116,6 +166,13 @@ export default function YardRequestForm({
     if (saving || pendingAttempt) return;
     const form = new FormData(event.currentTarget);
     const component = String(form.get("component") || "").trim();
+    const askCategory = Boolean(options && target.kind === "donor_part" && options.part_categories.length);
+    if (component && component.length < MIN_PART_TEXT) { setError(`Describe the part in at least ${MIN_PART_TEXT} characters.`); return; }
+    if (askCategory && !category) { setError("Choose the part you need."); return; }
+    if (askCategory && category === "other" && !component) { setError(`Describe the part in at least ${MIN_PART_TEXT} characters.`); return; }
+    if (options && !fulfillment) { setError("Choose pickup or delivery."); return; }
+    const cleanAddress = Object.fromEntries(Object.entries(address).map(([key, value]) => [key, value.trim()])) as DeliveryAddress;
+    if (fulfillment === "delivery" && Object.values(cleanAddress).some(value => !value)) { setError("Enter your full delivery address."); return; }
     const body: Omit<YardRequestBody, "idempotency_key"> = {
       kind: target.kind,
       ...(target.kind !== "part" && target.carId ? { car_id: target.carId } : {}),
@@ -126,6 +183,10 @@ export default function YardRequestForm({
       customer_phone: String(form.get("customer_phone") || "").trim() || undefined,
       target_vehicle: String(form.get("target_vehicle") || "").trim() || undefined,
       message: String(form.get("message") || "").trim() || undefined,
+      ...(askCategory ? { part_category: category } : {}),
+      ...(options && side && target.kind !== "whole_car" ? { part_side: side } : {}),
+      ...(options && fulfillment ? { fulfillment_method: fulfillment } : {}),
+      ...(options && fulfillment === "delivery" ? { delivery_address: cleanAddress } : {}),
     };
     await send(createYardRequestAttempt(body));
   };
@@ -142,6 +203,7 @@ export default function YardRequestForm({
           <CheckCircle2 className="h-8 w-8 text-green-700" />
           <h3 className="mt-3 text-lg font-bold">Request {receipt.request.reference} received</h3>
           <p className="mt-2 text-sm text-green-900">This confirms receipt. Availability, condition, fitment, final price, and pickup still require confirmation.</p>
+          {profileNote && <p role="status" className="mt-2 text-sm">{profileNote}</p>}
           <a href={receipt.status_url} className="mt-5 inline-flex min-h-11 items-center rounded-lg bg-green-800 px-5 font-bold text-white">Check request status</a>
         </div> : verificationAttempt ? <section className="mt-7 rounded-xl border bg-zinc-50 p-5">
           <h3 className="text-xl font-bold">Verify your email to send this request</h3>
@@ -151,11 +213,25 @@ export default function YardRequestForm({
           <div className="mt-5 flex flex-wrap gap-4"><a href="/account" className="min-h-11 underline">Open My Junkerz</a><button type="button" disabled={saving} className="min-h-11 underline" onClick={() => send(verificationAttempt)}>{saving ? "Requesting link…" : "Resend link / continue"}</button><button type="button" className="min-h-11 underline" onClick={() => setVerificationAttempt(null)}>Edit request</button></div>
           <p className="mt-3 text-sm">Need help? <a className="underline" href="tel:8174209180">Call 817-420-9180</a>.</p>
         </section> : <form className="mt-7 space-y-4" onSubmit={submit}>
-          {target.kind === "donor_part" && <Field label="Part or component" name="component" defaultValue={draft?.component} required placeholder="Example: driver-side headlight" />}
+          {target.kind === "donor_part" && options && options.part_categories.length > 0 ? <>
+            <label className="block text-sm font-semibold text-zinc-800">Part you need<select name="part_category" required value={category} onChange={event => setCategory(event.target.value)} className={selectClass}><option value="">Choose a part</option>{options.part_categories.map(item => <option key={item.key} value={item.key}>{item.label}</option>)}</select></label>
+            <Field label={category === "other" ? "Describe the part" : "Part details (optional)"} name="component" defaultValue={draft?.component} required={category === "other"} minLength={MIN_PART_TEXT} placeholder="Example: LED headlight with bracket" />
+          </> : target.kind === "donor_part" && <Field label="Part or component" name="component" defaultValue={draft?.component} required minLength={MIN_PART_TEXT} placeholder="Example: driver-side headlight" />}
+          {options && target.kind !== "whole_car" && <label className="block text-sm font-semibold text-zinc-800">Side (optional)<select name="part_side" value={side} onChange={event => setSide(event.target.value as PartSide | "")} className={selectClass}><option value="">Not sure</option>{(Object.keys(SIDE_TEXT) as PartSide[]).map(key => <option key={key} value={key}>{SIDE_TEXT[key]}</option>)}</select></label>}
           <Field label="Your name" name="customer_name" defaultValue={draft?.customer_name} required autoComplete="name" data-initial-focus />
           <Field label="Email" name="customer_email" defaultValue={draft?.customer_email} type="email" required autoComplete="email" />
           <Field label="Phone (optional)" name="customer_phone" defaultValue={draft?.customer_phone} type="tel" autoComplete="tel" />
           {target.kind !== "whole_car" && <Field label="Target vehicle (optional)" name="target_vehicle" defaultValue={draft?.target_vehicle} placeholder="Year, make, model, trim or VIN" />}
+          {options && methods.length > 0 && <fieldset className="space-y-2">
+            <legend className="text-sm font-semibold text-zinc-800">Pickup or delivery</legend>
+            {methods.length === 1 ? <p className="text-sm">{FULFILLMENT_TEXT[methods[0]]}</p> : methods.map(method => <label key={method} className="flex min-h-11 items-center gap-3 rounded-xl border border-zinc-300 px-3 text-sm"><input type="radio" name="fulfillment_method" value={method} checked={fulfillment === method} onChange={() => setFulfillment(method)} className="h-4 w-4" />{FULFILLMENT_TEXT[method]}</label>)}
+          </fieldset>}
+          {options && fulfillment === "delivery" && <fieldset className="space-y-3">
+            <legend className="text-sm font-semibold text-zinc-800">Delivery address</legend>
+            {ADDRESS_FIELDS.map(([key, label, autoComplete]) => <label key={key} className="block text-sm font-semibold text-zinc-800">{label}<input name={`delivery_${key}`} required autoComplete={autoComplete} value={address[key]} onChange={event => setAddress({ ...address, [key]: event.target.value })} className={inputClass} /></label>)}
+            {profile && JSON.stringify(address) !== JSON.stringify(profileAddress(profile)) && <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" checked={saveAddress} onChange={event => setSaveAddress(event.target.checked)} className="h-4 w-4" />Save this address to my Junkerz profile</label>}
+          </fieldset>}
+          {options && <p className="rounded-xl bg-zinc-50 p-4 text-sm text-zinc-800">If you approve a quote, a {options.deposit_basis_points / 100}% deposit is due first. {depositTerm(options)}</p>}
           <label className="block text-sm font-semibold text-zinc-800">Notes (optional)<textarea name="message" defaultValue={draft?.message} rows={3} className="mt-1.5 w-full rounded-xl border border-zinc-300 px-3 py-2 font-normal focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100" /></label>
           <p className="rounded-xl bg-amber-50 p-4 text-sm text-amber-950">Submitting asks Junkerz to confirm stock with the holding yard. It does not reserve the item or create a paid order.</p>
           {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
@@ -166,6 +242,9 @@ export default function YardRequestForm({
     </div>}
   </>;
 }
+
+const inputClass = "mt-1.5 min-h-11 w-full rounded-xl border border-zinc-300 px-3 font-normal focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100";
+const selectClass = `${inputClass} bg-white`;
 
 function Field({ label, name, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string; name: string }) {
   return <label className="block text-sm font-semibold text-zinc-800">{label}<input name={name} {...props} className="mt-1.5 min-h-11 w-full rounded-xl border border-zinc-300 px-3 font-normal focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100" /></label>;

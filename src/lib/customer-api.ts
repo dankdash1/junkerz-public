@@ -1,6 +1,8 @@
 import type { YardRequestBody, YardRequestReceipt } from './yard-requests';
 export type CustomerProfile={id:string;normalized_email:string;name:string;phone:string;delivery_address:Record<string,string>;pending_request?:YardRequestBody|null};
-export type CustomerRequest={id:string;reference:string;status:string;vehicle_label:string;component:string;customer_message:string;order_id?:string;payment_status?:string;payment_available?:boolean;order_status?:string;total?:string;receipt_available?:boolean;customer_name?:string;customer_email?:string;customer_phone?:string};
+export type CustomerRequest={id:string;reference:string;status:string;vehicle_label:string;component:string;customer_message:string;order_id?:string;payment_status?:string;payment_available?:boolean;order_status?:string;total?:string;receipt_available?:boolean;customer_name?:string;customer_email?:string;customer_phone?:string;
+  // Newer backends only; absent or null means not chosen yet.
+  fulfillment_method?:string|null;part_side?:string|null;delivery_address?:Record<string,string>|null};
 export async function customerFetch<T>(path:string,init:RequestInit={}):Promise<T> {
  const response=await fetch(`/api/customer/${path}`,{...init,credentials:'same-origin',cache:'no-store',headers:{...(init.body && !(init.body instanceof FormData) ? {'Content-Type':'application/json'} : {}),...init.headers}});
  const data=await response.json().catch(()=>({}));
