@@ -102,7 +102,7 @@ export default function PickupMobile(){
         </Step>
         <Step number="04" title="Document the pickup">
           {/* George 2026-11-23: a missing VIN never blocks the pickup or the bill of sale. */}
-          <div className="mb-4"><PickupVinField vin={detail.vehicle.vin} signed={!!detail.seller_signature} disabled={!identified}
+          <div className="mb-4"><PickupVinField vin={detail.vehicle.vin} year={detail.vehicle.year} signed={!!detail.seller_signature} disabled={!identified}
             onSave={async vin=>{if(!identified)throw new Error('driver_name_required');await api.vin(driver.trim(),vin);setAgreementChanged(false);await refresh();setNotice('VIN saved. The bill of sale now shows it.');}}/>
             {!identified && <p className="mt-2 text-xs text-slate-500">Type your name in step 01 to add or edit the VIN.</p>}</div>
           <p className="mb-4 text-sm leading-relaxed text-slate-600">Photograph the vehicle and documents at pickup. Seller ID photos stay private to this pickup and the buyer’s office.</p>

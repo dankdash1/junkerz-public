@@ -307,7 +307,7 @@ export default function BuyerPickupDetail() {
       </section>
 
       {/* George 2026-11-23: the yard can type the VIN; a missing VIN never blocks the pickup. */}
-      {!isCompleted && <PickupVinField vin={d.vin} signed={sellerSigned}
+      {!isCompleted && <PickupVinField vin={d.vin} year={d.year} signed={sellerSigned}
         onSave={async (vin) => { await buyerApi.pickupVin(matchId, vin); setAgreementChanged(false); setSigErr(null); await load(); }} />}
 
       <PickupShare matchId={matchId} completed={isCompleted} />

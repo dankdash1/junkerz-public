@@ -1,14 +1,17 @@
 "use client";
 import { useState } from "react";
-import { normalizeVin, pickupVinError, vinLooksValid, VIN_SHAPE_MESSAGE } from "@/lib/pickup-vin";
+import { normalizeVin, pickupVinError, vinLooksValid, vinWarningLines, VIN_SHAPE_MESSAGE } from "@/lib/pickup-vin";
+import VinCheckNote from "@/components/junkerz/VinCheckNote";
 
 /**
  * VIN shown on the buyer won-car page and the driver pickup page.
  * Missing: an input + Save. Present and unsigned: an "Edit" link.
  * Signed: read-only (the signed bill of sale must never change).
  */
-export default function PickupVinField({ vin, signed, disabled, onSave }: {
+export default function PickupVinField({ vin, year, signed, disabled, onSave }: {
   vin: string | null | undefined;
+  /** Listed model year, for the VIN year check (a warning only). */
+  year?: number | string | null;
   signed: boolean;
   disabled?: boolean;
   onSave: (vin: string) => Promise<unknown>;
@@ -18,6 +21,8 @@ export default function PickupVinField({ vin, signed, disabled, onSave }: {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const open = !signed && (!vin || editing);
+  // George 2026-11-23: check digit / model year is a warning, never a block.
+  const warned = vinWarningLines(value, year).length > 0;
 
   const save = async () => {
     const next = normalizeVin(value);
@@ -45,10 +50,11 @@ export default function PickupVinField({ vin, signed, disabled, onSave }: {
         value={value} maxLength={20} autoCapitalize="characters" autoComplete="off" spellCheck={false}
         onChange={e => { setValue(e.target.value.toUpperCase()); setError(null); }} disabled={busy || disabled}/>
       <p className="text-xs text-slate-500">Read it from the dashboard or the driver&apos;s door; also take the VIN plate photo.</p>
+      <VinCheckNote vin={value} year={year}/>
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
       <div className="flex gap-2">
         <button type="button" className="min-h-11 rounded-lg bg-slate-950 px-4 font-semibold text-white disabled:bg-slate-200 disabled:text-slate-500"
-          disabled={busy || disabled || !value.trim()} onClick={() => void save()}>{busy ? "Saving…" : "Save VIN"}</button>
+          disabled={busy || disabled || !value.trim()} onClick={() => void save()}>{busy ? "Saving…" : warned ? "Save anyway" : "Save VIN"}</button>
         {editing && <button type="button" className="min-h-11 rounded-lg px-4 font-semibold ring-1 ring-slate-300" disabled={busy} onClick={() => { setEditing(false); setError(null); }}>Cancel</button>}
       </div>
     </div>}
