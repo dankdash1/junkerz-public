@@ -1,6 +1,9 @@
 'use client';
 import React,{useEffect,useRef,useState} from 'react';
-import type {QuoteResult,YardQuote} from '@/lib/yard-requests';
+import {depositTerm,type QuoteResult,type YardQuote} from '@/lib/yard-requests';
+
+const HOW:Record<string,string>={delivery:'Junkerz delivers the part to you.',junkerz_pickup:'You collect the part from Junkerz.',yard_pickup:'You collect the part at the yard.'};
+const PAY:Record<string,string>={online:'online',cash_in_person:'in cash in person'};
 
 export default function YardRequestQuote({loadQuote,respond,onQuestion,onAccepted,paymentStatus}:{
  loadQuote:()=>Promise<QuoteResult>;respond:(quote:YardQuote,decision:'accept'|'decline',key:string)=>Promise<QuoteResult>;
@@ -20,14 +23,19 @@ export default function YardRequestQuote({loadQuote,respond,onQuestion,onAccepte
  if(loading)return <p role="status" className="mt-6">Checking quote…</p>;
  if(!quote&&!error)return null;
  const expired=quote&&new Date(quote.expires_at).getTime()<=Date.now();
+ // Newer backends record a collection place instead of an address on pickup quotes.
+ const collection=quote&&typeof quote.delivery_address?.collection==='string'?quote.delivery_address.collection:null;
+ const hasDeposit=Boolean(quote&&typeof quote.deposit_cents==='number'&&typeof quote.balance_cents==='number');
  return <section aria-label="Your quote" className="my-7 space-y-4 rounded-2xl border border-zinc-200 bg-white p-5 text-zinc-900">
   <h2 className="text-xl font-bold">Your quote{quote?` · version ${quote.version}`:''}</h2>
   {error&&<p role="alert" className="rounded-xl bg-red-50 p-3 text-red-800">{error}</p>}
   {quote&&<>
    <p className="text-sm text-zinc-600">{quote.part_id?`Part #${quote.part_id}`:`Vehicle #${quote.car_id}`} · Quantity {quote.quantity}</p>
    <p>{quote.condition}</p><p>{quote.fitment}</p>
-   <dl className="space-y-2">{[['Item',quote.item_price_cents],['Delivery',quote.delivery_cents],['Tax',quote.tax_cents],['Fees',quote.fees_cents]].map(([name,cents])=><div className="flex justify-between" key={name}><dt>{name}</dt><dd>{money(Number(cents))}</dd></div>)}<div className="flex justify-between border-t pt-3 text-lg font-bold"><dt>Total</dt><dd>{money(quote.total_cents)}</dd></div></dl>
-   <div className="space-y-2 text-sm"><p><strong>Delivery to:</strong> {Object.values(quote.delivery_address).join(', ')}</p><p>{quote.delivery_terms}</p><p><strong>Returns:</strong> {quote.return_terms}</p><p><strong>Core:</strong> {quote.core_terms}</p><p>Expires {new Date(quote.expires_at).toLocaleString()}</p></div>
+   <dl className="space-y-2">{([['Item',quote.item_price_cents],['Delivery',quote.delivery_cents],['Tax',quote.tax_cents],['Fees',quote.fees_cents]] as [string,number][]).filter(([name,cents])=>name!=='Delivery'||!collection||cents>0).map(([name,cents])=><div className="flex justify-between" key={name}><dt>{name}</dt><dd>{money(Number(cents))}</dd></div>)}<div className="flex justify-between border-t pt-3 text-lg font-bold"><dt>Total</dt><dd>{money(quote.total_cents)}</dd></div>
+    {hasDeposit&&<><div className="flex justify-between text-lg font-bold text-brand-700"><dt>Deposit due now</dt><dd>{money(Number(quote.deposit_cents))}</dd></div><div className="flex justify-between"><dt>Balance due at {collection?'collection':'delivery'}</dt><dd>{money(Number(quote.balance_cents))}</dd></div></>}</dl>
+   {hasDeposit&&typeof quote.hold_days==='number'&&<div className="rounded-xl bg-amber-50 p-3 text-sm text-amber-950"><p>{depositTerm({hold_days:quote.hold_days,deposit_refundable:quote.deposit_refundable===true})}</p>{quote.balance_methods?.length?<p className="mt-1">You can pay the balance {quote.balance_methods.map(m=>PAY[m]||m).join(' or ')}.</p>:null}</div>}
+   <div className="space-y-2 text-sm">{quote.fulfillment_method&&HOW[quote.fulfillment_method]&&<p><strong>{HOW[quote.fulfillment_method]}</strong></p>}{collection?<p><strong>Collection:</strong> {collection}</p>:<p><strong>Delivery to:</strong> {Object.values(quote.delivery_address).join(', ')}</p>}<p>{quote.delivery_terms}</p><p><strong>Returns:</strong> {quote.return_terms}</p><p><strong>Core:</strong> {quote.core_terms}</p><p>Expires {new Date(quote.expires_at).toLocaleString()}</p></div>
    {quote.status==='accepted'?<p role="status" className="rounded-xl bg-amber-50 p-3 font-semibold">{paymentStatus==='paid'?'Approved · payment confirmed':'Approved · payment pending'}</p>:quote.status==='unavailable'?<p role="status">Stock is unavailable or changed. Junkerz must review it before offering a new quote.</p>:quote.status==='declined'?<p role="status">Quote declined. You can send us a question.</p>:expired||quote.status==='expired'?<p role="status">This quote expired. Ask us for an updated quote.</p>:quote.status==='superseded'?<p role="status">A newer quote is available. Refresh to review it.</p>:<div className="grid gap-3 sm:grid-cols-2"><button type="button" disabled={busy} onClick={()=>decide('accept')} className="min-h-12 rounded-xl bg-brand-600 px-4 font-bold text-white disabled:opacity-50">{busy?'Saving response…':'Approve quote'}</button><button type="button" disabled={busy} onClick={()=>decide('decline')} className="min-h-12 rounded-xl border px-4 font-semibold disabled:opacity-50">Decline quote</button></div>}
    {onQuestion&&<button type="button" onClick={onQuestion} className="min-h-11 w-full rounded-xl border px-4 font-semibold">Ask a question</button>}
   </>}
