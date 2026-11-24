@@ -27,7 +27,7 @@ export async function SiteFooter({ phone, catalogSettings }: { phone?: string; c
               Dallas–Fort Worth. Your buyer purchases and pays for the vehicle;
               your assigned pickup partner collects it.
             </p>
-            <a href={telHref} className={`mt-4 inline-flex items-center gap-1.5 font-bold text-zinc-900 hover:text-brand-700 ${mono}`}>
+            <a href={telHref} data-tap-source="footer" className={`mt-4 inline-flex items-center gap-1.5 font-bold text-zinc-900 hover:text-brand-700 ${mono}`}>
               <Phone className="h-4 w-4" /> {p}
             </a>
           </div>

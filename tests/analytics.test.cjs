@@ -47,3 +47,42 @@ test('Google initialization configures Ads and real website-call measurement', (
   assert.ok(configs.some(x=>x[1]==='AW-583352549'));
   assert.ok(configs.some(x=>x[1]==='AW-583352549/ygzLCNmyifoCEOWBlZYC' && x[2].phone_conversion_number==='817-420-9180'));
 });
+function tapEnv(path, beaconOk = true) {
+  const env = load();
+  const beacons = [];
+  env.window.location = { pathname: path };
+  env.window.matchMedia = () => ({ matches: true });
+  env.window.navigator = { sendBeacon: (url, body) => { beacons.push([url, JSON.parse(body)]); return beaconOk; } };
+  env.sandbox.fetch = (url, opts) => { beacons.push(['fetch:' + url, JSON.parse(opts.body)]); return Promise.resolve(); };
+  return { ...env, beacons };
+}
+test('phone tap goes to Google Analytics as a real gtag event and to our own counter, with no phone number', () => {
+  const { api, window, beacons } = tapEnv('/cash-for-junk-cars/dallas');
+  api.trackContactTap('tel:+18174209180', 'header');
+  const gtagEvents = window.dataLayer.map(x => Array.from(x)).filter(x => x[0] === 'event');
+  assert.equal(gtagEvents.length, 1);
+  assert.equal(gtagEvents[0][1], 'call_tap');
+  assert.equal(gtagEvents[0][2].tap_source, 'header');
+  assert.ok(window.dataLayer.some(x => x.event === 'call_click'));
+  assert.deepEqual(beacons, [['/api/junkyard-public/tap', { kind: 'call', page: '/cash-for-junk-cars/dallas', source: 'header', device: 'mobile' }]]);
+  assert.ok(!JSON.stringify(beacons).includes('8174209180'));
+});
+test('text and email taps are counted; other links are not', () => {
+  const { api, beacons } = tapEnv('/contact-us');
+  api.trackContactTap('sms:+18174209180');
+  api.trackContactTap('mailto:info@junkerz.com');
+  api.trackContactTap('https://junkerz.com/quote');
+  assert.deepEqual(beacons.map(b => [b[1].kind, b[1].source]), [['text', 'link'], ['email', 'link']]);
+  assert.ok(!JSON.stringify(beacons).includes('info@junkerz.com'));
+});
+test('buyer and driver pages are not counted as customer taps', () => {
+  const { api, beacons, window } = tapEnv('/buyers/won-cars/12');
+  api.trackContactTap('tel:+15555550100');
+  assert.equal(beacons.length, 0);
+  assert.equal(window.dataLayer.length, 0);
+});
+test('falls back to fetch when the beacon is refused', () => {
+  const { api, beacons } = tapEnv('/', false);
+  api.trackContactTap('tel:+18174209180');
+  assert.equal(beacons.at(-1)[0], 'fetch:/api/junkyard-public/tap');
+});

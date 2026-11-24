@@ -31,6 +31,19 @@ export default function Analytics() {
     if (a) track("attribution", { lead_source: a.source, lead_medium: a.medium });
   }, []);
 
+  // One listener counts every phone, text and email link on every page,
+  // including links added later, so no page can forget to wire it up.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const onClick = (e: Event) => {
+      const el = e.target as { closest?: (s: string) => Element | null } | null;
+      const link = el?.closest?.('a[href^="tel:"],a[href^="sms:"],a[href^="mailto:"]');
+      if (link) trackContactTap(link.getAttribute("href") || "", link.getAttribute("data-tap-source"));
+    };
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, []);
+
   return (
     <>
       <Script
@@ -91,4 +104,41 @@ export function trackLeadSubmission(offerId: number) {
     });
     try { window.sessionStorage.setItem(transactionId, "1"); } catch { /* Optional deduplication. */ }
   } catch { /* Measurement must never interrupt delivery of the seller's offer. */ }
+}
+
+/** Junkerz staff/buyer/driver pages are not customer contact. */
+const NOT_CUSTOMER_PAGES = /^\/(buyers|driver|admin)(\/|$)/;
+
+/**
+ * Count a tap on a phone, text or email link in two places:
+ *  1. Google Analytics, as a real gtag event (the old plain dataLayer push
+ *     was never read by Google Analytics, so taps were lost).
+ *  2. Our own database through /api/junkyard-public/tap, so we can count
+ *     taps without Google or a paid Vercel plan. No phone number, email or
+ *     person is sent: only the kind of link, the page and a source label.
+ * The beacon is sent before the phone app opens and never blocks the call.
+ */
+export function trackContactTap(href: string, source?: string | null) {
+  if (typeof window === "undefined") return;
+  const kind = href.startsWith("tel:") ? "call" : href.startsWith("sms:") ? "text"
+    : href.startsWith("mailto:") ? "email" : null;
+  if (!kind) return;
+  try {
+    const page = window.location?.pathname || "/";
+    if (NOT_CUSTOMER_PAGES.test(page)) return;
+    const device = window.matchMedia?.("(max-width: 767px)").matches ? "mobile" : "desktop";
+    const label = source || "link";
+    const w = window as unknown as { dataLayer?: unknown[] };
+    w.dataLayer = w.dataLayer || [];
+    const gtag = function (..._args: unknown[]) { w.dataLayer!.push(arguments); };
+    gtag("event", `${kind}_tap`, { tap_source: label, page_path: page });
+    // Tag Manager listeners keyed on the old event name keep working.
+    if (kind === "call") track("call_click", { source: label });
+    const body = JSON.stringify({ kind, page, source: label, device });
+    const nav = window.navigator as Navigator | undefined;
+    if (nav?.sendBeacon?.("/api/junkyard-public/tap", body)) return;
+    void fetch("/api/junkyard-public/tap", {
+      method: "POST", body, keepalive: true, headers: { "Content-Type": "text/plain" },
+    }).catch(() => {});
+  } catch { /* Counting must never stop the call. */ }
 }

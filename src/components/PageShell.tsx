@@ -44,7 +44,7 @@ export async function SiteHeader({
         </nav>
         <div className="flex items-center gap-1 sm:gap-3">
           {hasLive && showCart && <CartLink />}
-          <a href={phoneHref}
+          <a href={phoneHref} data-tap-source="header"
              className={`hidden items-center gap-1.5 text-sm font-bold text-zinc-800 hover:text-brand-700 sm:flex ${mono}`}>
             <Phone className="h-4 w-4" /> {phone}
           </a>
