@@ -19,7 +19,7 @@ export default function StickyMobileBar({ es = false }: { es?: boolean }) {
       <div className="mx-auto flex max-w-md gap-2">
         <a
           href={SITE.phoneHref}
-          onClick={() => track("call_click", { source: "sticky_bar" })}
+          data-tap-source="sticky_bar"
           className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-300 bg-white text-[15px] font-bold text-zinc-900"
         >
           <Phone className="h-4 w-4" />
