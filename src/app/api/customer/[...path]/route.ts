@@ -19,8 +19,8 @@ const uuid = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-
 // and friends cannot slip through.
 const ALLOWED_ORIGINS = ['https://www.junkerz.com', 'https://junkerz.com'];
 const rules: Record<string, RegExp[]> = {
- GET: [/^settings$/, /^me$/, /^requests$/, /^orders$/, new RegExp(`^requests/${uuid}$`), new RegExp(`^requests/${uuid}/(messages|quote)$`), new RegExp(`^requests/${uuid}/attachments/${uuid}$`), /^orders\/[A-Za-z0-9_-]{1,80}(\/receipt)?$/],
- POST: [/^sign-in-link$/, /^verify$/, /^logout$/, /^claim-request$/, /^requests$/, new RegExp(`^requests/${uuid}/(messages|attachments|quote/respond|payment-session)$`)],
+ GET: [/^settings$/, /^me$/, /^tax-exemption(\/certificate)?$/, /^requests$/, /^orders$/, new RegExp(`^requests/${uuid}$`), new RegExp(`^requests/${uuid}/(messages|quote)$`), new RegExp(`^requests/${uuid}/attachments/${uuid}$`), /^orders\/[A-Za-z0-9_-]{1,80}(\/receipt)?$/],
+ POST: [/^sign-in-link$/, /^tax-exemption$/, /^verify$/, /^logout$/, /^claim-request$/, /^requests$/, new RegExp(`^requests/${uuid}/(messages|attachments|quote/respond|payment-session)$`)],
  PATCH: [/^me$/],
 };
 function json(data: unknown, status=200) { return NextResponse.json(data,{status,headers:{'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}}); }
@@ -38,7 +38,7 @@ async function proxy(request:NextRequest,context:{params:{path:string[]}}) {
  if(session) headers.Authorization=`Bearer ${session}`;
  let body: ArrayBuffer | undefined;
  if(request.method!=='GET') {
-   const max=path.endsWith('/attachments') ? 10*1024*1024+16384 : 16384;
+   const max=(path.endsWith('/attachments') || path==='tax-exemption') ? 10*1024*1024+16384 : 16384;
    if(Number(request.headers.get('content-length'))>max) return json({error:'Request is too large'},413);
    body=await request.arrayBuffer();
    if(body.byteLength>max) return json({error:'Request is too large'},413);
@@ -51,7 +51,7 @@ async function proxy(request:NextRequest,context:{params:{path:string[]}}) {
    const upstream=await fetch(`${BACKEND}/${path}${suffix}`,{method:request.method,headers,body,cache:'no-store',redirect:'error',signal:AbortSignal.timeout(20000)});
    const contentType=upstream.headers.get('content-type') || '';
    let result:NextResponse;
-   if(upstream.ok && (path.endsWith('/receipt') || /\/attachments\//.test(path))) {
+   if(upstream.ok && (path.endsWith('/receipt') || /\/attachments\//.test(path) || path==='tax-exemption/certificate')) {
      result=new NextResponse(await upstream.arrayBuffer(),{status:upstream.status,headers:{'Content-Type':contentType,'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; frame-ancestors 'none'"}});
      const disposition=upstream.headers.get('content-disposition'); if(disposition) result.headers.set('Content-Disposition',disposition);
    } else {
