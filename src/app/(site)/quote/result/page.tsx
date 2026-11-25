@@ -18,6 +18,10 @@ type Offer = {
   requires_human_approval?: boolean;
   token?: string | null;
   seller_checkin_enabled?: boolean;
+  // 2026-11-25 bid ask: no buyer would win this car yet, so the backend hides
+  // the price and asks every buyer first. The seller gets a text with the offer.
+  checking_buyers?: boolean;
+  message?: string;
 };
 
 function ResultContent() {
@@ -66,6 +70,7 @@ function ResultContent() {
   const confirmed = !offer?.requires_human_approval && offer?.status === "ready";
   const accepted = offer?.status === "seller_accepted";
   const langQuery = es ? "?lang=es" : "";
+  const checkingBuyers = !cents && (offer?.status === "checking_buyers" || offer?.checking_buyers === true || sp.get("status") === "checking_buyers");
 
 
   const t = es
@@ -106,6 +111,32 @@ function ResultContent() {
             <Phone className="h-4 w-4" /> {SITE.phone}
           </Button>
         </a>
+      </div>
+    );
+  }
+
+  if (checkingBuyers) {
+    const checkingCopy = es
+      ? "Estamos consultando con nuestros compradores para conseguirle la mejor oferta. Le enviaremos un mensaje de texto en aproximadamente 2 horas."
+      : "We're checking with our buyers to get you the best offer. We'll text you within about 2 hours.";
+    return (
+      <div className="mx-auto max-w-lg px-5 pb-16 pt-10" data-testid="checking-buyers">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-7 text-center shadow-[0_20px_60px_-20px_rgba(16,24,28,.2)]">
+          <p className={`text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400 ${mono}`}>
+            {t.head}
+          </p>
+          <BadgeDollarSign className="mx-auto mt-4 h-12 w-12 text-brand-600" />
+          <p className="mt-4 text-lg font-semibold text-zinc-900">
+            {es ? "Buscando su mejor oferta" : "Finding your best offer"}
+          </p>
+          <p className="mt-3 text-sm text-zinc-600">{(!es && offer?.message) || checkingCopy}</p>
+        </div>
+        <div className="mt-8 text-center">
+          <span className="text-sm text-zinc-500">{t.call} </span>
+          <a href={SITE.phoneHref} className={`font-bold text-zinc-900 underline ${mono}`}>
+            {SITE.phone}
+          </a>
+        </div>
       </div>
     );
   }
