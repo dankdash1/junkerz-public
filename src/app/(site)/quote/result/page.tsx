@@ -43,22 +43,27 @@ function ResultContent() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
+    let hasSnapshot = Boolean(centsFromUrl);
+    const maxAttempts = 24;
     let requiresReview = sp.get("review") === "1";
     (async () => {
       // Poll for a while in case staff approve while the seller is still here,
       // but never block showing the number on it.
-      for (let i = 0; i < 24 && !cancelled; i++) {
+      for (let i = 0; i < maxAttempts && !cancelled; i++) {
         try {
           const o = (await getOffer(id)) as Offer;
           if (cancelled) return;
+          hasSnapshot = true;
           if (typeof o.requires_human_approval === "boolean") requiresReview = o.requires_human_approval;
           setOffer((prev) => ({ ...prev, ...o, requires_human_approval: requiresReview }));
           if ((o.status === "ready" && !requiresReview) || o.status === "seller_accepted") return;
         } catch {
-          if (!offer) setError(es ? "No pudimos cargar su oferta." : "We couldn't load your offer.");
-          return;
+          if (cancelled) return;
+          if (i === maxAttempts - 1 && !hasSnapshot) {
+            setError(es ? "No pudimos cargar su oferta." : "We couldn't load your offer.");
+          }
         }
-        await new Promise((r) => setTimeout(r, 5000));
+        if (i < maxAttempts - 1) await new Promise((r) => setTimeout(r, 5000));
       }
     })();
     return () => { cancelled = true; };
