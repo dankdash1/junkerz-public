@@ -1,5 +1,6 @@
 "use client";
 import { API_BASE } from "@/lib/api-base";
+import { statusHref } from "@/lib/status-link";
 import { TIME_WINDOWS, WINDOW_START_HOUR, formatCentral, isTimeWindow, isSavedTimeWindow, quickPickDate, schedulePayload, windowForQuickPick, type TimeWindow, type SavedTimeWindow } from "@/lib/seller-schedule";
 import SellerPickupGuidance from "@/components/junkerz/SellerPickupGuidance";
 import { vinError } from "@/lib/seller-vin";
@@ -288,6 +289,13 @@ function SellerScheduleLive() {
           <p className="text-sm text-slate-600">
             This is your preferred time, subject to pickup partner availability and confirmation.
           </p>
+          {typeof offer?.id === "number" && token && (
+            <p className="text-sm">
+              <a className="font-semibold text-brand-700 underline" href={statusHref(offer.id, token)}>
+                Check your pickup status
+              </a>
+            </p>
+          )}
         </div>
 
         <SellerPickupGuidance />
