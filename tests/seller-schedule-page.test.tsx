@@ -132,3 +132,11 @@ it('a funded counter offers only buyer-backed dated windows and saves the exact 
  expect(await screen.findByText('Pickup preference saved')).toBeTruthy();
  expect(posted().body).toMatchObject({pickup_date:'2026-09-16',window:'1pm-4pm',pickup_address:offer.pickup_address});
 });
+
+it('the saved view links to the status page with the token in the fragment only (WP0-260)',async()=>{
+ navigation.query='qp=tomorrow_am';
+ render(<SellerSchedulePage/>);
+ await screen.findByText('Pickup preference saved');
+ const link=screen.getByRole('link',{name:'Check your pickup status'});
+ expect(link.getAttribute('href')).toBe('/status/1#token=tok-123');
+});
