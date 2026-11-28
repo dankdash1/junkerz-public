@@ -12,6 +12,9 @@ import SpanishLayout from '@/app/(spanish)/layout';
 import sitemap from '@/app/sitemap';
 import robots from '@/app/robots';
 
+// The saved connector work stays tested with the switch forced on here;
+// tests/mcp-connector-off.test.tsx proves the shipped (off) state.
+vi.mock('@/lib/mcp-connector', () => ({ MCP_CONNECTOR_ENABLED: true }));
 vi.mock('next/font/local', () => ({ default: () => ({ variable: 'font-test' }) }));
 vi.mock('@/components/QuoteWizard', () => ({ default: () => { throw new Promise(() => {}); } }));
 vi.mock('@/components/PageShell', () => ({

@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { quoteSchema } from "@/lib/business-assistant";
+import { MCP_CONNECTOR_ENABLED } from "@/lib/mcp-connector";
+
+export const dynamic = "force-dynamic";
 
 export function GET() {
+  if (!MCP_CONNECTOR_ENABLED) return new Response("Not Found", { status: 404, headers: { "cache-control": "no-store" } });
   const body = z.toJSONSchema(quoteSchema.omit({ request_id: true, customer_confirmed: true }));
   return Response.json({
     openapi: "3.1.0",

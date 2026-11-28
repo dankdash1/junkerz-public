@@ -4,7 +4,6 @@ import { SITE, CITIES } from "@/lib/site";
 const STATIC = [
   { path: "", priority: 1.0 },
   { path: "/quote", priority: 0.95 },
-  { path: "/assistants", priority: 0.6 },
   { path: "/service-areas", priority: 0.8 },
   { path: "/junk-cars", priority: 0.8 },
   { path: "/not-running", priority: 0.8 },

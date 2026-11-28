@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import PageShell from "@/components/PageShell";
+import { MCP_CONNECTOR_ENABLED } from "@/lib/mcp-connector";
 
 export const metadata: Metadata = {
   title: "Request a vehicle offer with a connected assistant",
@@ -9,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default function AssistantsPage() {
+  if (!MCP_CONNECTOR_ENABLED) notFound();
   return <PageShell eyebrow="Connected assistants" title="Get help selling your vehicle."
     lede="A compatible connected assistant can request a vehicle offer through Junkerz. Junkerz connects you with an independent buyer and pickup partner; the assigned buyer purchases your vehicle and pays at pickup.">
     <div className="space-y-10 text-zinc-700">
