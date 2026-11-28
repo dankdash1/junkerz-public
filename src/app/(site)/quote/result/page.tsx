@@ -57,8 +57,14 @@ function ResultContent() {
           if (typeof o.requires_human_approval === "boolean") requiresReview = o.requires_human_approval;
           setOffer((prev) => ({ ...prev, ...o, requires_human_approval: requiresReview }));
           if ((o.status === "ready" && !requiresReview) || o.status === "seller_accepted") return;
-        } catch {
+        } catch (e) {
           if (cancelled) return;
+          // A 429 is the server saying "slow down" (dankdashbackend4 #4229 limits): never
+          // retry it. Keep any number already shown; otherwise show the load error now.
+          if ((e as { status?: number } | null)?.status === 429) {
+            if (!hasSnapshot) setError(es ? "No pudimos cargar su oferta." : "We couldn't load your offer.");
+            return;
+          }
           if (i === maxAttempts - 1 && !hasSnapshot) {
             setError(es ? "No pudimos cargar su oferta." : "We couldn't load your offer.");
           }

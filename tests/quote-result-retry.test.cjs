@@ -22,6 +22,8 @@ for (const es of [false, true]) {
     { seeded: false, scenario: 'initial failure → ready' },
     { seeded: false, scenario: 'permanent failure' },
     { seeded: true, scenario: 'permanent failure' },
+    { seeded: false, scenario: 'rate limited (429) first' },
+    { seeded: true, scenario: 'pending → rate limited (429)' },
   ];
   for (const { seeded, scenario } of cases) {
     test(`${es ? 'ES' : 'EN'} / ${seeded ? 'seeded' : 'unseeded'}: ${scenario}`, async () => {
@@ -56,6 +58,10 @@ for (const es of [false, true]) {
         '@/lib/site': { NOT_LIVE_COPY: { en: {}, es: {} }, PICKUPS_LIVE: true, SITE: { phoneHref: 'tel:000' } },
         '@/lib/api': { async getOffer(id) {
           calls.push(id);
+          if ((scenario === 'rate limited (429) first' && calls.length === 1) ||
+              (scenario === 'pending → rate limited (429)' && calls.length === 2)) {
+            throw Object.assign(new Error('offer load failed: 429'), { status: 429 });
+          }
           const fail = scenario === 'permanent failure' ||
             calls.length === (scenario === 'initial failure → ready' ? 1 : 2);
           if (fail) throw new TypeError('synthetic network failure');
@@ -70,6 +76,23 @@ for (const es of [false, true]) {
         new Function('require', 'module', 'exports', compiled)(requireComponent, module, module.exports);
         await React.act(async () => root.render(React.createElement(module.exports.default)));
         const ui = () => document.body.textContent;
+        if (scenario === 'rate limited (429) first') {
+          // A 429 is never retried: one call, no timer, the load error at once.
+          assert.deepEqual(calls, [42]);
+          assert.equal(delays.length, 0, 'a 429 scheduled a retry');
+          assert.ok(ui().includes(error), 'no load error after a 429 with nothing to show');
+          return;
+        }
+        if (scenario === 'pending → rate limited (429)') {
+          assert.deepEqual(calls, [42]);
+          await React.act(async () => delays.shift()());
+          assert.deepEqual(calls, [42, 42]);
+          assert.equal(delays.length, 0, 'polling continued after a 429');
+          assert.match(ui(), /450/);
+          assert.ok(ui().includes(pending), 'the shown number lost its pending wording');
+          assert.ok(!ui().includes(error), 'a 429 replaced the number already shown');
+          return;
+        }
         if (scenario !== 'pending → failed lookup → ready') {
           const permanent = scenario === 'permanent failure';
           const wait = es ? 'Estamos calculando su oferta…' : 'Working out your offer…';

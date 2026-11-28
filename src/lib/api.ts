@@ -37,14 +37,18 @@ export async function submitQuote(payload: {
   });
   if (!r.ok) {
     const err = await r.json().catch(() => ({}));
-    throw new Error((err as any).error || `quote failed: ${r.status}`);
+    // status 429 = the daily quote limit (dankdashbackend4 #4229). Never retried.
+    throw Object.assign(new Error((err as any).error || `quote failed: ${r.status}`), { status: r.status });
   }
   return r.json();
 }
 
 export async function getOffer(offerId: number) {
   const r = await fetch(`${BASE}/api/public/junkerz/offer/${offerId}`);
-  if (!r.ok) throw new Error(`offer load failed: ${r.status}`);
+  if (!r.ok) {
+    // Carry the HTTP status so callers can tell "slow down" (429) from a passing failure.
+    throw Object.assign(new Error(`offer load failed: ${r.status}`), { status: r.status });
+  }
   return r.json();
 }
 
