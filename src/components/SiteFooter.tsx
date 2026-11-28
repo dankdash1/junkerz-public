@@ -49,7 +49,6 @@ export async function SiteFooter({ phone, catalogSettings }: { phone?: string; c
               <li><Link href="/about-us" className="hover:text-brand-700">About us</Link></li>
               <li><Link href="/contact-us" className="hover:text-brand-700">Contact us</Link></li>
               {showShop && <li><Link href="/shop" className="hover:text-brand-700">Cars &amp; parts{!hasLive && " · Coming soon"}</Link></li>}
-              <li><Link href="/assistants" className="hover:text-brand-700">AI assistants</Link></li>
               <li><Link href="/privacy-policy" className="hover:text-brand-700">Privacy policy</Link></li>
               <li><Link href="/terms" className="hover:text-brand-700">Terms of service</Link></li>
               <li><Link href="/returns" className="hover:text-brand-700">Returns policy</Link></li>
