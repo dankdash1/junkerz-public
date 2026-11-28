@@ -1,15 +1,20 @@
 import React from 'react';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, it, vi } from 'vitest';
 import QuotePage, { metadata as quoteMetadata } from '@/app/(site)/quote/page';
 import { metadata as homeMetadata } from '@/app/(site)/page';
 import { metadata as spanishMetadata } from '@/app/(spanish)/carro-viejos/page';
+import AssistantsPage, { metadata as assistantMetadata } from '@/app/(site)/assistants/page';
+import { GET as openapi } from '@/app/assistants/openapi.json/route';
 import EnglishLayout from '@/app/(site)/layout';
 import SpanishLayout from '@/app/(spanish)/layout';
 import sitemap from '@/app/sitemap';
 import robots from '@/app/robots';
 
+// The saved connector work stays tested with the switch forced on here;
+// tests/mcp-connector-off.test.tsx proves the shipped (off) state.
+vi.mock('@/lib/mcp-connector', () => ({ MCP_CONNECTOR_ENABLED: true }));
 vi.mock('next/font/local', () => ({ default: () => ({ variable: 'font-test' }) }));
 vi.mock('@/components/QuoteWizard', () => ({ default: () => { throw new Promise(() => {}); } }));
 vi.mock('@/components/PageShell', () => ({
@@ -39,16 +44,15 @@ it('renders Spanish and English document languages on the server with reciprocal
   expect(homeMetadata.alternates?.languages).toMatchObject({ 'en-US': 'https://junkerz.com', 'es-US': 'https://junkerz.com/carro-viejos' });
 });
 
-it('keeps the AI assistant connection unlisted from every public page (DM-OWNER-126)', () => {
+it('keeps public assistant discovery about vehicle offers and qualifies accepted offers', async () => {
+  const schema = await openapi().json();
+  const html = renderToStaticMarkup(<AssistantsPage />);
   const llms = readFileSync('public/llms.txt', 'utf8');
-  const footer = readFileSync('src/components/SiteFooter.tsx', 'utf8');
-  const urls = sitemap().map(entry => entry.url);
-  for (const text of [llms, footer, urls.join(' ')]) {
-    expect(text).not.toMatch(/\/assistants|\/api\/mcp|openapi\.json|junkerz_create_quote/i);
-  }
-  expect(existsSync('src/app/(site)/assistants/page.tsx')).toBe(false);
-  expect(existsSync('src/app/assistants/openapi.json/route.ts')).toBe(false);
-  expect(llms).not.toMatch(/dwell|furniture/i);
+  expect(`${JSON.stringify(schema)} ${JSON.stringify(assistantMetadata)} ${html} ${llms}`).not.toMatch(/dwell|furniture/i);
+  expect(Object.keys(schema.paths).sort()).toEqual(['/junkerz/quote', '/junkerz/quote/capabilities']);
+  expect(schema.paths['/junkerz/quote'].post.parameters).toContainEqual(expect.objectContaining({name: 'Idempotency-Key', required: true}));
+  expect(schema.paths['/junkerz/quote'].post.description).toContain('consent');
+  expect(html).toContain('ownership details match your description');
   expect(llms).toContain('human-approval requirement');
   expect(llms).toContain('may still accept and request scheduling');
 });
