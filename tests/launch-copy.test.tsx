@@ -112,6 +112,9 @@ for (const route of ['terms', 'privacy-policy', 'returns'] as const) {
     } else if (route === 'privacy-policy') {
       expect(text).toContain('optional text-message consent box');
       expect(text).toContain('Reply STOP to stop receiving texts');
+      // Owner-approved wording, exactly as written (DM-OWNER-105 / DM-OWNER-108).
+      expect(text).toContain('Repeat quote requests');
+      expect(text).toContain('When you ask for a quote, we keep a scrambled copy of your internet address and phone number for 30 days. The scrambled copy does not show the address or number itself. We use it only to notice when the same person asks for many quotes, and we delete it after 30 days. We do not sell it or share it with anyone.');
     } else {
       expect(text).toContain('All sales are final');
       expect(text).toContain('within 30 days');

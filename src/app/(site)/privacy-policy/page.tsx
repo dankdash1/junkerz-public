@@ -34,6 +34,11 @@ const SECTIONS: [string, string[]][] = [
   ["Automatically collected information", [
     "Like most websites, our servers record standard technical details such as browser type, device type, approximate location derived from an internet address, and the pages requested. We use this to keep the site working and secure.",
   ]],
+  // Owner-approved wording, exactly as written (DM-OWNER-105 / DM-OWNER-108, 2026-11-27).
+  // Ships only together with the backend 30-day record (dankdashbackend4 WP0-336).
+  ["Repeat quote requests", [
+    "When you ask for a quote, we keep a scrambled copy of your internet address and phone number for 30 days. The scrambled copy does not show the address or number itself. We use it only to notice when the same person asks for many quotes, and we delete it after 30 days. We do not sell it or share it with anyone.",
+  ]],
   ["Security of your personal information", [
     "We protect your information with access controls and encrypted connections. No system is perfectly secure, but we limit who can see your details and how long we keep them.",
   ]],
